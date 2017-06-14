@@ -36,6 +36,4 @@ public class MongoConfig {
 		final MongoCredential credential = MongoCredential.createScramSha1Credential(username, authSource, password.toCharArray());
 		return new MongoClient(new ServerAddress(host, port), Arrays.asList(credential));
 	}
-
-
 }
