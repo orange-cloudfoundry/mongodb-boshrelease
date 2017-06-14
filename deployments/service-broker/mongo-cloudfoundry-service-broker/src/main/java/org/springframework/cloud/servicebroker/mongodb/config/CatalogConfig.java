@@ -21,7 +21,7 @@ public class CatalogConfig {
 				new ServiceDefinition(
 						getEnvOrDefault("SERVICE_ID","mongodb-service-broker"), //env variable
 						getEnvOrDefault("SERVICE_NAME","mongodb"), //env variable
-						"[Free] A shared external MongoDB database on demand. (Data are not persistent)",
+						"A shared MongoDB database on demand.",
 						true,
 						false,
 						Collections.singletonList(
@@ -39,7 +39,7 @@ public class CatalogConfig {
 
 	private Map<String, Object> getServiceDefinitionMetadata() {
 		Map<String, Object> sdMetadata = new HashMap<>();
-		sdMetadata.put("displayName", "MongoDB (beta)");
+		sdMetadata.put("displayName", "MongoDB 3.0");
 		//sdMetadata.put("imageUrl", "http://info.mongodb.com/rs/mongodb/images/MongoDB_Logo_Full.png");
 		sdMetadata.put("imageUrl", "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcR9mtOVRxVp_1TgQ3b4UnawlWqUkw86oNRDvQAFz3gCuZNMrtPqYw");
 		sdMetadata.put("longDescription", "MongoDB is a free and open-source cross-platform document-oriented database program. Classified as a NoSQL database program, MongoDB uses JSON-like documents with schemas. MongoDB is developed by MongoDB Inc. and is free and open-source, published under a combination of the GNU Affero General Public License and the Apache License.");
@@ -83,6 +83,4 @@ public class CatalogConfig {
 			return defaultValue;
 		}
 	}
-
-	
 }
