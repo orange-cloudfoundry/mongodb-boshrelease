@@ -16,7 +16,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 
-@Configuration
+@Configuration 
 @EnableMongoRepositories(basePackages = "org.springframework.cloud.servicebroker.mongodb.repository")
 public class MongoConfig {
 
