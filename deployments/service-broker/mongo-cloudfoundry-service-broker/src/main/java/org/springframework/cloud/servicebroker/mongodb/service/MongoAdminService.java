@@ -43,6 +43,7 @@ public class MongoAdminService {
 	}
 
 	public boolean databaseExists(String databaseName) throws MongoServiceException {
+
 		try {
 			for(String dbname : client.listDatabaseNames()){
 				if(dbname.equals(databaseName)){
@@ -57,6 +58,7 @@ public class MongoAdminService {
 	}
 
 	public void deleteDatabase(String databaseName) throws MongoServiceException {
+
 		try{
 			client.getDatabase(adminDatabase);
 			client.dropDatabase(databaseName);
@@ -66,18 +68,21 @@ public class MongoAdminService {
 	}
 
 	public MongoDatabase createDatabase(String databaseName) throws MongoServiceException {
+
 		try {
 			addDbOwnerRole(databaseName);
 			
 			MongoDatabase db = client.getDatabase(databaseName);
-			db.createCollection("foo");
+			db.createCollection("tmp");
 			// save into a collection to force DB creation.
-			MongoCollection<Document> col = db.getCollection("foo");
-			Document document = new Document("foo", "bar");
+			MongoCollection<Document> col = db.getCollection("tmp");
+			Document document = new Document("tmp", "Use to persist the database");
 			
 			col.insertOne(document);
 			// drop the collection so the db is empty
-			col.drop();
+			// Fix: disable drop to keep database (mongoDB 3.4)
+			logger.info("Database " + databaseName + " is created");
+			//col.drop();
 
 			return db;
 		} catch (MongoException e) {
@@ -91,6 +96,7 @@ public class MongoAdminService {
 	
 	
 	private void addDbOwnerRole(String databaseName){
+
 		MongoDatabase db = client.getDatabase(adminDatabase);
 		Map<String, Object> roles = new BasicDBObject();
 		roles.put("role", "dbOwner");
@@ -108,7 +114,9 @@ public class MongoAdminService {
 	}
 
 	public void createUser(String database, String username, String password) throws MongoServiceException {
+
 		try {
+			
 			MongoDatabase db = client.getDatabase(database);
 			Map<String, Object> roles = new BasicDBObject();
 			roles.put("role", "readWrite");
@@ -121,7 +129,7 @@ public class MongoAdminService {
 		    commandArguments.put("roles", Arrays.asList(roles));
 		    BasicDBObject createUserCmd = new BasicDBObject(commandArguments);
 			
-			
+		    logger.info("createUser " + createUserCmd.toString() );
 			Document result = db.runCommand(createUserCmd);
 			if (result.getDouble("ok") != 1.0d) {
 				throw handleException(new MongoServiceException(result.toString()));
@@ -132,6 +140,7 @@ public class MongoAdminService {
 	}
 
 	public void deleteUser(String database, String username) throws MongoServiceException {
+
 		try {
 			MongoDatabase db = client.getDatabase(database);
 			Document result = db.runCommand(new BasicDBObject("dropUser", username));
@@ -144,19 +153,28 @@ public class MongoAdminService {
 	}
 
 	public String getConnectionString(String database, String username, String password) {
-		return new StringBuilder()
-				.append("mongodb://")
-				.append(username)
-				.append(":")
-				.append(password)
-				.append("@")
-				.append(getServerAddresses())
-				.append("/")
-				.append(database)
-				.toString();
+		
+		StringBuilder strB = new StringBuilder();
+		strB.append("mongodb://")
+		.append(username)
+		.append(":")
+		.append(password)
+		.append("@")
+		.append(getServerAddresses())
+		.append("/")
+		.append(database);
+		
+		if(System.getenv("MONGODB_REPLICASET_NAME") != null && ! System.getenv("MONGODB_REPLICASET_NAME").isEmpty()){
+			strB.append("?replicaSet=")
+			.append(System.getenv("MONGODB_REPLICASET_NAME"))
+			.append("&readPreference=secondary");
+		}
+		
+		return strB.toString();
 	}
 
 	public String getServerAddresses() {
+
 		StringBuilder builder = new StringBuilder();
 		for (ServerAddress address : client.getAllAddress()) {
 			builder.append(address.getHost())
