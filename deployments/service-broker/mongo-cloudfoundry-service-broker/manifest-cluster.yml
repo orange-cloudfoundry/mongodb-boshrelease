@@ -1,0 +1,25 @@
+---
+applications:
+- name: mongodb-cluster-service-broker-app
+  memory: 1024M
+  instances: 1
+  #path: build/libs/cloudfoundry-mongodb-service-broker.jar
+  env:
+    SERVICE_ID: mongodb-cluster-service-broker
+    SERVICE_NAME: mongodb-cluster
+    SERVICE_PLAN_ID: mongo-cluster-plan
+    SERVICE_MARKETPLACE_LABEL: "MongoDB 3.4 Cluster"
+    SERVICE_MARKETPLACE_DESCRIPTION: "[Cluster] A MongoDB database on demand."
+    #MONGODB_HOST: 192.168.170.47
+    #MONGODB_HOST: 192.168.170.160,192.168.170.159,192.168.170.155,192.168.170.156,192.168.170.157
+    MONGODB_HOST: 192.168.170.160,192.168.170.159,192.168.170.155,192.168.170.156
+    MONGODB_REPLICASET_NAME: replicaset
+    MONGODB_PORT: 27017
+    MONGODB_USERNAME: root
+    MONGODB_PASSWORD: rootpI1QdhGIGyKaWLO9
+    SECURITY_USER_NAME: admin
+    SECURITY_USER_PASSWORD: MySecurePwd_fdf7g09
+    #JBP_LOG_LEVEL: DEBUG
+    logging_level_root: INFO
+    logging_level_org_springframework: INFO
+    #logging_level_com_ge_predix_solsvc: DEBUG
