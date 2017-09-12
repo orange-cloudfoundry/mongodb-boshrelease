@@ -21,7 +21,7 @@ import com.mongodb.client.MongoDatabase;
 /**
  * Utility class for manipulating a Mongo database.
  *
- * @author sgreenberg@pivotal.io
+ * @author sgreenberg@pivotal.io 
  *
  */
 @Service

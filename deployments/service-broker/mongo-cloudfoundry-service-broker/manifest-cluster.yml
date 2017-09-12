@@ -19,7 +19,7 @@ applications:
     MONGODB_PASSWORD: rootpI1QdhGIGyKaWLO9
     SECURITY_USER_NAME: admin
     SECURITY_USER_PASSWORD: MySecurePwd_fdf7g09
-    #JBP_LOG_LEVEL: DEBUG
+    #JBP_LOG_LEVEL: DEBUG 
     logging_level_root: INFO
     logging_level_org_springframework: INFO
-    #logging_level_com_ge_predix_solsvc: DEBUG
+    #logging_level_com_ge_predix_solsvc: DEBUG 
