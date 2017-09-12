@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CatalogConfig {
 	
-	@Bean
+	@Bean 
 	public Catalog catalog() {
 		return new Catalog(Collections.singletonList(
 				new ServiceDefinition(
