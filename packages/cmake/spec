@@ -1,0 +1,6 @@
+---
+name: cmake
+dependencies: 
+-  gcc
+files:
+-  cmake/cmake-*.tar.gz

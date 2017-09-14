@@ -1,0 +1,36 @@
+set -e # exit immediately if a simple command exits with a non-zero status
+set -u # report the usage of uninitialized variables
+
+# $BOSH_COMPILE_TARGET - where this package & spec'd source files are available
+# $BOSH_INSTALL_TARGET - where you copy/install files to be included in package
+#/sbin/swapoff -a
+
+export HOME=/var/vcap
+
+#cp -a brokers $BOSH_INSTALL_TARGET/brokers
+
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-''} # default to empty
+for package_lib_dir in $(ls -d /var/vcap/packages/*/lib)
+do
+  export LD_LIBRARY_PATH=${package_lib_dir}:$LD_LIBRARY_PATH
+done
+
+export C_INCLUDE_PATH=${C_INCLUDE_PATH:-''}
+for package_inc_dir in $(ls -d /var/vcap/packages/*/include)
+do
+  export C_INCLUDE_PATH=${package_inc_dir}:$C_INCLUDE_PATH
+done
+
+export CC=/var/vcap/packages/gcc/bin/gcc
+export CXX=/var/vcap/packages/gcc/bin/g++
+
+# compiling last go src
+for i in `find golang/ -type f -name 'go*.tar.gz' ! -name 'go1.4-bootstrap-*.tar.gz' -print`
+do 
+  ext_dir=`tar -tvf $i |tail -1|tr -s [:space:]| cut -d" " -f6 |cut -d"/" -f1`
+  tar xf $i -C $BOSH_INSTALL_TARGET --strip 1
+  cd $BOSH_INSTALL_TARGET/src
+  export GOROOT_BOOTSTRAP=/var/vcap/packages/golang14
+  ./all.bash
+  cd ../..
+done

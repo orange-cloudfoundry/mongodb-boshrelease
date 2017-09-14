@@ -1,0 +1,190 @@
+#!/bin/bash
+#set -e
+set -u 
+set -x
+
+source `dirname $(readlink --canonicalize-existing $0)`/setenv
+
+# creating needed directories
+for dir in $RUN_DIR $LOG_DIR $TMP_DIR $STORE_DIR $DATA_DIR $BACKUP_DIR
+do
+  mkdir -p ${dir}
+  chown vcap:vcap ${dir}
+  chmod 775 ${dir}
+done
+
+# updating vcap limits
+if [ -f /etc/security/limits.conf ]
+then
+  if [ `grep "$(cat $JOB_DIR/config/vcap_limits.conf)" /etc/security/limits.conf|wc -l` -eq 0 ]
+  then 	
+    cat $JOB_DIR/config/vcap_limits.conf >> /etc/security/limits.conf
+  fi  
+# Allow limits apply without rebooting
+  if [ -f /etc/pam.d/common-session ]
+  then
+    if [ `grep "^session required pam_limits.so" /etc/pam.d/common-session|wc -l` -eq 0 ]
+    then	
+      echo "# Allow limits apply without rebooting" >> /etc/pam.d/common-session
+      echo "session required pam_limits.so" >> /etc/pam.d/common-session
+    fi  
+  fi
+fi
+
+# disabeling transparent_hugepage
+if [ -d /sys/kernel/mm/transparent_hugepage ]; then
+      thp_path=/sys/kernel/mm/transparent_hugepage
+elif [ -d /sys/kernel/mm/redhat_transparent_hugepage ]; then
+      thp_path=/sys/kernel/mm/redhat_transparent_hugepage
+else
+      return 0
+fi
+
+echo 'never' > ${thp_path}/enabled
+echo 'never' > ${thp_path}/defrag
+unset thp_path
+
+<%- if p("mongodb-server.morDbType") == "rs" -%>
+  <%- morDbTypeport=27017 -%>
+  <%- _mor_rsconfig = ''
+  link('server').instances.each do |instance| -%>
+    <%- _mor_rsconfig = _mor_rsconfig + instance.address + ',' -%>
+  <%- end -%>
+  <%- # remove last ,
+  mor_rsconfig = _mor_rsconfig[0..-2] -%>
+  <%- mor_hostconfig = ''
+  link('server').instances.each do |instance| -%>
+    <%- mor_hostconfig = mor_hostconfig + instance.address + ' ' + instance.name %>
+  <%- end -%>
+  <%- mor_current_ip = link('server').instances[spec.index].address -%>
+<%- end -%>
+
+# Updating permission on keyfile
+#sed -i -e "/^---/d" /var/vcap/jobs/mongodb-server/config/keyfile
+#chown vcap:vcap /var/vcap/jobs/${JOB_NAME}/config/keyfile
+#chmod 600 /var/vcap/jobs/${JOB_NAME}/config/keyfile
+
+
+<%- if p("mongodb-server.morConf_ssl") == 0 -%>
+export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo.sh"
+<%- else -%>
+# Generate the certificates
+/var/vcap/jobs/${JOB_NAME}/bin/generate_ssl_cert.sh
+export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo-ssl.sh"
+<%- end -%>
+
+
+start_bs()
+{
+  # Stopping eventually running instance
+  if [ -f $PIDFILE ]
+    then
+    [ `ps -p $(cat $PIDFILE)|wc -l` -gt 1 ] && kill_and_wait $PIDFILE
+  fi
+
+  pid_guard $PIDFILE ${JOB_NAME}
+
+  # start mongod without auth
+  su -m vcap -c "$MONGODB_BIN/mongod --config $MONGODB_CONF/mongod_bootstrap.conf --pidfilepath $PIDFILE"
+}
+
+export MONGO_CMD_PARAM="--quiet"
+
+# looking for already created master node
+Master=""
+for Server in $(echo <%= mor_rsconfig -%>|tr -s "," " ")
+do
+
+  if [ "`${MONGO_CMD} --host $Server \
+    ${MONGO_CMD_PARAM} --eval 'db.isMaster().ismaster' 2>/dev/null`" == "true" ]
+  then
+    Master=$Server
+  else
+    if [ "`${MONGO_CMD} --host $Server -u '<%= p("mongodb-server.morDbRootAdminName") %>' \
+      -p '<%= p("mongodb-server.morDbRootAdminPwd") %>' --authenticationDatabase admin \
+    ${MONGO_CMD_PARAM} --eval 'db.isMaster().ismaster' 2>/dev/null`" == "true" ]
+    then
+      Master=$Server
+    fi
+  fi
+done    
+
+if [ "$Master" == "" -o "$Master" == "<%= mor_current_ip %>" ]
+then
+  [ "$Master" == "" ] && start_bs
+  # check if rs is already initialized
+  if [ "$(${MONGO_CMD} --host <%= mor_current_ip %> ${MONGO_CMD_PARAM} \
+    --eval 'rs.status().codeName' 2>/dev/null)" == "NotYetInitialized" ]
+  then
+    CR=1
+    while [ $CR -ne 0 ]
+  	do
+  	  ${MONGO_CMD} --host <%= mor_current_ip %> \
+      ${MONGO_CMD_PARAM} < /var/vcap/jobs/${JOB_NAME}/js/initiate_rs.js
+  	  CR=$?
+  	done
+    # wait until rs is fully active
+    # while [ `${MONGO_CMD} --host <%= mor_current_ip %> ${MONGO_CMD_PARAM} --eval 'rs.status().ok'` -ne 1 -o \
+    # $(${MONGO_CMD} --host <%= mor_current_ip %> ${MONGO_CMD_PARAM} --eval 'rs.status().members'| \
+    # grep "\"infoMessage\" : \"could not find member to sync from\""|wc -l) -gt 0 ]
+    while [ `${MONGO_CMD} --host <%= mor_current_ip %> ${MONGO_CMD_PARAM} --eval 'rs.status().ok'` -ne 1 ]
+    do
+      sleep 3
+    done
+
+    # check if admin users have already been created
+    CR=1
+    while [ $CR -ne 0 ]
+    do
+      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mor_current_ip %> \
+      --eval 'db.getUser("<%= p("mongodb-server.morDbUserAdminName") %>")' admin`
+      CR=$?
+      [ $CR -eq 0 -a "$created" == "null" ] && CR=1
+      if [ $CR -eq 0 ]
+      then
+        created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mor_current_ip %> \
+        --eval 'db.getUser("<%= p("mongodb-server.morDbRootAdminName") %>")' admin`
+        CR=$?
+        [ $CR -eq 0 -a "$created" == "null" ] && CR=1
+      fi
+      # Create admin users if not already created
+      if [ $CR -ne 0 ]
+      then
+         ${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mor_current_ip %> < /var/vcap/jobs/${JOB_NAME}/js/create_admin_user.js
+      fi
+    done
+  fi
+else
+  start_bs
+  export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u <%= p("mongodb-server.morDbRootAdminName") %> -p <%= p("mongodb-server.morDbRootAdminPwd") %> --authenticationDatabase admin"
+  # check Master node if admin users have already been created
+  admin_initialized=`${MONGO_CMD} --host $Master ${MONGO_CMD_PARAM} \
+  --eval 'db.getUser("<%= p("mongodb-server.morDbUserAdminName") %>")' admin`
+  CR=$?
+  [ $CR -eq 0 -a "$admin_initialized" == "null" ] && CR=1
+  if [ $CR -eq 0 ]
+  then
+    admin_initialized=`${MONGO_CMD} --host $Master  ${MONGO_CMD_PARAM} \
+    --eval 'db.getUser("<%= p("mongodb-server.morDbRootAdminName") %>")' admin`
+    CR=$?
+    [ $CR -eq 0 -a "$admin_initialized" == "null" ] && CR=1
+  fi
+
+  if [ $CR -eq 0 ]
+  then
+    # restarting with auth
+    kill_and_wait $PIDFILE
+    pid_guard $PIDFILE ${JOB_NAME}
+    su -m vcap -c "$MONGODB_BIN/mongod --config $MONGODB_CONF/mongod.conf --pidfilepath $PIDFILE"
+  else
+    exit 1
+  fi
+
+  # Adding current node to rs
+  ${MONGO_CMD} --host <%= p("mongodb-server.morConf_replSetName") %>/$Master \
+  ${MONGO_CMD_PARAM} --eval 'rs.add("<%= link('server').instances[spec.index].address %>")'
+fi
+
+kill_and_wait $PIDFILE
+
+exit 0

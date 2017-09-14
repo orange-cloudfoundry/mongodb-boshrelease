@@ -1,0 +1,7 @@
+---
+name: golang
+dependencies: 
+-  golang14
+-  gcc
+files:
+-  golang/go1.8*.tar.gz

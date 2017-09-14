@@ -1,0 +1,19 @@
+use admin
+if (db.system.users.find({user:'<%= p("mongodb-server.morDbUserAdminName") %>'}).count() == 0) {
+db.createUser(
+  {
+    user: "<%= p("mongodb-server.morDbUserAdminName") %>",
+    pwd: "<%= p("mongodb-server.morDbUserAdminPwd") %>",
+    roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
+  }
+)
+}
+if (db.system.users.find({user:'<%= p("mongodb-server.morDbRootAdminName") %>'}).count() == 0) {
+db.createUser(
+  {
+    user: "<%= p("mongodb-server.morDbRootAdminName") %>",
+    pwd: "<%= p("mongodb-server.morDbRootAdminPwd") %>",
+    roles: [ { role: "root", db: "admin" } ]
+  }
+)
+}

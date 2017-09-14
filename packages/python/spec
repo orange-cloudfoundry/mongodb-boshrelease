@@ -1,0 +1,6 @@
+---
+name: python
+dependencies: 
+-  gcc
+files:
+-  python/Python-*.tgz

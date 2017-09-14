@@ -1,0 +1,126 @@
+---
+name: mongodb-server
+packages:
+- mongodb
+- gcc
+- openssl
+- compressors
+consumes:
+- name: server
+  type: mongodb-server
+  
+provides:
+- name: server
+  type: mongodb-server 
+  
+templates:
+  helpers/ctl_setup.sh: helpers/ctl_setup.sh
+  helpers/ctl_utils.sh: helpers/ctl_utils.sh
+  bin/pre-start.erb: bin/pre-start
+  bin/mongodb-server_ctl: bin/mongodb_server_ctl
+  bin/mongo.sh: bin/mongo.sh
+  bin/mongo-ssl.sh: bin/mongo-ssl.sh
+  bin/setenv.erb: bin/setenv
+  bin/monit_debugger: bin/monit_debugger
+  bin/generate_ssl_cert.sh.erb: bin/generate_ssl_cert.sh
+  data/properties.sh.erb: data/properties.sh
+  config/mongod.conf.erb: config/mongod.conf
+  config/mongod_bootstrap.conf.erb: config/mongod_bootstrap.conf
+  config/vcap_limits.conf.erb: config/vcap_limits.conf
+  ssl/mongodb.pem.erb: ssl/mongodb.pem
+  ssl/mongodb.ca.erb: ssl/mongodb.ca
+  js/create_admin_user.js.erb: js/create_admin_user.js
+  js/initiate_rs.js.erb: js/initiate_rs.js
+
+properties:
+  mongodb-server.morDbVersion: 
+    default: 3.4.6
+  mongodb-server.morDbToolVersion:
+    default: 1.4.1
+  mongodb-server.morSysDriverMongo:
+    default: rpm
+  mongodb-server.morDbType:
+    default: rs
+    description: Function of the mongod server - <rs> for replica set only, <cfg> for config server, (<sh> for shard server - not implemented yet) 
+  mongodb-server.morSysReboot:
+    default: 1
+    description: Authorize the role to restart the server (don't work with a proxy_ssh)
+  mongodb-server.morSysIface:
+    default: eth0
+    description: The interface where the mongodb process should listen on.
+  mongodb-server.morSysAliasPrefix:
+    default: ""
+    description: The mongodb extension name - alias for the interface, ex pre-hostname-prd.domain.name
+  mongodb-server.morSysAlias:
+    default: "-prd"
+    description: The mongodb extension name - alias for the interface, ex pre-hostname-prd.domain.name
+  mongodb-server.morSysDomain:
+    default: ""
+    description: The mongodb extension name - alias for the interface, ex pre-hostname-prd.domain.name
+  mongodb-server.morSysDb_diskperf_readahead:
+    default: 16
+    description: disk tuning for databases purpose (devices linked to morSysDb_dirData.path) / if you don't have some sequential reads, do not touch
+  mongodb-server.morSysLogrotate:
+    default: 1
+    description: Mongodb logrotate
+  mongodb-server.morConf_engine:
+    default: wiredTiger
+    description: mongodb storage engine part mmapv1 / wiredTiger / rocksdb
+  mongodb-server.morConf_mmapv1smallFiles:
+    default: "false"
+    description:
+  mongodb-server.morConf_wiredTiger_cacheSizeGB:
+    default: 1
+    description: NOT CONFIGURED by default but can be set to minimize the wiredTiger cache
+  mongodb-server.morConf_slowOpThresholdMs:
+    default: 100
+    description:
+  mongodb-server.morConf_replication:
+    default: 1
+    description: mongodb replication part
+  mongodb-server.morConf_replSetName:
+    default: rs0
+    description: replicaset name
+  mongodb-server.morConf_oplogSizeMB:
+    default: 256
+    description:
+  mongodb-server.morConf_authorization:
+    default: 1
+    description: mongodb Auth part
+  mongodb-server.morDbUserAdminName:
+    default: MongoAdmin
+    description: mongodb default user
+  mongodb-server.morDbUserAdminPwd:
+    default: MongoAdmin
+    description: 
+  mongodb-server.morDbRootAdminName:
+    default: siteRootAdmin
+    description:
+  mongodb-server.morDbRootAdminPwd:
+    default: siteRootAdmin
+    description:
+  mongodb-server.morDbManagedUsers:
+    default:
+      #- { name: testUser, password: passw0rd, roles: readWrite, database: app_development }
+    description:
+  mongodb-server.mor_operator: 
+    default: "vcap"
+    description:  Mongodb mongod operator
+  mongodb-server.mor_rsconfig:
+    default: #mor_rsconfig: "{{ play_hosts }}"
+    description: Mongodb mongod list
+  mongodb-server.mor_state: 
+    default: "present"
+    description: Mongodb mongod state [ 'present', 'absent' ]
+  mongodb-server.mor_backup: 
+    default: "absent"
+    description: Mongodb backup state [ 'present', 'absent' ]
+  mongodb-server.morDbCertificate:
+    default: "NOT INITIALIZED"
+    description: Mongodb certificate for ttl/ssl auth
+  mongodb-server.morDbKeyfile:
+    default: "NOT INITIALIZED"
+    description: Mongodb rsa key  
+  mongodb-server.morConf_ssl:
+    default: 1
+    description: use tls/ssl for authent and transactions     

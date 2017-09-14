@@ -1,0 +1,7 @@
+---
+final_name: mongodb-service
+blobstore:
+  provider: local
+  options:
+#    bucket_name: orange-mongodb-cf-service 
+    blobstore_path: /images/

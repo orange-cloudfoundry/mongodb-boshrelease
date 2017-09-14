@@ -1,0 +1,10 @@
+<%- if p("mongodb-server.morDbType") == "rs" -%><%- morDbTypeport=27017 -%><%- end -%>
+<%- morConf_replSetName = p("mongodb-server.morConf_replSetName") 
+morConf_bindIp = link('server').instances[0].address -%>
+<%- if p("mongodb-server.morDbType") == "sh" -%><%- morDbTypeport=27018 -%><%- end -%>
+<%- if p("mongodb-server.morDbType") == "cfg" -%><%- morDbTypeport=27019 -%><%- end -%>
+<%- if p("mongodb-server.morDbType") == "mongos" -%><%- morDbTypeport=27017 -%><%- end -%>
+rs.initiate( {
+   _id : "<%= morConf_replSetName %>",
+   members: [ { _id : 0, host : "<%= morConf_bindIp %>:<%= morDbTypeport %>" } ]
+} )

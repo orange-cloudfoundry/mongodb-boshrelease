@@ -1,0 +1,57 @@
+name: ((appli))
+director_uuid: 8dd35958-abc4-46fc-9c96-f91c791bfeae
+
+releases:
+  - name: mongodb-service
+    version: latest
+
+update:
+  canaries: 0
+  canary_watch_time: 30000-240000
+  update_watch_time:  30000-240000
+  max_in_flight: 1 #<-- important to limit max in flight
+  serial: false
+
+stemcells:
+- alias: trusty
+  os: ubuntu-trusty
+  version: 3421.11
+
+instance_groups:
+- name: mongodb-server
+  release: mongodb-service
+#  azs: [z1]
+  instances: 3
+  vm_type: medium
+  env:
+    bosh:
+      swap_size: 0
+
+  stemcell: trusty
+  networks:
+  - name: mongo1
+  persistent_disk_type: test_disk
+  env:
+    persistent_disk_fs: xfs
+  jobs:
+  - name: mongodb-server
+    release: mongodb-service
+    properties: 
+      mongodb-server:
+        morDbUserAdminPwd: ((mongo_admin_password))
+        morDbRootAdminPwd: ((mongo_root_password))
+        morDbCertificate: 
+          ca: ((mongo_certificate.ca))
+          private_key: ((mongo_certificate.private_key))
+          certificate: ((mongo_certificate.certificate))
+        
+variables:
+- name: mongo_admin_password
+  type: password
+- name: mongo_root_password
+  type: password
+- name: mongo_certificate
+  type: certificate
+  options:
+    is_ca: true
+    common_name: mongo-cert

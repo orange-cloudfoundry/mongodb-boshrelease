@@ -1,0 +1,220 @@
+<%-
+# Mongodb version
+morDbVersion = p("mongodb-server.morDbVersion") 
+morDbToolVersion = p("mongodb-server.morDbToolVersion")
+morSysDriverMongo = p("mongodb-server.morSysDriverMongo")
+#Function of the mongod server
+morDbType = p("mongodb-server.morDbType") 
+# Authorize the role to restart the server (don't work with a proxy_ssh)
+morSysReboot = p("mongodb-server.morSysReboot")
+# The interface where the mongodb process should listen on.
+morSysIface = p("mongodb-server.morSysIface") 
+# The mongodb extension name
+morSysAliasPrefix = p("mongodb-server.morSysAliasPrefix") 
+morSysAlias = p("mongodb-server.morSysAlias") 
+morSysDomain = p("mongodb-server.morSysDomain") 
+# Mongodb logrotate
+morSysLogrotate = p("mongodb-server.morSysLogrotate")
+# mongodb storage engine part
+morConf_engine = "wiredTiger" #default engine if not defined -%>
+<%- if_p("mongodb-server.morConf_engine") do morConf_engine = p("mongodb-server.morConf_engine") -%><%- end -%>
+<%-
+morConf_mmapv1smallFiles = p("mongodb-server.morConf_mmapv1smallFiles")
+# NOT CONFIGURED by default but can be set to minimize the wiredTiger cache
+# DEPRECATED
+# morConf_wiredTigercacheSizeGB: <%#= p("mongodb-server.morConf_wiredTigercacheSizeGB")
+morConf_slowOpThresholdMs = p("mongodb-server.morConf_slowOpThresholdMs")
+# mongodb replication part
+morConf_replication = p("mongodb-server.morConf_replication")
+morConf_replSetName = p("mongodb-server.morConf_replSetName")
+morConf_oplogSizeMB = p("mongodb-server.morConf_oplogSizeMB")
+# mongodb Auth part
+morConf_authorization = p("mongodb-server.morConf_authorization")
+morDbUserAdminName = p("mongodb-server.morDbUserAdminName")
+morDbUserAdminPwd = p("mongodb-server.morDbUserAdminPwd")
+morDbRootAdminName = p("mongodb-server.morDbRootAdminName")
+morDbRootAdminPwd = p("mongodb-server.morDbRootAdminPwd")
+morConfssl = p("mongodb-server.morConf_ssl")
+#morDbManagedUsers: <%#= p("mongodb-server.morDbManagedUsers")
+#################################################################################################
+# Set default value if not defined in the playbook vars / group_vars / host_vars / inventory vars
+# Do not touch below
+#################################################################################################
+# Mongodb mongod operator
+mor_operator = p("mongodb-server.mor_operator") 
+# Mongodb mongod list
+morConf_bindIp = "127.0.0.1," + link('server').instances[spec.index].address
+# morConf_bindIp = "127.0.0.1," + p("mongodb-server.spec.ip")
+# Mongodb mongod state:
+mor_state = p("mongodb-server.mor_state")
+# Mongodb backup state:
+mor_backup = p("mongodb-server.mor_backup")
+# Mongodb alias name used for the replica set communication
+#mor_hostname: = p("mongodb-server.mor_hostname") 
+# Mongodb backup key file name (stored on the same level as playbook)
+#morConf_keyfileBackup = p("mongodb-server.morConf_keyfileBackup")
+# Add tag to the modified line (by ansible tasks)
+morRoleComment= "#BOSH orange.mongodb role comment#"
+-%>
+<%- # Managed the mongodb port binding depending on the mongodb role
+if p("mongodb-server.morDbType") == "rs" -%>
+	<%- morDbTypeport=27017 -%>
+	<%- _mor_rsconfig = ''
+	link('server').instances.each do |instance| -%>
+		<%- _mor_rsconfig = _mor_rsconfig + instance.address + ',' -%>
+	<%- end -%>
+	<%- # remove last ,
+	 mor_rsconfig = _mor_rsconfig[0..-2] %>
+<%- end -%>
+<%- if p("mongodb-server.morDbType") == "sh" -%><%- morDbTypeport=27018 -%><%- end -%>
+<%- if p("mongodb-server.morDbType") == "cfg" -%><%- morDbTypeport=27019 -%><%- end -%>
+<%- if p("mongodb-server.morDbType") == "mongos" -%><%- morDbTypeport=27017 -%><%- end -%>
+<%- # Retrieve all parts of the Mongodb version 
+/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("mongodb-server.morDbVersion") #=> 0 -%>
+<%-
+morDbVersionMaj = _DbVersionMaj 
+morDbVersionMid = _DbVersionMid
+morDbVersionMin = _DbVersionMin
+
+# Mongodb orange products parameters
+morDbProductName = "mongodb-cf-release"
+#morDbPymongoName: mongodb-orange-python-pymongo
+#morDbToolName: mongodb-orange-tools
+morSysDbUser = "vcap"
+morSysDbGroup = "vcap" 
+# Mongodb directory
+morSysDb_dirRoot="/var/vcap/store/mongodb-server" 
+morSysDb_dirBackup="/var/vcap/store/mongodb-server/backup" 
+morSysDb_dirCfg="/var/vcap/jobs/mongodb-server/config"
+morSysDb_dirSSL="/var/vcap/jobs/mongodb-server/ssl" 
+morSysDb_dirData="/var/vcap/store/mongodb-server/data" 
+morSysDb_dirLog="/var/vcap/sys/log/mongodb-server"
+morSysDb_dirRun="/var/vcap/sys/run/mongodb-server"
+morSysDb_dirManaged=[ morSysDb_dirRoot ,  morSysDb_dirBackup , morSysDb_dirCfg , morSysDb_dirData , morSysDb_dirLog , morSysDb_dirRun ]
+# Mongodb configuration parameters
+morConf_systemLog = morSysDb_dirLog + "/mongod.log"
+#morConf_cfgFile = morSysDb_dirCfg + "/mongod.conf"
+#morConf_pidFile = morSysDb_dirRun + "/mongod.pid"
+morConf_port = morDbTypeport
+morConf_journalenabled = "true"
+morConf_keyFile = morSysDb_dirCfg + "/keyfile"
+morConf_PEMKeyFile = morSysDb_dirSSL + "/server.pem"
+morConf_CAFile = morSysDb_dirSSL + "/mongodb.ca"
+#morConf_mmapv1smallFiles = "false" #<= deprecated
+tmpjournalenabled = morConf_journalenabled
+tmpoplogSizeMB = morConf_oplogSizeMB
+-%>
+<%- if_p("morConf_mmapv1smallFiles") do tmpsmallFiles = morConf_mmapv1smallFiles -%><%- end -%>
+<%- _arbiter_only = 0 
+if_p("arbiter_only") do -%>
+	<%- if p("arbiter_only") == "yes" -%>
+		_arbiter_only = 1 
+	<%- end -%>
+<%- end -%>
+<%- if _arbiter_only = 1 
+    	tmpjournalenabled = "false"
+   		tmpsmallFiles = "true"
+    	tmpoplogSizeMB = 1 
+end -%>
+systemLog:
+  destination: file
+  path: <%= morConf_systemLog %>
+  logAppend: true
+<%- if morDbVersionMaj == "3" -%>
+  logRotate: reopen
+<%- end -%>
+storage:
+<%- if morDbVersionMaj == "2" -%>
+  dbPath: <%= morSysDb_dirData %>
+  directoryPerDB: true
+	<% if_p("morConf_syncPeriodSecs") do %>
+  syncPeriodSecs: <%= morConf_syncPeriodSecs %>
+	<%- end -%>
+  journal:
+    enabled: <%= tmpjournalenabled %>
+ 	<% if_p("morConf_commitIntervalMs") do %>
+    commitIntervalMs: <%= morConf_commitIntervalMs %>
+	<%- end -%>
+  smallFiles: <%= tmpsmallFiles %>
+<%- end -%>
+<%- if morDbVersionMaj == "3" -%>
+  engine: <%= morConf_engine %>
+  dbPath: <%= morSysDb_dirData %>
+  directoryPerDB: true
+  journal:
+    enabled: <%= tmpjournalenabled %>
+	<%- if_p("morConf_commitIntervalMs") do -%>
+		<% if morDbVersionMid == "2" or morDbVersionMid == "4" -%>
+    commitIntervalMs: <%= morConf_commitIntervalMs %>
+		<%- end -%>
+	<%- end -%>
+	<%- if morConf_engine == "mmapv1" -%>
+  mmapv1:
+    smallFiles: <%= tmpsmallFiles %>
+		<% if_p("morConf_mmapv1_preallocDataFiles") do -%>
+    preallocDataFiles: <%= morConf_mmapv1_preallocDataFiles %>
+		<%- end -%>
+		<% if_p("morConf_mmapv1_nsSize") do -%>
+    nsSize: <%= morConf_mmapv1_nsSize %>
+		<%- end -%>
+		<%- if_p("morConf_mmapv1_quota_enforced","morConf_mmapv1_quota_maxFilesPerDB") do -%>
+    quota:
+			<%- if_p("morConf_mmapv1_quota_enforced") do -%>
+      enforced: <%= morConf_mmapv1_quota_enforced %>
+			<%- end -%>
+			<%- if_p("morConf_mmapv1_quota_maxFilesPerDB") do -%>
+      maxFilesPerDB: <%= morConf_mmapv1_quota_maxFilesPerDB %>
+			<%- end -%>
+		<%- end -%>	
+	<%- end -%>
+	<%- if_p("morConf_commitIntervalMs") do -%>
+		<%- if morDbVersionMid == "0" -%>
+    journal:
+      commitIntervalMs: <%= morConf_commitIntervalMs %>
+		<%- end -%>
+	<%- end -%>
+	<%- if morConf_engine == "wiredTiger" -%>
+  wiredTiger:
+    engineConfig:
+      directoryForIndexes: true
+		<%- if_p("morConf_wiredTiger_cacheSizeGB") do -%>
+      cacheSizeGB: <%= morConf_wiredTiger_cacheSizeGB %>
+		<%- end -%>
+		<%- if_p("morConf_wiredTiger_journalCompressor") do -%>
+      journalCompressor: <%= morConf_wiredTiger_journalCompressor %>
+		<%- end -%>
+		<%- if_p("morConf_wiredTiger_blockCompressor") do -%>
+    collectionConfig:
+			blockCompressor: <%= morConf_wiredTiger_blockCompressor %>
+		<%- end -%>
+		<%- if_p("morConf_wiredTiger_prefixCompression") do -%>
+    indexConfig:
+			prefixCompression: <%= morConf_wiredTiger_prefixCompression %>
+		<%- end -%>
+	<%- end -%>
+<%- end -%>
+processManagement:
+  fork: true
+net:
+  bindIp: <%= morConf_bindIp %>
+  port: <%= morConf_port %>
+  unixDomainSocket:
+    enabled: true
+    pathPrefix: <%= morSysDb_dirRun %>
+<%- if morConfssl == 1 -%>   
+  ssl:
+    mode: requireSSL
+    PEMKeyFile: <%= morConf_PEMKeyFile %>
+    CAFile: <%= morConf_CAFile %>
+<%- end -%>          
+<%- if morConf_authorization == 1 -%>
+<%- end -%>
+operationProfiling:
+  slowOpThresholdMs: <%= morConf_slowOpThresholdMs %>
+<%- if morConf_replication == 1 -%>
+replication:
+  replSetName: <%= morConf_replSetName %>
+  oplogSizeMB: <%= tmpoplogSizeMB %>
+<%- end -%>
+setParameter:
+  enableLocalhostAuthBypass: 1
