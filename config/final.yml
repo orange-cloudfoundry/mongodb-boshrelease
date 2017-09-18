@@ -1,7 +1,6 @@
 ---
-final_name: mongodb-service
+final_name: mongodb-services
 blobstore:
-  provider: local
+  provider: s3
   options:
-#    bucket_name: orange-mongodb-cf-service 
-    blobstore_path: /images/
+    bucket_name: orange-mongodb-cf-service-boshrelease
