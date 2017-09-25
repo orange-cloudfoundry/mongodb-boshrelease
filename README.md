@@ -35,40 +35,40 @@ Because of this choice it could be implemented on ubuntu or centos Stemcell.
 
 * Mongodb database and modules version
 
-Package  | Version  |  Note
---|---|--
-mongodb | `3.4.6` |
-mongo-rocks | `3.4.6` |
-mongo-tools | `3.4.6` |
-rocksdb | `5.5.5` |
+Package     | Version  |  Note
+------------|----------|-------
+mongodb     | `3.4.6`  |
+mongo-rocks | `3.4.6`  |
+mongo-tools | `3.4.6`  |
+rocksdb     | `5.5.5`  |
 
 * dependencies
 
-Package  | Version  |  Note
---|---|--
-cmake | `3.8.2` |
-bzip2 | `1.0.6` |
-lz4 | `1.7.5` |
-snappy | `1.1.4` |
-zlib | `1.2.11` |
-zstd | `1.3.0` |
-gcc | `5.4.0` |
-gmp | `6.1.2` |
-libpcap | `1.8.1` |
-m4 | `1.4.18` |
-mpc | `1.0.3` |
-mpfr | `3.1.5` |
-isl | `0.18` |
-go | `1.8.3` | need to compile go 1.4 as bootstrap
-Python | `2.7.13` |
-scons | `2.5.1` |
-openssl | `1.0.2l` |
-lzip | `1.19` |
-ed | `1.14.2` |
-texinfo | `6.4` |
-bc | `1.07.1` |
-binutils | `2.28` |
-coreutils | `8.27` |
+Package   | Version  |  Note
+----------|----------|-------
+cmake     | `3.8.2`  |
+bzip2     | `1.0.6`  |
+lz4       | `1.7.5`  |
+snappy    | `1.1.4`  |
+zlib      | `1.2.11` |
+zstd      | `1.3.0`  |
+gcc       | `5.4.0`  |
+gmp       | `6.1.2`  |
+libpcap   | `1.8.1`  |
+m4        | `1.4.18` |
+mpc       | `1.0.3`  |
+mpfr      | `3.1.5`  |
+isl       | `0.18`   |
+go        | `1.8.3`  | need to compile go 1.4 as bootstrap
+Python    | `2.7.13` |
+scons     | `2.5.1`  |
+openssl   | `1.0.2l` |
+lzip      | `1.19`   |
+ed        | `1.14.2` |
+texinfo   | `6.4`    |
+bc        | `1.07.1` |
+binutils  | `2.28`   |
+coreutils | `8.27`   |
 
 
 ## Release tree
