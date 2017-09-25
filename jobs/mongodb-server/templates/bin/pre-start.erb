@@ -31,8 +31,8 @@ export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo-ssl.sh"
 get_actual_members()
 {
   m_list=""
-  for i in `${MONGO_CMD} --host rs0/<%= mor_current_ip %>  ${MONGO_CMD_PARAM} --eval 'rs.status().members'| \
-  grep name|tr -s [:space:]|tr -d '"'|cut -d ":" -f2`
+  for i in `${MONGO_CMD} --host rs0/<%= mor_current_ip %>  ${MONGO_CMD_PARAM} --eval 'rs.status().members' \
+      | grep name | tr -s [:space:] | tr -d '"' | cut -d ":" -f2`
   do
     m_list="$m_list $i"
   done
@@ -103,13 +103,13 @@ check_master()
   do
 
     if [ "`${MONGO_CMD} --host $Server \
-      ${MONGO_CMD_PARAM} --eval 'db.isMaster().ismaster' 2>/dev/null`" == "true" ]
+        ${MONGO_CMD_PARAM} --eval 'db.isMaster().ismaster' 2>/dev/null`" == "true" ]
     then
       Master=$Server
     else
       if [ "`${MONGO_CMD} --host $Server -u '<%= p("mongodb-server.morDbRootAdminName") %>' \
-        -p '<%= p("mongodb-server.morDbRootAdminPwd") %>' --authenticationDatabase admin \
-      ${MONGO_CMD_PARAM} --eval 'db.isMaster().ismaster' 2>/dev/null`" == "true" ]
+          -p '<%= p("mongodb-server.morDbRootAdminPwd") %>' --authenticationDatabase admin \
+          ${MONGO_CMD_PARAM} --eval 'db.isMaster().ismaster' 2>/dev/null`" == "true" ]
       then
         Master=$Server
       fi
@@ -121,7 +121,7 @@ check_master()
 remove_unwanted_nodes()
 {
   export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
-  -u <%= p("mongodb-server.morDbRootAdminName") %> -p <%= p("mongodb-server.morDbRootAdminPwd") %> --authenticationDatabase admin"
+    -u <%= p("mongodb-server.morDbRootAdminName") %> -p <%= p("mongodb-server.morDbRootAdminPwd") %> --authenticationDatabase admin"
   
   wanted_servers=$(echo <%= mor_rsconfig -%>|tr -s "," " ")
   for defined_server in $( get_actual_members )
@@ -129,7 +129,7 @@ remove_unwanted_nodes()
     if [ `echo $wanted_servers| grep $defined_server|wc -l` -eq 0 ]
     then
       ${MONGO_CMD} --host <%= p("mongodb-server.morConf_replSetName") %>/$Master \
-  ${MONGO_CMD_PARAM} --eval 'rs.remove("'$defined_server':<%= morDbTypeport %>")'
+        ${MONGO_CMD_PARAM} --eval 'rs.remove("'$defined_server':<%= morDbTypeport %>")'
     fi
   done
 }
@@ -141,13 +141,13 @@ create_admin_users()
     while [ $CR -ne 0 ]
     do
       created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mor_current_ip %> \
-      --eval 'db.getUser("<%= p("mongodb-server.morDbUserAdminName") %>")' admin`
+        --eval 'db.getUser("<%= p("mongodb-server.morDbUserAdminName") %>")' admin`
       CR=$?
       [ $CR -eq 0 -a "$created" == "null" ] && CR=1
       if [ $CR -eq 0 ]
       then
         created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mor_current_ip %> \
-        --eval 'db.getUser("<%= p("mongodb-server.morDbRootAdminName") %>")' admin`
+          --eval 'db.getUser("<%= p("mongodb-server.morDbRootAdminName") %>")' admin`
         CR=$?
         [ $CR -eq 0 -a "$created" == "null" ] && CR=1
       fi
@@ -165,7 +165,7 @@ init_rs()
     while [ $CR -ne 0 ]
     do
       ${MONGO_CMD} --host <%= mor_current_ip %> \
-      ${MONGO_CMD_PARAM} < /var/vcap/jobs/${JOB_NAME}/js/initiate_rs.js
+        ${MONGO_CMD_PARAM} < /var/vcap/jobs/${JOB_NAME}/js/initiate_rs.js
       CR=$?
     done
     # wait until rs is fully active
@@ -190,7 +190,7 @@ then
   [ "$Master" == "" ] && start_bs || remove_unwanted_nodes
   # check if rs is already initialized
   if [ "$(${MONGO_CMD} --host <%= mor_current_ip %> ${MONGO_CMD_PARAM} \
-    --eval 'rs.status().codeName' 2>/dev/null)" == "NotYetInitialized" ]
+      --eval 'rs.status().codeName' 2>/dev/null)" == "NotYetInitialized" ]
   then
     init_rs
     create_admin_users
@@ -200,13 +200,13 @@ else
   export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u <%= p("mongodb-server.morDbRootAdminName") %> -p <%= p("mongodb-server.morDbRootAdminPwd") %> --authenticationDatabase admin"
   # check Master node if admin users have already been created
   admin_initialized=`${MONGO_CMD} --host $Master ${MONGO_CMD_PARAM} \
-  --eval 'db.getUser("<%= p("mongodb-server.morDbUserAdminName") %>")' admin`
+    --eval 'db.getUser("<%= p("mongodb-server.morDbUserAdminName") %>")' admin`
   CR=$?
   [ $CR -eq 0 -a "$admin_initialized" == "null" ] && CR=1
   if [ $CR -eq 0 ]
   then
     admin_initialized=`${MONGO_CMD} --host $Master  ${MONGO_CMD_PARAM} \
-    --eval 'db.getUser("<%= p("mongodb-server.morDbRootAdminName") %>")' admin`
+      --eval 'db.getUser("<%= p("mongodb-server.morDbRootAdminName") %>")' admin`
     CR=$?
     [ $CR -eq 0 -a "$admin_initialized" == "null" ] && CR=1
   fi
@@ -223,7 +223,7 @@ else
 
   # Adding current node to rs
   ${MONGO_CMD} --host <%= p("mongodb-server.morConf_replSetName") %>/$Master \
-  ${MONGO_CMD_PARAM} --eval 'rs.add("<%= mor_current_ip %>:<%= morDbTypeport %>")'
+    ${MONGO_CMD_PARAM} --eval 'rs.add("<%= mor_current_ip %>:<%= morDbTypeport %>")'
   [ $? -ne 0 ] && exit 1
   # need to wait for complete add before restarting
   _timeout=30
@@ -231,7 +231,7 @@ else
   while [ "$add_ok" == "false" ]
   do
     add_ok=`${MONGO_CMD} --host <%= mor_current_ip %>:<%= morDbTypeport %> ${MONGO_CMD_PARAM} \
-   --eval 'rs.isMaster().secondary'`
+      --eval 'rs.isMaster().secondary'`
     if [ "$add_ok" != "true" ]
     then
       sleep 2

@@ -1,18 +1,18 @@
 ---
 name: mongodb-server
 packages:
-- mongodb
-- gcc
-- openssl
-- compressors
+  - mongodb
+  - gcc
+  - openssl
+  - compressors
 consumes:
-- name: server
-  type: mongodb-server
-  
+  - name: server
+    type: mongodb-server
+
 provides:
-- name: server
-  type: mongodb-server 
-  
+  - name: server
+    type: mongodb-server
+
 templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
@@ -34,7 +34,7 @@ templates:
   js/initiate_rs.js.erb: js/initiate_rs.js
 
 properties:
-  mongodb-server.morDbVersion: 
+  mongodb-server.morDbVersion:
     default: 3.4.6
   mongodb-server.morDbToolVersion:
     default: 1.4.1
@@ -42,7 +42,7 @@ properties:
     default: rpm
   mongodb-server.morDbType:
     default: rs
-    description: Function of the mongod server - <rs> for replica set only, <cfg> for config server, (<sh> for shard server - not implemented yet) 
+    description: Function of the mongod server - <rs> for replica set only, <cfg> for config server, (<sh> for shard server - not implemented yet)
   mongodb-server.morSysReboot:
     default: 1
     description: Authorize the role to restart the server (don't work with a proxy_ssh)
@@ -93,7 +93,7 @@ properties:
     description: mongodb default user
   mongodb-server.morDbUserAdminPwd:
     default: MongoAdmin
-    description: 
+    description:
   mongodb-server.morDbRootAdminName:
     default: MongoRoot
     description:
@@ -104,16 +104,16 @@ properties:
     default:
       #- { name: testUser, password: passw0rd, roles: readWrite, database: app_development }
     description:
-  mongodb-server.mor_operator: 
+  mongodb-server.mor_operator:
     default: "vcap"
     description:  Mongodb mongod operator
   mongodb-server.mor_rsconfig:
     default: #mor_rsconfig: "{{ play_hosts }}"
     description: Mongodb mongod list
-  mongodb-server.mor_state: 
+  mongodb-server.mor_state:
     default: "present"
     description: Mongodb mongod state [ 'present', 'absent' ]
-  mongodb-server.mor_backup: 
+  mongodb-server.mor_backup:
     default: "absent"
     description: Mongodb backup state [ 'present', 'absent' ]
   mongodb-server.morDbCertificate:
@@ -121,7 +121,7 @@ properties:
     description: Mongodb certificate for ttl/ssl auth
   mongodb-server.morDbKeyfile:
     default: "NOT INITIALIZED"
-    description: Mongodb rsa key  
+    description: Mongodb rsa key
   mongodb-server.morConf_ssl:
     default: 1
-    description: use tls/ssl for authent and transactions     
+    description: use tls/ssl for authent and transactions
