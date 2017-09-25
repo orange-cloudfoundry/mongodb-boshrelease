@@ -1,18 +1,18 @@
 <%-
 # Mongodb version
-morDbVersion = p("mongodb-server.morDbVersion") 
+morDbVersion = p("mongodb-server.morDbVersion")
 morDbToolVersion = p("mongodb-server.morDbToolVersion")
 morSysDriverMongo = p("mongodb-server.morSysDriverMongo")
 #Function of the mongod server
-morDbType = p("mongodb-server.morDbType") 
+morDbType = p("mongodb-server.morDbType")
 # Authorize the role to restart the server (don't work with a proxy_ssh)
 morSysReboot = p("mongodb-server.morSysReboot")
 # The interface where the mongodb process should listen on.
-morSysIface = p("mongodb-server.morSysIface") 
+morSysIface = p("mongodb-server.morSysIface")
 # The mongodb extension name
-morSysAliasPrefix = p("mongodb-server.morSysAliasPrefix") 
-morSysAlias = p("mongodb-server.morSysAlias") 
-morSysDomain = p("mongodb-server.morSysDomain") 
+morSysAliasPrefix = p("mongodb-server.morSysAliasPrefix")
+morSysAlias = p("mongodb-server.morSysAlias")
+morSysDomain = p("mongodb-server.morSysDomain")
 # Mongodb logrotate
 morSysLogrotate = p("mongodb-server.morSysLogrotate")
 # mongodb storage engine part
@@ -41,7 +41,7 @@ morConfssl = p("mongodb-server.morConf_ssl")
 # Do not touch below
 #################################################################################################
 # Mongodb mongod operator
-mor_operator = p("mongodb-server.mor_operator") 
+mor_operator = p("mongodb-server.mor_operator")
 # Mongodb mongod list
 morConf_bindIp = "127.0.0.1," + link('server').instances[spec.index].address
 # morConf_bindIp = "127.0.0.1," + p("mongodb-server.spec.ip")
@@ -50,7 +50,7 @@ mor_state = p("mongodb-server.mor_state")
 # Mongodb backup state:
 mor_backup = p("mongodb-server.mor_backup")
 # Mongodb alias name used for the replica set communication
-#mor_hostname: = p("mongodb-server.mor_hostname") 
+#mor_hostname: = p("mongodb-server.mor_hostname")
 # Mongodb backup key file name (stored on the same level as playbook)
 #morConf_keyfileBackup = p("mongodb-server.morConf_keyfileBackup")
 # Add tag to the modified line (by ansible tasks)
@@ -69,10 +69,10 @@ if p("mongodb-server.morDbType") == "rs" -%>
 <%- if p("mongodb-server.morDbType") == "sh" -%><%- morDbTypeport=27018 -%><%- end -%>
 <%- if p("mongodb-server.morDbType") == "cfg" -%><%- morDbTypeport=27019 -%><%- end -%>
 <%- if p("mongodb-server.morDbType") == "mongos" -%><%- morDbTypeport=27017 -%><%- end -%>
-<%- # Retrieve all parts of the Mongodb version 
+<%- # Retrieve all parts of the Mongodb version
 /(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("mongodb-server.morDbVersion") #=> 0 -%>
 <%-
-morDbVersionMaj = _DbVersionMaj 
+morDbVersionMaj = _DbVersionMaj
 morDbVersionMid = _DbVersionMid
 morDbVersionMin = _DbVersionMin
 
@@ -81,13 +81,13 @@ morDbProductName = "mongodb-cf-release"
 #morDbPymongoName: mongodb-orange-python-pymongo
 #morDbToolName: mongodb-orange-tools
 morSysDbUser = "vcap"
-morSysDbGroup = "vcap" 
+morSysDbGroup = "vcap"
 # Mongodb directory
-morSysDb_dirRoot="/var/vcap/store/mongodb-server" 
-morSysDb_dirBackup="/var/vcap/store/mongodb-server/backup" 
+morSysDb_dirRoot="/var/vcap/store/mongodb-server"
+morSysDb_dirBackup="/var/vcap/store/mongodb-server/backup"
 morSysDb_dirCfg="/var/vcap/jobs/mongodb-server/config"
-morSysDb_dirSSL="/var/vcap/jobs/mongodb-server/ssl" 
-morSysDb_dirData="/var/vcap/store/mongodb-server/data" 
+morSysDb_dirSSL="/var/vcap/jobs/mongodb-server/ssl"
+morSysDb_dirData="/var/vcap/store/mongodb-server/data"
 morSysDb_dirLog="/var/vcap/sys/log/mongodb-server"
 morSysDb_dirRun="/var/vcap/sys/run/mongodb-server"
 morSysDb_dirManaged=[ morSysDb_dirRoot ,  morSysDb_dirBackup , morSysDb_dirCfg , morSysDb_dirData , morSysDb_dirLog , morSysDb_dirRun ]
@@ -105,16 +105,16 @@ tmpjournalenabled = morConf_journalenabled
 tmpoplogSizeMB = morConf_oplogSizeMB
 -%>
 <%- if_p("morConf_mmapv1smallFiles") do tmpsmallFiles = morConf_mmapv1smallFiles -%><%- end -%>
-<%- _arbiter_only = 0 
+<%- _arbiter_only = 0
 if_p("arbiter_only") do -%>
 	<%- if p("arbiter_only") == "yes" -%>
-		_arbiter_only = 1 
+		_arbiter_only = 1
 	<%- end -%>
 <%- end -%>
-<%- if _arbiter_only = 1 
+<%- if _arbiter_only = 1
     	tmpjournalenabled = "false"
    		tmpsmallFiles = "true"
-    	tmpoplogSizeMB = 1 
+    	tmpoplogSizeMB = 1
 end -%>
 systemLog:
   destination: file
@@ -165,7 +165,7 @@ storage:
 			<%- if_p("morConf_mmapv1_quota_maxFilesPerDB") do -%>
       maxFilesPerDB: <%= morConf_mmapv1_quota_maxFilesPerDB %>
 			<%- end -%>
-		<%- end -%>	
+		<%- end -%>
 	<%- end -%>
 	<%- if_p("morConf_commitIntervalMs") do -%>
 		<%- if morDbVersionMid == "0" -%>
@@ -201,12 +201,12 @@ net:
   unixDomainSocket:
     enabled: true
     pathPrefix: <%= morSysDb_dirRun %>
-<%- if morConfssl == 1 -%>   
+<%- if morConfssl == 1 -%>
   ssl:
     mode: requireSSL
     PEMKeyFile: <%= morConf_PEMKeyFile %>
     CAFile: <%= morConf_CAFile %>
-<%- end -%>          
+<%- end -%>
 <%- if morConf_authorization == 1 -%>
 <%- end -%>
 operationProfiling:

@@ -1,6 +1,6 @@
 #!/bin/bash
 #set -e
-set -u 
+set -u
 #set -x
 
 source `dirname $(readlink --canonicalize-existing $0)`/setenv
@@ -67,17 +67,17 @@ sys_update()
   if [ -f /etc/security/limits.conf ]
   then
     if [ `grep "$(cat $JOB_DIR/config/vcap_limits.conf)" /etc/security/limits.conf|wc -l` -eq 0 ]
-    then 	
+    then
       cat $JOB_DIR/config/vcap_limits.conf >> /etc/security/limits.conf
-    fi  
+    fi
   # Allow limits apply without rebooting
     if [ -f /etc/pam.d/common-session ]
     then
       if [ `grep "^session required pam_limits.so" /etc/pam.d/common-session|wc -l` -eq 0 ]
-      then	
+      then
         echo "# Allow limits apply without rebooting" >> /etc/pam.d/common-session
         echo "session required pam_limits.so" >> /etc/pam.d/common-session
-      fi  
+      fi
     fi
   fi
 
@@ -114,7 +114,7 @@ check_master()
         Master=$Server
       fi
     fi
-  done    
+  done
   echo $Master
 }
 
@@ -122,7 +122,7 @@ remove_unwanted_nodes()
 {
   export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
     -u <%= p("mongodb-server.morDbRootAdminName") %> -p <%= p("mongodb-server.morDbRootAdminPwd") %> --authenticationDatabase admin"
-  
+
   wanted_servers=$(echo <%= mor_rsconfig -%>|tr -s "," " ")
   for defined_server in $( get_actual_members )
   do
