@@ -20,6 +20,7 @@ templates:
   bin/mongodb-server_ctl: bin/mongodb_server_ctl
   bin/mongo.sh: bin/mongo.sh
   bin/mongo-ssl.sh: bin/mongo-ssl.sh
+  bin/mongoadmin.sh.erb: bin/mongoadmin.sh
   bin/setenv.erb: bin/setenv
   bin/monit_debugger: bin/monit_debugger
   bin/generate_ssl_cert.sh.erb: bin/generate_ssl_cert.sh
@@ -94,10 +95,10 @@ properties:
     default: MongoAdmin
     description: 
   mongodb-server.morDbRootAdminName:
-    default: siteRootAdmin
+    default: MongoRoot
     description:
   mongodb-server.morDbRootAdminPwd:
-    default: siteRootAdmin
+    default: MongoRoot
     description:
   mongodb-server.morDbManagedUsers:
     default:

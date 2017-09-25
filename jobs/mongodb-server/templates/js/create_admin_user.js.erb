@@ -1,12 +1,14 @@
 use admin
 if (db.system.users.find({user:'<%= p("mongodb-server.morDbUserAdminName") %>'}).count() == 0) {
-db.createUser(
+  db.createUser(
   {
     user: "<%= p("mongodb-server.morDbUserAdminName") %>",
     pwd: "<%= p("mongodb-server.morDbUserAdminPwd") %>",
     roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
   }
 )
+} else {
+  db.changeUserPassword("<%= p("mongodb-server.morDbUserAdminName") %>","<%= p("mongodb-server.morDbUserAdminPwd") %>")
 }
 if (db.system.users.find({user:'<%= p("mongodb-server.morDbRootAdminName") %>'}).count() == 0) {
 db.createUser(
@@ -16,4 +18,6 @@ db.createUser(
     roles: [ { role: "root", db: "admin" } ]
   }
 )
+} else {
+  db.changeUserPassword("<%= p("mongodb-server.morDbRootAdminName") %>","<%= p("mongodb-server.morDbRootAdminPwd") %>")
 }

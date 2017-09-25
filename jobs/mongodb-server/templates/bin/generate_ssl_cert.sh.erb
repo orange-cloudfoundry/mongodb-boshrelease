@@ -8,16 +8,13 @@ source `dirname $(readlink --canonicalize-existing $0)`/setenv
 pushd `dirname $(readlink --canonicalize-existing $0)` >/dev/null
 cd ${MONGODB_SSL}
 
-#[ -f server.pem ] && rm -f server.pem 
-#[ -f client.pem ] && rm -f client.pem
-
 touch .rnd
 export RANDFILE="${MONGODB_SSL}"/.rnd
 
 # generate only if client and server keys doesnt already exists
-if [ ! -f server.pem -o ! -f client.pem ]
+if [ ! -f ${MONGODB_SSL}/server.pem -o ! -f ${MONGODB_SSL}/client.pem ]
 then
-	<%- mor_current_ip = link('server').instances[spec.index].address -%>
+	<%- mor_current_ip = spec.ip -%>
 	perl -e 'my $n1=int(rand(10));my $n2=int(rand(10));print "$n1$n2\n"' > mongodb.srl # two random digits number
 	openssl genrsa -out server.key 2048
 	openssl req -key server.key -new -out server.req -subj  "/C=FR/ST=IDF/O=Cloud Foundry/CN=<%= mor_current_ip -%>/emailAddress=user@domain.com"
