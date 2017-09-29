@@ -4,40 +4,44 @@ job:
 index: 0
 properties: &props
   mongodb-server:
-    morDbVersion: 3.4.6
-    morDbToolVersion: 1.4.1
-    morSysDriverMongo: rpm
-    morDbType: rs
-    morSysReboot: 1
-    morSysIface: eth0
-    morSysAliasPrefix: ""
-    morSysAlias: -prd
-    morSysDomain: ""
-    morSysDb_diskperf_readahead: 16
-    morSysLogrotate: 1
-    morConf_engine: wiredTiger
-    morConf_mmapv1smallFiles: "false"
-    morConf_wiredTiger_cacheSizeGB: 1
-    morConf_slowOpThresholdMs: 100
-    morConf_replication: 1
-    morConf_replSetName: rs0
-    morConf_oplogSizeMB: 256
-    morConf_authorization: 1
-    morDbUserAdminName: MongoAdmin
-    morDbUserAdminPwd: MongoAdmin
-    morDbRootAdminName: MongoRoot
-    morDbRootAdminPwd: MongoRoot
-    morDbManagedUsers:
+    mongo_DbVersion: 3.4.6
+    mongo_DbToolVersion: 1.4.1
+    mongo_SysDriverMongo: rpm
+    mongo_DbType: rs
+    mongo_rs_port: 27017
+    mongo_cfg_port: 27019
+    mongo_sh_port: 27018
+    mongo_mongos_port: 27017
+    mongo_SysReboot: 1
+    mongo_SysIface: eth0
+    mongo_SysAliasPrefix: ""
+    mongo_SysAlias: -prd
+    mongo_SysDomain: ""
+    mongo_SysDb_diskperf_readahead: 16
+    mongo_SysLogrotate: 1
+    mongo_Conf_engine: wiredTiger
+    mongo_Conf_mmapv1smallFiles: "false"
+    mongo_Conf_wiredTiger_cacheSizeGB: 1
+    mongo_Conf_slowOpThresholdMs: 100
+    mongo_Conf_replication: 1
+    mongo_Conf_replSetName: rs0
+    mongo_Conf_oplogSizeMB: 256
+    mongo_Conf_authorization: 1
+    mongo_DbUserAdminName: MongoAdmin
+    mongo_DbUserAdminPwd: MongoAdmin
+    mongo_DbRootAdminName: MongoRoot
+    mongo_DbRootAdminPwd: MongoRoot
+    mongo_DbManagedUsers:
       - name: testUser
         password: passw0rd
         roles: readWrite
         database: app_development
-    mor_operator: "vcap"
-    mor_state: "present"
-    mor_backup: "absent"
-    morDbCertificate: "NOT INITIALIZED"
-    morDbKeyfile: "NOT INITIALIZED"
-    morConf_ssl: 1
+    mongo__operator: "vcap"
+    mongo__state: "present"
+    mongo__backup: "absent"
+    mongo_DbCertificate: "NOT INITIALIZED"
+    mongo_DbKeyfile: "NOT INITIALIZED"
+    mongo_Conf_ssl: 1
 
 links:
   server:
