@@ -1,0 +1,51 @@
+---
+job:
+  name: mongo-server
+index: 0
+properties: &props
+  mongodb-server:
+    morDbVersion: 3.4.6
+    morDbToolVersion: 1.4.1
+    morSysDriverMongo: rpm
+    morDbType: rs
+    morSysReboot: 1
+    morSysIface: eth0
+    morSysAliasPrefix: ""
+    morSysAlias: -prd
+    morSysDomain: ""
+    morSysDb_diskperf_readahead: 16
+    morSysLogrotate: 1
+    morConf_engine: wiredTiger
+    morConf_mmapv1smallFiles: "false"
+    morConf_wiredTiger_cacheSizeGB: 1
+    morConf_slowOpThresholdMs: 100
+    morConf_replication: 1
+    morConf_replSetName: rs0
+    morConf_oplogSizeMB: 256
+    morConf_authorization: 1
+    morDbUserAdminName: MongoAdmin
+    morDbUserAdminPwd: MongoAdmin
+    morDbRootAdminName: MongoRoot
+    morDbRootAdminPwd: MongoRoot
+    morDbManagedUsers:
+      - name: testUser
+        password: passw0rd
+        roles: readWrite
+        database: app_development
+    mor_operator: "vcap"
+    mor_state: "present"
+    mor_backup: "absent"
+    morDbCertificate: "NOT INITIALIZED"
+    morDbKeyfile: "NOT INITIALIZED"
+    morConf_ssl: 1
+
+links:
+  server:
+    instances:
+      - name: mongo-server
+        index: 0
+        id: 82D61059-08F7-4748-A4AA-BB14EDA903F1
+        az: z1
+        address: 1.2.3.4
+        properties: *props
+        bootstrap: true

@@ -1,0 +1,18 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    bosh-template (1.3262.24.0)
+      semi_semantic (~> 1.2.0)
+    semi_semantic (1.2.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bosh-template (~> 1.3262.24.0)
+
+RUBY VERSION
+   ruby 2.4.2p198
+
+BUNDLED WITH
+   1.15.4

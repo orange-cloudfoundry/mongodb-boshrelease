@@ -196,3 +196,17 @@ bosh -e [director name] -d [deployment name] -n deploy manifest.yml --vars-store
 ```
 
 > >
+
+
+## Contributing
+
+### Ruby Env Setup
+
+This my setup:
+
+    brew install ruby-build chruby
+    ruby-build 2.4.2 --install-dir ~/.rubies/ruby-2.4.2
+    gem update --system
+    gem install bundler
+    bundle install
+
