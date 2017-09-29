@@ -34,94 +34,100 @@ templates:
   js/initiate_rs.js.erb: js/initiate_rs.js
 
 properties:
-  mongodb-server.morDbVersion:
+  mongodb-server.mongo_DbVersion:
     default: 3.4.6
-  mongodb-server.morDbToolVersion:
+  mongodb-server.mongo_DbToolVersion:
     default: 1.4.1
-  mongodb-server.morSysDriverMongo:
+  mongodb-server.mongo_SysDriverMongo:
     default: rpm
-  mongodb-server.morDbType:
+  mongodb-server.mongo_DbType:
     default: rs
-    description: Function of the mongod server - <rs> for replica set only, <cfg> for config server, (<sh> for shard server - not implemented yet)
-  mongodb-server.morSysReboot:
+    description: Function of the mongod server - <rs> for replica set only (<cfg> for config server, <sh> for shard server - not implemented yet)
+  mongodb-server.mongo_rs_port:
+    default: 27017
+    description: Default mongodb port for replicasets
+  mongodb-server.mongo_cfg_port:
+    default: 27019
+    description: Default mongodb port for configserver / NOT IMPLEMENTED YET
+  mongodb-server.mongo_sh_port:
+    default: 27018
+    description: Default mongodb port for shards / NOT IMPLEMENTED YET
+  mongodb-server.mongo_mongos_port:
+    default: 27017
+    description: Default mongodb port for mongos / NOT IMPLEMENTED YET
+  mongodb-server.mongo_SysReboot:
     default: 1
     description: Authorize the role to restart the server (don't work with a proxy_ssh)
-  mongodb-server.morSysIface:
+  mongodb-server.mongo_SysIface:
     default: eth0
     description: The interface where the mongodb process should listen on.
-  mongodb-server.morSysAliasPrefix:
+  mongodb-server.mongo_SysAliasPrefix:
     default: ""
     description: The mongodb extension name - alias for the interface, ex pre-hostname-prd.domain.name
-  mongodb-server.morSysAlias:
+  mongodb-server.mongo_SysAlias:
     default: "-prd"
     description: The mongodb extension name - alias for the interface, ex pre-hostname-prd.domain.name
-  mongodb-server.morSysDomain:
+  mongodb-server.mongo_SysDomain:
     default: ""
     description: The mongodb extension name - alias for the interface, ex pre-hostname-prd.domain.name
-  mongodb-server.morSysDb_diskperf_readahead:
-    default: 16
-    description: disk tuning for databases purpose (devices linked to morSysDb_dirData.path) / if you don't have some sequential reads, do not touch
-  mongodb-server.morSysLogrotate:
+  mongodb-server.mongo_SysLogrotate:
     default: 1
     description: Mongodb logrotate
-  mongodb-server.morConf_engine:
+  mongodb-server.mongo_Conf_engine:
     default: wiredTiger
     description: mongodb storage engine part mmapv1 / wiredTiger / rocksdb
-  mongodb-server.morConf_mmapv1smallFiles:
+  mongodb-server.mongo_Conf_mmapv1smallFiles:
     default: "false"
     description:
-  mongodb-server.morConf_wiredTiger_cacheSizeGB:
+  mongodb-server.mongo_Conf_wiredTiger_cacheSizeGB:
     default: 1
     description: NOT CONFIGURED by default but can be set to minimize the wiredTiger cache
-  mongodb-server.morConf_slowOpThresholdMs:
+  mongodb-server.mongo_Conf_slowOpThresholdMs:
     default: 100
     description:
-  mongodb-server.morConf_replication:
+  mongodb-server.mongo_Conf_replication:
     default: 1
     description: mongodb replication part
-  mongodb-server.morConf_replSetName:
+  mongodb-server.mongo_Conf_replSetName:
     default: rs0
     description: replicaset name
-  mongodb-server.morConf_oplogSizeMB:
+  mongodb-server.mongo_Conf_oplogSizeMB:
     default: 256
     description:
-  mongodb-server.morConf_authorization:
+  mongodb-server.mongo_Conf_authorization:
     default: 1
     description: mongodb Auth part
-  mongodb-server.morDbUserAdminName:
+  mongodb-server.mongo_DbUserAdminName:
     default: MongoAdmin
     description: mongodb default user
-  mongodb-server.morDbUserAdminPwd:
+  mongodb-server.mongo_DbUserAdminPwd:
     default: MongoAdmin
     description:
-  mongodb-server.morDbRootAdminName:
+  mongodb-server.mongo_DbRootAdminName:
     default: MongoRoot
     description:
-  mongodb-server.morDbRootAdminPwd:
+  mongodb-server.mongo_DbRootAdminPwd:
     default: MongoRoot
     description:
-  mongodb-server.morDbManagedUsers:
+  mongodb-server.mongo_DbManagedUsers:
     default:
       #- { name: testUser, password: passw0rd, roles: readWrite, database: app_development }
     description:
-  mongodb-server.mor_operator:
+  mongodb-server.mongo__operator:
     default: "vcap"
     description:  Mongodb mongod operator
-  mongodb-server.mor_rsconfig:
-    default: #mor_rsconfig: "{{ play_hosts }}"
+  mongodb-server.mongo__rsconfig:
+    default: #mongo__rsconfig: "{{ play_hosts }}"
     description: Mongodb mongod list
-  mongodb-server.mor_state:
+  mongodb-server.mongo__state:
     default: "present"
     description: Mongodb mongod state [ 'present', 'absent' ]
-  mongodb-server.mor_backup:
+  mongodb-server.mongo__backup:
     default: "absent"
     description: Mongodb backup state [ 'present', 'absent' ]
-  mongodb-server.morDbCertificate:
+  mongodb-server.mongo_DbCertificate:
     default: "NOT INITIALIZED"
     description: Mongodb certificate for ttl/ssl auth
-  mongodb-server.morDbKeyfile:
-    default: "NOT INITIALIZED"
-    description: Mongodb rsa key
-  mongodb-server.morConf_ssl:
+  mongodb-server.mongo_Conf_ssl:
     default: 1
     description: use tls/ssl for authent and transactions

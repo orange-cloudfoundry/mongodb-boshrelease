@@ -10,6 +10,7 @@
 .final_builds/packages/**/*.tgz
 .gitreview
 .idea
+.dev_builds/
 config/dev.yml
 config/private.yml
 dev_releases

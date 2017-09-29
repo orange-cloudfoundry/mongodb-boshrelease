@@ -1,10 +1,18 @@
-<%- if p("mongodb-server.morDbType") == "rs" -%><%- morDbTypeport=27017 -%><%- end -%>
-<%- morConf_replSetName = p("mongodb-server.morConf_replSetName")
-morConf_bindIp = link('server').instances[0].address -%>
-<%- if p("mongodb-server.morDbType") == "sh" -%><%- morDbTypeport=27018 -%><%- end -%>
-<%- if p("mongodb-server.morDbType") == "cfg" -%><%- morDbTypeport=27019 -%><%- end -%>
-<%- if p("mongodb-server.morDbType") == "mongos" -%><%- morDbTypeport=27017 -%><%- end -%>
+<%- if p("mongodb-server.mongo_DbType") == "rs"
+	mongo_DbTypeport=p("mongodb-server.mongo_rs_port")
+end
+mongo_Conf_replSetName = p("mongodb-server.mongo_Conf_replSetName")
+mongo_Conf_bindIp = link('server').instances[0].address
+if p("mongodb-server.mongo_DbType") == "sh"
+  mongo_DbTypeport=p("mongodb-server.mongo_sh_port")
+end
+if p("mongodb-server.mongo_DbType") == "cfg"
+  mongo_DbTypeport=p("mongodb-server.mongo_cfg_port")
+end
+if p("mongodb-server.mongo_DbType") == "mongos"
+  mongo_DbTypeport=p("mongodb-server.mongo_mongos_port")
+end -%>
 rs.initiate( {
-   _id : "<%= morConf_replSetName %>",
-   members: [ { _id : 0, host : "<%= morConf_bindIp %>:<%= morDbTypeport %>" } ]
+   _id : "<%= mongo_Conf_replSetName %>",
+   members: [ { _id : 0, host : "<%= mongo_Conf_bindIp %>:<%= mongo_DbTypeport %>" } ]
 } )
