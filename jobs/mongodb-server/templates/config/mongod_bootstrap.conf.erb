@@ -58,13 +58,13 @@ mongo_RoleComment= "#BOSH orange.mongodb role comment#"
 
 # Managed the mongodb port binding depending on the mongodb role
 if p("mongodb-server.mongo_DbType") == "rs" 
-     mongo_DbTypeport=p("mongodb-server.mongo_rs_port") 
-     _mongo_rsconfig = ''
-     link('server').instances.each do |instance| 
-       _mongo_rsconfig = _mongo_rsconfig + instance.address + ':' + mongo_DbTypeport + ',' 
-   end -
-   # remove last ,
-   mongo_rsconfig = _mongo_rsconfig[0..-2]
+  mongo_DbTypeport=p("mongodb-server.mongo_rs_port") 
+  _mongo_rsconfig = ''
+  link('server').instances.each do |instance| 
+     _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport}," 
+  end
+  # remove last ,
+  mongo_rsconfig = _mongo_rsconfig[0..-2]
 end
 if p("mongodb-server.mongo_DbType") == "sh" 
   mongo_DbTypeport=p("mongodb-server.mongo_sh_port") 
