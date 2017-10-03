@@ -57,59 +57,113 @@ properties:
   mongodb.mongos_port:
     default: 27017
     description: Default mongodb port for mongos / NOT IMPLEMENTED YET
-  mongodb.Sys_Logrotate:
-    default: 1
-    description: Mongodb logrotate
-  mongodb.Conf_engine:
+  mongodb.storage_engine:
     default: wiredTiger
-    description: mongodb storage engine part mmapv1 / wiredTiger / rocksdb
-  mongodb.Conf_mmapv1smallFiles:
+    description: |
+      The storage engine for the mongod database.
+      Use "mmapv1" to specify the MMAPv1 Storage Engine.
+      Use "wiredTiger" to specify the WiredTiger Storage Engine.
+      Use "inMemory" to specify the In-Memory Storage Engine.
+
+      Ref: https://docs.mongodb.com/manual/reference/configuration-options/#storage.engine
+  mongodb.mmap_v1_small_files:
     default: "false"
-    description:
-  mongodb.Conf_wiredTiger_cacheSizeGB:
-    default: 1
-    description: NOT CONFIGURED by default but can be set to minimize the wiredTiger cache
-  mongodb.Conf_slowOpThresholdMs:
+    description: |
+      When 'true', MongoDB uses a smaller default file size. This option
+      reduces the initial size for data files and limits the maximum size to
+      512 megabytes. When "true", the size of each journal file will also be
+      reduced from 1 GB to 128 MB. Use this option if you have a large number
+      of databases that each holds a small quantity of data.
+
+      Setting this to "true" can lead the mongod instance to create a large
+      number of files, which can affect performance for larger databases.
+
+      Ref: https://docs.mongodb.com/manual/reference/configuration-options/#storage.mmapv1.smallFiles
+  mongodb.wired_tiger_cache_size_gb:
+    default: null
+    description: |
+      The maximum size of the internal cache that WiredTiger will use for all
+      data. Values can range from 256MB to 10TB and can be a float.
+
+      When this option is set to 'null' (without quotes), the WiredTiger
+      internal cache, by default, will use the larger of either: 50% of RAM
+      minus 1 GB, or 256 MB. Avoid increasing the WiredTiger internal cache
+      size above such default values.
+
+      The default WiredTiger internal cache size value assumes that there is a
+      single mongod instance per machine. If a single machine contains
+      multiple MongoDB instances, then you should decrease the setting to
+      accommodate the other mongod instances.
+
+      Ref: https://docs.mongodb.com/manual/reference/configuration-options/#storage.wiredTiger.engineConfig.cacheSizeGB
+  mongodb.slow_query_threshold_ms:
     default: 100
-    description:
-  mongodb.Conf_replication:
+    description: |
+      The threshold in milliseconds at which the database profiler considers a
+      query slow. MongoDB records all slow queries to the log, even when the
+      database profiler is off. When the profiler is on, it writes to the
+      'system.profile' collection.
+
+      Ref: https://docs.mongodb.com/manual/reference/configuration-options/#operationProfiling.slowOpThresholdMs
+  mongodb.replication.enable:
     default: 1
-    description: mongodb replication part
-  mongodb.Conf_replSetName:
+    description: |
+      When set to 1, this settings activates replication.
+  mongodb.replication.replica_set_name:
     default: rs0
-    description: replicaset name
-  mongodb.Conf_oplogSizeMB:
+    description: |
+      The name of the replica set that the mongod is part of. All hosts in the
+      replica set must have the same set name.
+
+      If your application connects to more than one replica set, each set
+      should have a distinct name. Some drivers group replica set connections
+      by replica set name.
+
+      Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.replSetName
+  mongodb.replication.operation_log_max_size_mb:
     default: 256
-    description:
-  mongodb.Conf_authorization:
+    description: |
+      The maximum size in megabytes for the replication operation log (i.e.,
+      the oplog). The mongod process creates an oplog based on the maximum
+      amount of space available. For 64-bit systems, the oplog is typically 5%
+      of available disk space. Once the mongod has created the oplog for the
+      first time, changing the this maximum size option will not affect the
+      size of the oplog.
+
+      Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.oplogSizeMB
+  mongodb.enable_role_based_access_control:
     default: 1
-    description: mongodb Auth part
-  mongodb.Db_UserAdminName:
+    description: |
+      When set to '1', this option enables Role-Based Access Control (RBAC) to
+      govern each user’s access to database resources and operations. In such
+      case, a user can access only the database resources and actions for
+      which they have been granted privileges.
+
+      When set to any other value, all users can access any database and
+      perform any action. This is meant to be done in development environments
+      only. Never disable this option in production.
+
+      Ref: https://docs.mongodb.com/manual/reference/configuration-options/#security.authorization
+  mongodb.admin_username:
     default: MongoAdmin
-    description: mongodb default user
-  mongodb.Db_UserAdminPwd:
-    default: MongoAdmin
-    description:
-  mongodb.Db_RootAdminName:
+    description: |
+      Username of the default admin user.
+  mongodb.admin_password:
+    description: |
+      Password for the admin user, in clear text.
+  mongodb.root_username:
     default: MongoRoot
-    description:
-  mongodb.Db_RootAdminPwd:
-    default: MongoRoot
-    description:
-  mongodb.operator:
-    default: "vcap"
-    description:  Mongodb mongod operator
-  mongodb.Db_Certificate:
+    description: |
+      Username of the default root user.
+  mongodb.root_password:
+    description: |
+      Password for the root user, in clear text.
+  mongodb.server_certificate:
     default:
       ca: "NOT INITIALIZED"
       private_key: "NOT INITIALIZED"
       certificate: "NOT INITIALIZED"
     description: Mongodb certificate for ttl/ssl auth
-  mongodb.Db_RootCertificate:
-    default:
-      certificate: "NOT INITIALIZED"
-      private_key: "NOT INITIALIZED"
-    description: Root certificate for ttl/ssl auth
-  mongodb.Conf_UseSSL:
+  mongodb.require_ssl:
     default: 1
-    description: use tls/ssl for authent and transactions
+    description: Use TLS/SSL for connecting to the server.

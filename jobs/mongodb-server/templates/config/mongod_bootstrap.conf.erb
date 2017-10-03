@@ -1,39 +1,11 @@
 <%-
-# Mongodb version
 DbVersion = p("mongodb.db_version")
 DbToolVersion = p("mongodb.db_tool_version")
-#Function of the mongod server
-DbType = p("mongodb.node_role")
-# Mongodb logrotate
-SysLogrotate = p("mongodb.Sys_Logrotate")
-# mongodb storage engine part
-Conf_engine = "wiredTiger" #default engine if not defined
-if_p("mongodb.Conf_engine") do
-  Conf_engine = p("mongodb.Conf_engine")
-end
-Conf_mmapv1smallFiles = p("mongodb.Conf_mmapv1smallFiles")
-# NOT CONFIGURED by default but can be set to minimize the wiredTiger cache
-# DEPRECATED
-# Conf_wiredTigercacheSizeGB: <%#= p("mongodb.Conf_wiredTigercacheSizeGB")
-Conf_slowOpThresholdMs = p("mongodb.Conf_slowOpThresholdMs")
-# mongodb replication part
-Conf_replication = p("mongodb.Conf_replication")
-Conf_replSetName = p("mongodb.Conf_replSetName")
-Conf_oplogSizeMB = p("mongodb.Conf_oplogSizeMB")
-# mongodb Auth part
-Conf_authorization = p("mongodb.Conf_authorization")
-DbUserAdminName = p("mongodb.Db_UserAdminName")
-DbUserAdminPwd = p("mongodb.Db_UserAdminPwd")
-DbRootAdminName = p("mongodb.Db_RootAdminName")
-DbRootAdminPwd = p("mongodb.Db_RootAdminPwd")
-Confssl = p("mongodb.Conf_UseSSL")
 #DbManagedUsers: <%#= p("mongodb.DbManagedUsers")
 #################################################################################################
 # Set default value if not defined in the playbook vars / group_vars / host_vars / inventory vars
 # Do not touch below
 #################################################################################################
-# Mongodb mongod operator
-Operator = p("mongodb.operator")
 # Mongodb mongod list
 Conf_bindIp = "127.0.0.1," + link('server').instances[spec.index].address
 # Conf_bindIp = "127.0.0.1," + p("mongodb.spec.ip")
@@ -73,8 +45,6 @@ DbVersionMin = _DbVersionMin
 DbProductName = "mongodb-cf-release"
 #DbPymongoName: mongodb-orange-python-pymongo
 #DbToolName: mongodb-orange-tools
-Sys_DbUser = Operator
-Sys_DbGroup = Operator
 # Mongodb directory
 Sys_Db_dirRoot="/var/vcap/store/mongodb-server"
 Sys_Db_dirCfg="/var/vcap/jobs/mongodb-server/config"
@@ -88,28 +58,22 @@ Conf_systemLog = Sys_Db_dirLog + "/mongod.log"
 #Conf_cfgFile = SysDb_dirCfg + "/mongod.conf"
 #Conf_pidFile = SysDb_dirRun + "/mongod.pid"
 Conf_port = DbTypeport
-Conf_journalenabled = "true"
 Conf_keyFile = Sys_Db_dirCfg + "/keyfile"
 Conf_PEMKeyFile = Sys_Db_dirSSL + "/server.pem"
 Conf_CAFile = Sys_Db_dirSSL + "/mongodb.ca"
-#Conf_mmapv1smallFiles = "false" #<= deprecated
-tmpjournalenabled = Conf_journalenabled
-tmpoplogSizeMB = Conf_oplogSizeMB
 
-if_p("Conf_mmapv1smallFiles") do
-  tmpsmallFiles = Conf_mmapv1smallFiles
-end
-_arbiter_only = 0
+storage_journal_enabled = "true"
+storage_mmap_v1_small_files = p("mongodb.mmap_v1_small_files")
+replication_oplog_size_mb = p("mongodb.replication.operation_log_max_size_mb")
+
 if_p("arbiter_only") do
-   if p("arbiter_only") == "yes"
-    _arbiter_only = 1
-   end
+  if p("arbiter_only") == "yes"
+    storage_journal_enabled = "false"
+    storage_mmap_v1_small_files = "true"
+    replication_oplog_size_mb = 1
+  end
 end
-if _arbiter_only = 1
-      tmpjournalenabled = "false"
-      tmpsmallFiles = "true"
-      tmpoplogSizeMB = 1
-end -%>
+-%>
 systemLog:
   destination: file
   path: <%= Conf_systemLog %>
@@ -125,26 +89,26 @@ storage:
   syncPeriodSecs: <%= Conf_syncPeriodSecs %>
 	<%- end -%>
   journal:
-    enabled: <%= tmpjournalenabled %>
+    enabled: <%= storage_journal_enabled %>
   <% if_p("Conf_commitIntervalMs") do %>
     commitIntervalMs: <%= Conf_commitIntervalMs %>
 	<%- end -%>
-  smallFiles: <%= tmpsmallFiles %>
+  smallFiles: <%= storage_mmap_v1_small_files %>
 <%- end -%>
 <%- if DbVersionMaj == "3" -%>
-  engine: <%= Conf_engine %>
+  engine: <%= p("mongodb.storage_engine") %>
   dbPath: <%= Sys_Db_dirData %>
   directoryPerDB: true
   journal:
-    enabled: <%= tmpjournalenabled %>
+    enabled: <%= storage_journal_enabled %>
 	<%- if_p("Conf_commitIntervalMs") do -%>
 		<% if DbVersionMid == "2" or DbVersionMid == "4" -%>
     commitIntervalMs: <%= Conf_commitIntervalMs %>
 		<%- end -%>
 	<%- end -%>
-	<%- if Conf_engine == "mmapv1" -%>
+	<%- if p("mongodb.storage_engine") == "mmapv1" -%>
   mmapv1:
-    smallFiles: <%= tmpsmallFiles %>
+    smallFiles: <%= storage_mmap_v1_small_files %>
 		<% if_p("Conf_mmapv1_preallocDataFiles") do -%>
     preallocDataFiles: <%= Conf_mmapv1_preallocDataFiles %>
 		<%- end -%>
@@ -167,12 +131,12 @@ storage:
       commitIntervalMs: <%= Conf_commitIntervalMs %>
 		<%- end -%>
 	<%- end -%>
-	<%- if Conf_engine == "wiredTiger" -%>
+	<%- if p("mongodb.storage_engine") == "wiredTiger" -%>
   wiredTiger:
     engineConfig:
       directoryForIndexes: true
-		<%- if_p("Conf_wiredTiger_cacheSizeGB") do -%>
-      cacheSizeGB: <%= Conf_wiredTiger_cacheSizeGB %>
+		<%- if_p("mongodb.wired_tiger_cache_size_gb") do -%>
+      cacheSizeGB: <%= p("mongodb.wired_tiger_cache_size_gb") %>
 		<%- end -%>
 		<%- if_p("Conf_wiredTiger_journalCompressor") do -%>
       journalCompressor: <%= Conf_wiredTiger_journalCompressor %>
@@ -195,7 +159,7 @@ net:
   unixDomainSocket:
     enabled: true
     pathPrefix: <%= Sys_Db_dirRun %>
-<%- if Confssl == 1 -%>
+<%- if p("mongodb.require_ssl") == 1 -%>
   ssl:
     mode: requireSSL
     PEMKeyFile: <%= Conf_PEMKeyFile %>
@@ -203,14 +167,12 @@ net:
     allowConnectionsWithoutCertificates: true
     allowInvalidHostnames: true
 <%- end -%>
-<%- if Conf_authorization == 1 -%>
-<%- end -%>
 operationProfiling:
-  slowOpThresholdMs: <%= Conf_slowOpThresholdMs %>
-<%- if Conf_replication == 1 -%>
+  slowOpThresholdMs: <%= p("mongodb.slow_query_threshold_ms") %>
+<%- if p("mongodb.replication.enable") == 1 -%>
 replication:
-  replSetName: <%= Conf_replSetName %>
-  oplogSizeMB: <%= tmpoplogSizeMB %>
+  replSetName: <%= p("mongodb.replication.replica_set_name") %>
+  oplogSizeMB: <%= replication_oplog_size_mb %>
 <%- end -%>
 setParameter:
   enableLocalhostAuthBypass: 1

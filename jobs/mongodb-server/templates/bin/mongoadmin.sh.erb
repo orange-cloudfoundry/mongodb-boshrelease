@@ -2,7 +2,7 @@
 
 source `dirname $(readlink --canonicalize-existing $0)`/setenv
 
-<%- if p("mongodb.Conf_UseSSL") == 0 -%>
+<%- if p("mongodb.require_ssl") == 0 -%>
 export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo.sh"
 <%- else -%>
 export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo-ssl.sh"
@@ -20,8 +20,8 @@ end -%>
 export PARAM="$@"
 
 pushd /var/vcap/packages/mongodb/bin >/dev/null
-${MONGO_CMD} --host <%= p("mongodb.Conf_replSetName") %>/<%= mongo_rsconfig %> \
- -u <%= p("mongodb.Db_RootAdminName") %> -p <%= p("mongodb.Db_RootAdminPwd") %> --authenticationDatabase admin \
+${MONGO_CMD} --host <%= p("mongodb.replication.replica_set_name") %>/<%= mongo_rsconfig %> \
+ -u <%= p("mongodb.root_username") %> -p <%= p("mongodb.root_password") %> --authenticationDatabase admin \
  $PARAM
 popd >/dev/null
 exit 0

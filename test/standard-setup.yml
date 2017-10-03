@@ -12,28 +12,26 @@ properties: &props
     cfg_port: 27019
     sh_port: 27018
     mongos_port: 27017
-    Sys_Logrotate: 1
-    Conf_engine: wiredTiger
-    Conf_mmapv1smallFiles: "false"
-    Conf_wiredTiger_cacheSizeGB: 1
-    Conf_slowOpThresholdMs: 100
-    Conf_replication: 1
-    Conf_replSetName: rs0
-    Conf_oplogSizeMB: 256
-    Conf_authorization: 1
-    Db_UserAdminName: MongoAdmin
-    Db_UserAdminPwd: MongoAdmin
-    Db_RootAdminName: MongoRoot
-    Db_RootAdminPwd: MongoRoot
+    storage_engine: wiredTiger
+    mmap_v1_small_files: "false"
+    wired_tiger_cache_size_gb: null
+    slow_query_threshold_ms: 100
+    replication:
+      enable: 1
+      replica_set_name: rs0
+      operation_log_max_size_mb: 256
+    enable_role_based_access_control: 1
+    admin_username: MongoAdmin
+    admin_password: MongoAdmin
+    root_username: MongoRoot
+    root_password: MongoRoot
     Db_ManagedUsers:
       - name: testUser
         password: passw0rd
         roles: readWrite
         database: app_development
-    operator: "vcap"
-    Db_Certificate: "NOT INITIALIZED"
-    Db_RootCertificate: "NOT INITIALIZED"
-    Conf_UseSSL: 1
+    server_certificate: "NOT INITIALIZED"
+    require_ssl: 1
 
 links:
   server:

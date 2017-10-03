@@ -1,7 +1,6 @@
 <%- if p("mongodb.node_role") == "rs"
 	DbTypeport=p("mongodb.rs_port")
 end
-Conf_replSetName = p("mongodb.Conf_replSetName")
 Conf_bindIp = link('server').instances[0].address
 if p("mongodb.node_role") == "sh"
   DbTypeport=p("mongodb.sh_port")
@@ -13,6 +12,6 @@ if p("mongodb.node_role") == "mongos"
   DbTypeport=p("mongodb.mongos_port")
 end -%>
 rs.initiate( {
-   _id : "<%= Conf_replSetName %>",
+   _id : "<%= p('mongodb.replication.replica_set_name') %>",
    members: [ { _id : 0, host : "<%= Conf_bindIp %>:<%= DbTypeport %>" } ]
 } )
