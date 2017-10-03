@@ -98,6 +98,10 @@ mongodb/rocksdb-5.5.5.tar.gz:
   size: 3282156
   object_id: 3251977e-18df-4372-57fa-312057292913
   sha: 8df3c5f2356ac4e7d9cb31c5df7270735ef5c8a8
+openjdk/openjdk.tar.gz:
+  size: 126476497
+  object_id: eb5177af-ce3b-4dfd-657d-ae9b84a255a7
+  sha: 9fc65908420c92047346e5bcc66fee0aad422c5e
 openssl/openssl-1.0.2l.tar.gz:
   size: 5365054
   object_id: 9f062ca5-a102-4b3c-687c-ff8fe2080ac0

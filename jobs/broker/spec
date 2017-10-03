@@ -1,0 +1,30 @@
+---
+name: broker
+packages:
+- java-common
+- openjdk
+- mongodb-broker-pkg
+consumes:
+- name: server
+  type: mongodb-server
+
+templates:
+  bin/ctl: bin/ctl
+  bin/monit_debugger: bin/monit_debugger
+  data/properties.sh.erb: data/properties.sh
+  helpers/ctl_setup.sh: helpers/ctl_setup.sh
+  helpers/ctl_utils.sh: helpers/ctl_utils.sh
+  config/application.yml.erb: config/application.yml
+  config/log4j.xml.erb: config/log4j.xml
+properties:
+  broker.user:
+    description: mongodb service broker user
+    default: broker
+  broker.password:
+    description: mongodb service broker password
+  mongodb_node.root_username:
+    description: mongodb root username
+  mongodb_node.root_password:
+    description: mongodb root password
+ 
+
