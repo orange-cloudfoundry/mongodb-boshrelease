@@ -1,23 +1,23 @@
 use admin
-if (db.system.users.find({user:'<%= p("mongodb-server.Db_UserAdminName") %>'}).count() == 0) {
+if (db.system.users.find({user:'<%= p("mongodb.Db_UserAdminName") %>'}).count() == 0) {
   db.createUser(
   {
-    user: "<%= p("mongodb-server.Db_UserAdminName") %>",
-    pwd: "<%= p("mongodb-server.Db_UserAdminPwd") %>",
+    user: "<%= p("mongodb.Db_UserAdminName") %>",
+    pwd: "<%= p("mongodb.Db_UserAdminPwd") %>",
     roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
   }
 )
 } else {
-  db.changeUserPassword("<%= p("mongodb-server.Db_UserAdminName") %>","<%= p("mongodb-server.Db_UserAdminPwd") %>")
+  db.changeUserPassword("<%= p("mongodb.Db_UserAdminName") %>","<%= p("mongodb.Db_UserAdminPwd") %>")
 }
-if (db.system.users.find({user:'<%= p("mongodb-server.Db_RootAdminName") %>'}).count() == 0) {
+if (db.system.users.find({user:'<%= p("mongodb.Db_RootAdminName") %>'}).count() == 0) {
 db.createUser(
   {
-    user: "<%= p("mongodb-server.Db_RootAdminName") %>",
-    pwd: "<%= p("mongodb-server.Db_RootAdminPwd") %>",
+    user: "<%= p("mongodb.Db_RootAdminName") %>",
+    pwd: "<%= p("mongodb.Db_RootAdminPwd") %>",
     roles: [ { role: "root", db: "admin" } ]
   }
 )
 } else {
-  db.changeUserPassword("<%= p("mongodb-server.Db_RootAdminName") %>","<%= p("mongodb-server.Db_RootAdminPwd") %>")
+  db.changeUserPassword("<%= p("mongodb.Db_RootAdminName") %>","<%= p("mongodb.Db_RootAdminPwd") %>")
 }

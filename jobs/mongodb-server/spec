@@ -35,90 +35,90 @@ templates:
   js/initiate_rs.js.erb: js/initiate_rs.js
 
 properties:
-  mongodb-server.Db_Version:
+  mongodb.Db_Version:
     default: 3.4.6
-  mongodb-server.Db_Tool_Version:
+  mongodb.Db_Tool_Version:
     default: 1.4.1
-  mongodb-server.Db_Type:
+  mongodb.Db_Type:
     default: rs
     description: Function of the mongod server - <rs> for replica set only (<cfg> for config server, <sh> for shard server - not implemented yet)
-  mongodb-server.rs_port:
+  mongodb.rs_port:
     default: 27017
     description: Default mongodb port for replicasets
-  mongodb-server.cfg_port:
+  mongodb.cfg_port:
     default: 27019
     description: Default mongodb port for configserver / NOT IMPLEMENTED YET
-  mongodb-server.sh_port:
+  mongodb.sh_port:
     default: 27018
     description: Default mongodb port for shards / NOT IMPLEMENTED YET
-  mongodb-server.mongos_port:
+  mongodb.mongos_port:
     default: 27017
     description: Default mongodb port for mongos / NOT IMPLEMENTED YET
-  mongodb-server.Sys_Reboot:
+  mongodb.Sys_Reboot:
     default: 1
     description: Authorize the role to restart the server (don't work with a proxy_ssh)
-  mongodb-server.Sys_Logrotate:
+  mongodb.Sys_Logrotate:
     default: 1
     description: Mongodb logrotate
-  mongodb-server.Conf_engine:
+  mongodb.Conf_engine:
     default: wiredTiger
     description: mongodb storage engine part mmapv1 / wiredTiger / rocksdb
-  mongodb-server.Conf_mmapv1smallFiles:
+  mongodb.Conf_mmapv1smallFiles:
     default: "false"
     description:
-  mongodb-server.Conf_wiredTiger_cacheSizeGB:
+  mongodb.Conf_wiredTiger_cacheSizeGB:
     default: 1
     description: NOT CONFIGURED by default but can be set to minimize the wiredTiger cache
-  mongodb-server.Conf_slowOpThresholdMs:
+  mongodb.Conf_slowOpThresholdMs:
     default: 100
     description:
-  mongodb-server.Conf_replication:
+  mongodb.Conf_replication:
     default: 1
     description: mongodb replication part
-  mongodb-server.Conf_replSetName:
+  mongodb.Conf_replSetName:
     default: rs0
     description: replicaset name
-  mongodb-server.Conf_oplogSizeMB:
+  mongodb.Conf_oplogSizeMB:
     default: 256
     description:
-  mongodb-server.Conf_authorization:
+  mongodb.Conf_authorization:
     default: 1
     description: mongodb Auth part
-  mongodb-server.Db_UserAdminName:
+  mongodb.Db_UserAdminName:
     default: MongoAdmin
     description: mongodb default user
-  mongodb-server.Db_UserAdminPwd:
+  mongodb.Db_UserAdminPwd:
     default: MongoAdmin
     description:
-  mongodb-server.Db_RootAdminName:
+  mongodb.Db_RootAdminName:
     default: MongoRoot
     description:
-  mongodb-server.Db_RootAdminPwd:
+  mongodb.Db_RootAdminPwd:
     default: MongoRoot
     description:
-  mongodb-server.operator:
+  mongodb.operator:
     default: "vcap"
     description:  Mongodb mongod operator
-  mongodb-server.rs_config:
+  mongodb.rs_config:
     default: #mongo__rsconfig: "{{ play_hosts }}"
     description: Mongodb mongod list
-  mongodb-server.state:
+  mongodb.state:
     default: "present"
     description: Mongodb mongod state [ 'present', 'absent' ]
-  mongodb-server.backup:
+  mongodb.backup:
     default: "absent"
     description: Mongodb backup state [ 'present', 'absent' ]
-  mongodb-server.Db_Certificate:
+  mongodb.Db_Certificate:
     default:
       ca: "NOT INITIALIZED"
       private_key: "NOT INITIALIZED"
       certificate: "NOT INITIALIZED"
     description: Mongodb certificate for ttl/ssl auth
-  mongodb-server.Db_RootCertificate:
+  mongodb.Db_RootCertificate:
     default:
       certificate: "NOT INITIALIZED"
       private_key: "NOT INITIALIZED"
     description: Root certificate for ttl/ssl auth
-  mongodb-server.Conf_UseSSL:
+  mongodb.Conf_UseSSL:
     default: 1
     description: use tls/ssl for authent and transactions

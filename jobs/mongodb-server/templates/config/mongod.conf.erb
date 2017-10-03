@@ -1,58 +1,58 @@
 <%-
 # Mongodb version
-mongo_DbVersion = p("mongodb-server.Db_Version")
-mongo_DbToolVersion = p("mongodb-server.Db_Tool_Version")
+mongo_DbVersion = p("mongodb.Db_Version")
+mongo_DbToolVersion = p("mongodb.Db_Tool_Version")
 #Function of the mongod server
-mongo_DbType = p("mongodb-server.Db_Type")
+mongo_DbType = p("mongodb.Db_Type")
 # Authorize the role to restart the server (don't work with a proxy_ssh)
-mongo_SysReboot = p("mongodb-server.Sys_Reboot")
+mongo_SysReboot = p("mongodb.Sys_Reboot")
 # Mongodb logrotate
-mongo_SysLogrotate = p("mongodb-server.Sys_Logrotate")
+mongo_SysLogrotate = p("mongodb.Sys_Logrotate")
 # mongodb storage engine part
 mongo_Conf_engine = "wiredTiger" #default engine if not defined
-if_p("mongodb-server.Conf_engine") do
-  mongo_Conf_engine = p("mongodb-server.Conf_engine")
+if_p("mongodb.Conf_engine") do
+  mongo_Conf_engine = p("mongodb.Conf_engine")
 end
-mongo_Conf_mmapv1smallFiles = p("mongodb-server.Conf_mmapv1smallFiles")
+mongo_Conf_mmapv1smallFiles = p("mongodb.Conf_mmapv1smallFiles")
 # NOT CONFIGURED by default but can be set to minimize the wiredTiger cache
 # DEPRECATED
-# Conf_wiredTigercacheSizeGB: <%#= p("mongodb-server.Conf_wiredTigercacheSizeGB")
-mongo_Conf_slowOpThresholdMs = p("mongodb-server.Conf_slowOpThresholdMs")
+# Conf_wiredTigercacheSizeGB: <%#= p("mongodb.Conf_wiredTigercacheSizeGB")
+mongo_Conf_slowOpThresholdMs = p("mongodb.Conf_slowOpThresholdMs")
 # mongodb replication part
-mongo_Conf_replication = p("mongodb-server.Conf_replication")
-mongo_Conf_replSetName = p("mongodb-server.Conf_replSetName")
-mongo_Conf_oplogSizeMB = p("mongodb-server.Conf_oplogSizeMB")
+mongo_Conf_replication = p("mongodb.Conf_replication")
+mongo_Conf_replSetName = p("mongodb.Conf_replSetName")
+mongo_Conf_oplogSizeMB = p("mongodb.Conf_oplogSizeMB")
 # mongodb Auth part
-mongo_Conf_authorization = p("mongodb-server.Conf_authorization")
-mongo_DbUserAdminName = p("mongodb-server.Db_UserAdminName")
-mongo_DbUserAdminPwd = p("mongodb-server.Db_UserAdminPwd")
-DbRootAdminName = p("mongodb-server.Db_RootAdminName")
-DbRootAdminPwd = p("mongodb-server.Db_RootAdminPwd")
-Confssl = p("mongodb-server.Conf_UseSSL")
-#DbManagedUsers: <%#= p("mongodb-server.DbManagedUsers")
+mongo_Conf_authorization = p("mongodb.Conf_authorization")
+mongo_DbUserAdminName = p("mongodb.Db_UserAdminName")
+mongo_DbUserAdminPwd = p("mongodb.Db_UserAdminPwd")
+DbRootAdminName = p("mongodb.Db_RootAdminName")
+DbRootAdminPwd = p("mongodb.Db_RootAdminPwd")
+Confssl = p("mongodb.Conf_UseSSL")
+#DbManagedUsers: <%#= p("mongodb.DbManagedUsers")
 #################################################################################################
 # Set default value if not defined in the playbook vars / group_vars / host_vars / inventory vars
 # Do not touch below
 #################################################################################################
 # Mongodb mongod operator
-Operator = p("mongodb-server.operator")
+Operator = p("mongodb.operator")
 # Mongodb mongod list
 Conf_bindIp = "127.0.0.1,#{spec.ip}"
-# Conf_bindIp = "127.0.0.1," + p("mongodb-server.spec.ip")
+# Conf_bindIp = "127.0.0.1," + p("mongodb.spec.ip")
 # Mongodb mongod state:
-State = p("mongodb-server.state")
+State = p("mongodb.state")
 # Mongodb backup state:
-Backup = p("mongodb-server.backup")
+Backup = p("mongodb.backup")
 # Mongodb alias name used for the replica set communication
-#_hostname: = p("mongodb-server._hostname")
+#_hostname: = p("mongodb._hostname")
 # Mongodb backup key file name (stored on the same level as playbook)
-#Conf_keyfileBackup = p("mongodb-server.Conf_keyfileBackup")
+#Conf_keyfileBackup = p("mongodb.Conf_keyfileBackup")
 # Add tag to the modified line (by ansible tasks)
 RoleComment= "#BOSH orange.mongodb role comment#"
 
 # Managed the mongodb port binding depending on the mongodb role
-if p("mongodb-server.Db_Type") == "rs"
-  DbTypeport=p("mongodb-server.rs_port")
+if p("mongodb.Db_Type") == "rs"
+  DbTypeport=p("mongodb.rs_port")
   _rsconfig = ''
   link('server').instances.each do |instance|
     _rsconfig = "#{_rsconfig}#{instance.address}:#{DbTypeport},"
@@ -60,18 +60,18 @@ if p("mongodb-server.Db_Type") == "rs"
   # remove last ,
   rsconfig = _rsconfig[0..-2]
 end
-if p("mongodb-server.Db_Type") == "sh"
-  DbTypeport=p("mongodb-server.sh_port")
+if p("mongodb.Db_Type") == "sh"
+  DbTypeport=p("mongodb.sh_port")
 end
-if p("mongodb-server.Db_Type") == "cfg"
-  DbTypeport=p("mongodb-server.cfg_port")
+if p("mongodb.Db_Type") == "cfg"
+  DbTypeport=p("mongodb.cfg_port")
 end
-if p("mongodb-server.Db_Type") == "mongos"
-  DbTypeport=p("mongodb-server.mongos_port")
+if p("mongodb.Db_Type") == "mongos"
+  DbTypeport=p("mongodb.mongos_port")
 end
 
 # Retrieve all parts of the Mongodb version
-/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("mongodb-server.Db_Version") #=> 0
+/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("mongodb.Db_Version") #=> 0
 
 DbVersionMaj = _DbVersionMaj
 DbVersionMid = _DbVersionMid
