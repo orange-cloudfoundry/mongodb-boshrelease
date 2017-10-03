@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.springframework.cloud</groupId>
-	<artifactId>cloudfoundry-service-broker</artifactId>
+	<artifactId>mongodb-open-service-broker</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>cloudfoundry-service-broker</name>
+	<name>mongodb-open-service-broker</name>
 	<description></description>
 
 	<parent>
@@ -21,7 +21,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.7</java.version>
-		<springCloudServiceBrokerVersion>1.0.0.RC3</springCloudServiceBrokerVersion>
+		<springCloudServiceBrokerVersion>1.0.0.RELEASE</springCloudServiceBrokerVersion>
 	</properties>
 
 	<dependencies>
@@ -49,6 +49,13 @@
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.6</version>
+		</dependency>
+
 	</dependencies>
 	
 	<build>
@@ -60,11 +67,4 @@
 		</plugins>
 	</build>
 
-	<repositories>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/libs-milestone/</url>
-		</repository>
-	</repositories>
 </project>
