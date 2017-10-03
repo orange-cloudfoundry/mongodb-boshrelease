@@ -1,7 +1,7 @@
 mongodb:
-  host: 192.168.170.2
+  host: 127.0.0.1
   port: 27017
-  username: admin
-  password: password
+  username: myUserAdmin
+  password: abc123
   SECURITY_USER_NAME: user
   SECURITY_USER_PASSWORD: MySecurePwd
