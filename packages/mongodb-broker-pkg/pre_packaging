@@ -1,0 +1,13 @@
+set -e
+set -u
+set -x
+
+. common/setup-java-prepackaging.sh
+
+cd ${BUILD_DIR}/mongodb-open-service-broker
+./mvnw clean install -DskipTests=true
+mv target/mongodb-open-service-broker-0.0.1-SNAPSHOT.jar ${BUILD_DIR}
+
+cd ${BUILD_DIR}
+rm -rf mongodb-open-service-broker 
+
