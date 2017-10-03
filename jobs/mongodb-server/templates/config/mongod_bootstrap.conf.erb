@@ -1,11 +1,9 @@
 <%-
 # Mongodb version
-DbVersion = p("mongodb.Db_Version")
-DbToolVersion = p("mongodb.Db_Tool_Version")
+DbVersion = p("mongodb.db_version")
+DbToolVersion = p("mongodb.db_tool_version")
 #Function of the mongod server
-DbType = p("mongodb.Db_Type")
-# Authorize the role to restart the server (don't work with a proxy_ssh)
-SysReboot = p("mongodb.Sys_Reboot")
+DbType = p("mongodb.node_role")
 # Mongodb logrotate
 SysLogrotate = p("mongodb.Sys_Logrotate")
 # mongodb storage engine part
@@ -39,19 +37,13 @@ Operator = p("mongodb.operator")
 # Mongodb mongod list
 Conf_bindIp = "127.0.0.1," + link('server').instances[spec.index].address
 # Conf_bindIp = "127.0.0.1," + p("mongodb.spec.ip")
-# Mongodb mongod state:
-State = p("mongodb.state")
-# Mongodb backup state:
-Backup = p("mongodb.backup")
 # Mongodb alias name used for the replica set communication
 #_hostname: = p("mongodb._hostname")
-# Mongodb backup key file name (stored on the same level as playbook)
-#Conf_keyfileBackup = p("mongodb.Conf_keyfileBackup")
 # Add tag to the modified line (by ansible tasks)
 RoleComment= "#BOSH orange.mongodb role comment#"
 
 # Managed the mongodb port binding depending on the mongodb role
-if p("mongodb.Db_Type") == "rs"
+if p("mongodb.node_role") == "rs"
   DbTypeport=p("mongodb.rs_port")
   _rsconfig = ''
   link('server').instances.each do |instance|
@@ -60,18 +52,18 @@ if p("mongodb.Db_Type") == "rs"
   # remove last ,
   rsconfig = _rsconfig[0..-2]
 end
-if p("mongodb.Db_Type") == "sh"
+if p("mongodb.node_role") == "sh"
   DbTypeport=p("mongodb.sh_port")
 end
-if p("mongodb.Db_Type") == "cfg"
+if p("mongodb.node_role") == "cfg"
   DbTypeport=p("mongodb.cfg_port")
 end
-if p("mongodb.Db_Type") == "mongos"
+if p("mongodb.node_role") == "mongos"
   DbTypeport=p("mongodb.mongos_port")
 end
 
 # Retrieve all parts of the Mongodb version
-/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("mongodb.Db_Version") #=> 0
+/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("mongodb.db_version") #=> 0
 
 DbVersionMaj = _DbVersionMaj
 DbVersionMid = _DbVersionMid
@@ -85,13 +77,12 @@ Sys_DbUser = Operator
 Sys_DbGroup = Operator
 # Mongodb directory
 Sys_Db_dirRoot="/var/vcap/store/mongodb-server"
-Sys_Db_dirBackup="/var/vcap/store/mongodb-server/backup"
 Sys_Db_dirCfg="/var/vcap/jobs/mongodb-server/config"
 Sys_Db_dirSSL="/var/vcap/jobs/mongodb-server/ssl"
 Sys_Db_dirData="/var/vcap/store/mongodb-server/data"
 Sys_Db_dirLog="/var/vcap/sys/log/mongodb-server"
 Sys_Db_dirRun="/var/vcap/sys/run/mongodb-server"
-Sys_Db_dirManaged=[ Sys_Db_dirRoot ,  Sys_Db_dirBackup , Sys_Db_dirCfg , Sys_Db_dirData , Sys_Db_dirLog , Sys_Db_dirRun ]
+Sys_Db_dirManaged = [ Sys_Db_dirRoot, Sys_Db_dirCfg, Sys_Db_dirData, Sys_Db_dirLog, Sys_Db_dirRun ]
 # Mongodb configuration parameters
 Conf_systemLog = Sys_Db_dirLog + "/mongod.log"
 #Conf_cfgFile = SysDb_dirCfg + "/mongod.conf"

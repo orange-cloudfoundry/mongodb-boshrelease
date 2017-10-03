@@ -50,7 +50,6 @@ export LOG_DIR=/var/vcap/sys/log/$JOB_NAME
 export TMP_DIR=/var/vcap/sys/tmp/$JOB_NAME
 export STORE_DIR=/var/vcap/store/$JOB_NAME
 export DATA_DIR=$STORE_DIR/data
-export BACKUP_DIR=$STORE_DIR/backup
 export TMPDIR=$TMP_DIR
 
 PIDFILE=$RUN_DIR/$output_label.pid

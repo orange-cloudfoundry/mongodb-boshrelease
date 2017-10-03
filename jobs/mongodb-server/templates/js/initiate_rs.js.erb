@@ -1,15 +1,15 @@
-<%- if p("mongodb.Db_Type") == "rs"
+<%- if p("mongodb.node_role") == "rs"
 	DbTypeport=p("mongodb.rs_port")
 end
 Conf_replSetName = p("mongodb.Conf_replSetName")
 Conf_bindIp = link('server').instances[0].address
-if p("mongodb.Db_Type") == "sh"
+if p("mongodb.node_role") == "sh"
   DbTypeport=p("mongodb.sh_port")
 end
-if p("mongodb.Db_Type") == "cfg"
+if p("mongodb.node_role") == "cfg"
   DbTypeport=p("mongodb.cfg_port")
 end
-if p("mongodb.Db_Type") == "mongos"
+if p("mongodb.node_role") == "mongos"
   DbTypeport=p("mongodb.mongos_port")
 end -%>
 rs.initiate( {
