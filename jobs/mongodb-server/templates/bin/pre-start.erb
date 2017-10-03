@@ -6,21 +6,17 @@ set -u
 source `dirname $(readlink --canonicalize-existing $0)`/setenv
 
 <%-
-if p("mongodb-server.mongo_DbType") == "rs"
-  mongo_DbTypeport = p("mongodb-server.mongo_rs_port")
+if p("mongodb-server.Db_Type") == "rs"
+  mongo_DbTypeport = p("mongodb-server.rs_port")
   _mongo_rsconfig = ''
   link('server').instances.each do |instance|
     _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport},"
   end
   # remove last ,
   mongo_rsconfig = _mongo_rsconfig[0..-2]
-  mongo__hostconfig = ''
-  link('server').instances.each do |instance|
-    mongo__hostconfig = mongo__hostconfig + instance.address + ' ' + instance.name
-  end
   mongo__current_ip = spec.ip
 end
-if p("mongodb-server.mongo_Conf_ssl") == 0 -%>
+if p("mongodb-server.Conf_UseSSL") == 0 -%>
 export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo.sh"
 <%- else -%>
 # Generate the certificates
@@ -107,8 +103,8 @@ check_master()
     then
       Master=$Server
     else
-      if [ "`${MONGO_CMD} --host $Server -u '<%= p("mongodb-server.mongo_DbRootAdminName") %>' \
-          -p '<%= p("mongodb-server.mongo_DbRootAdminPwd") %>' --authenticationDatabase admin \
+      if [ "`${MONGO_CMD} --host $Server -u '<%= p("mongodb-server.Db_RootAdminName") %>' \
+          -p '<%= p("mongodb-server.Db_RootAdminPwd") %>' --authenticationDatabase admin \
           ${MONGO_CMD_PARAM} --eval 'db.isMaster().ismaster' 2>/dev/null`" == "true" ]
       then
         Master=$Server
@@ -121,14 +117,14 @@ check_master()
 remove_unwanted_nodes()
 {
   export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
-    -u <%= p("mongodb-server.mongo_DbRootAdminName") %> -p <%= p("mongodb-server.mongo_DbRootAdminPwd") %> --authenticationDatabase admin"
+    -u <%= p("mongodb-server.Db_RootAdminName") %> -p <%= p("mongodb-server.Db_RootAdminPwd") %> --authenticationDatabase admin"
 
   wanted_servers=$(echo <%= mongo_rsconfig -%>|tr -s "," " ")
   for defined_server in $( get_actual_members )
   do
     if [ `echo $wanted_servers| grep $defined_server|wc -l` -eq 0 ]
     then
-      ${MONGO_CMD} --host <%= p("mongodb-server.mongo_Conf_replSetName") %>/$Master \
+      ${MONGO_CMD} --host <%= p("mongodb-server.Conf_replSetName") %>/$Master \
         ${MONGO_CMD_PARAM} --eval 'rs.remove("'$defined_server':<%= mongo_DbTypeport %>")'
     fi
   done
@@ -141,13 +137,13 @@ create_admin_users()
     while [ $CR -ne 0 ]
     do
       created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mongo__current_ip %> \
-        --eval 'db.getUser("<%= p("mongodb-server.mongo_DbUserAdminName") %>")' admin`
+        --eval 'db.getUser("<%= p("mongodb-server.Db_UserAdminName") %>")' admin`
       CR=$?
       [ $CR -eq 0 -a "$created" == "null" ] && CR=1
       if [ $CR -eq 0 ]
       then
         created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mongo__current_ip %> \
-          --eval 'db.getUser("<%= p("mongodb-server.mongo_DbRootAdminName") %>")' admin`
+          --eval 'db.getUser("<%= p("mongodb-server.Db_RootAdminName") %>")' admin`
         CR=$?
         [ $CR -eq 0 -a "$created" == "null" ] && CR=1
       fi
@@ -197,16 +193,16 @@ then
  fi
 else
   start_bs
-  export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u <%= p("mongodb-server.mongo_DbRootAdminName") %> -p <%= p("mongodb-server.mongo_DbRootAdminPwd") %> --authenticationDatabase admin"
+  export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u <%= p("mongodb-server.Db_RootAdminName") %> -p <%= p("mongodb-server.Db_RootAdminPwd") %> --authenticationDatabase admin"
   # check Master node if admin users have already been created
   admin_initialized=`${MONGO_CMD} --host $Master ${MONGO_CMD_PARAM} \
-    --eval 'db.getUser("<%= p("mongodb-server.mongo_DbUserAdminName") %>")' admin`
+    --eval 'db.getUser("<%= p("mongodb-server.Db_UserAdminName") %>")' admin`
   CR=$?
   [ $CR -eq 0 -a "$admin_initialized" == "null" ] && CR=1
   if [ $CR -eq 0 ]
   then
     admin_initialized=`${MONGO_CMD} --host $Master  ${MONGO_CMD_PARAM} \
-      --eval 'db.getUser("<%= p("mongodb-server.mongo_DbRootAdminName") %>")' admin`
+      --eval 'db.getUser("<%= p("mongodb-server.Db_RootAdminName") %>")' admin`
     CR=$?
     [ $CR -eq 0 -a "$admin_initialized" == "null" ] && CR=1
   fi
@@ -222,7 +218,7 @@ else
   fi
 
   # Adding current node to rs
-  ${MONGO_CMD} --host <%= p("mongodb-server.mongo_Conf_replSetName") %>/$Master \
+  ${MONGO_CMD} --host <%= p("mongodb-server.Conf_replSetName") %>/$Master \
     ${MONGO_CMD_PARAM} --eval 'rs.add("<%= mongo__current_ip %>:<%= mongo_DbTypeport %>")'
   [ $? -ne 0 ] && exit 1
   # need to wait for complete add before restarting

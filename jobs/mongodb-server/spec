@@ -28,106 +28,97 @@ templates:
   config/mongod.conf.erb: config/mongod.conf
   config/mongod_bootstrap.conf.erb: config/mongod_bootstrap.conf
   config/vcap_limits.conf.erb: config/vcap_limits.conf
-  ssl/mongodb.pem.erb: ssl/mongodb.pem
+  ssl/mongodb.key.erb: ssl/mongodb.key
+  ssl/mongodb.crt.erb: ssl/mongodb.crt
   ssl/mongodb.ca.erb: ssl/mongodb.ca
   js/create_admin_user.js.erb: js/create_admin_user.js
   js/initiate_rs.js.erb: js/initiate_rs.js
 
 properties:
-  mongodb-server.mongo_DbVersion:
+  mongodb-server.Db_Version:
     default: 3.4.6
-  mongodb-server.mongo_DbToolVersion:
+  mongodb-server.Db_Tool_Version:
     default: 1.4.1
-  mongodb-server.mongo_SysDriverMongo:
-    default: rpm
-  mongodb-server.mongo_DbType:
+  mongodb-server.Db_Type:
     default: rs
     description: Function of the mongod server - <rs> for replica set only (<cfg> for config server, <sh> for shard server - not implemented yet)
-  mongodb-server.mongo_rs_port:
+  mongodb-server.rs_port:
     default: 27017
     description: Default mongodb port for replicasets
-  mongodb-server.mongo_cfg_port:
+  mongodb-server.cfg_port:
     default: 27019
     description: Default mongodb port for configserver / NOT IMPLEMENTED YET
-  mongodb-server.mongo_sh_port:
+  mongodb-server.sh_port:
     default: 27018
     description: Default mongodb port for shards / NOT IMPLEMENTED YET
-  mongodb-server.mongo_mongos_port:
+  mongodb-server.mongos_port:
     default: 27017
     description: Default mongodb port for mongos / NOT IMPLEMENTED YET
-  mongodb-server.mongo_SysReboot:
+  mongodb-server.Sys_Reboot:
     default: 1
     description: Authorize the role to restart the server (don't work with a proxy_ssh)
-  mongodb-server.mongo_SysIface:
-    default: eth0
-    description: The interface where the mongodb process should listen on.
-  mongodb-server.mongo_SysAliasPrefix:
-    default: ""
-    description: The mongodb extension name - alias for the interface, ex pre-hostname-prd.domain.name
-  mongodb-server.mongo_SysAlias:
-    default: "-prd"
-    description: The mongodb extension name - alias for the interface, ex pre-hostname-prd.domain.name
-  mongodb-server.mongo_SysDomain:
-    default: ""
-    description: The mongodb extension name - alias for the interface, ex pre-hostname-prd.domain.name
-  mongodb-server.mongo_SysLogrotate:
+  mongodb-server.Sys_Logrotate:
     default: 1
     description: Mongodb logrotate
-  mongodb-server.mongo_Conf_engine:
+  mongodb-server.Conf_engine:
     default: wiredTiger
     description: mongodb storage engine part mmapv1 / wiredTiger / rocksdb
-  mongodb-server.mongo_Conf_mmapv1smallFiles:
+  mongodb-server.Conf_mmapv1smallFiles:
     default: "false"
     description:
-  mongodb-server.mongo_Conf_wiredTiger_cacheSizeGB:
+  mongodb-server.Conf_wiredTiger_cacheSizeGB:
     default: 1
     description: NOT CONFIGURED by default but can be set to minimize the wiredTiger cache
-  mongodb-server.mongo_Conf_slowOpThresholdMs:
+  mongodb-server.Conf_slowOpThresholdMs:
     default: 100
     description:
-  mongodb-server.mongo_Conf_replication:
+  mongodb-server.Conf_replication:
     default: 1
     description: mongodb replication part
-  mongodb-server.mongo_Conf_replSetName:
+  mongodb-server.Conf_replSetName:
     default: rs0
     description: replicaset name
-  mongodb-server.mongo_Conf_oplogSizeMB:
+  mongodb-server.Conf_oplogSizeMB:
     default: 256
     description:
-  mongodb-server.mongo_Conf_authorization:
+  mongodb-server.Conf_authorization:
     default: 1
     description: mongodb Auth part
-  mongodb-server.mongo_DbUserAdminName:
+  mongodb-server.Db_UserAdminName:
     default: MongoAdmin
     description: mongodb default user
-  mongodb-server.mongo_DbUserAdminPwd:
+  mongodb-server.Db_UserAdminPwd:
     default: MongoAdmin
     description:
-  mongodb-server.mongo_DbRootAdminName:
+  mongodb-server.Db_RootAdminName:
     default: MongoRoot
     description:
-  mongodb-server.mongo_DbRootAdminPwd:
+  mongodb-server.Db_RootAdminPwd:
     default: MongoRoot
     description:
-  mongodb-server.mongo_DbManagedUsers:
-    default:
-      #- { name: testUser, password: passw0rd, roles: readWrite, database: app_development }
-    description:
-  mongodb-server.mongo__operator:
+  mongodb-server.operator:
     default: "vcap"
     description:  Mongodb mongod operator
-  mongodb-server.mongo__rsconfig:
+  mongodb-server.rs_config:
     default: #mongo__rsconfig: "{{ play_hosts }}"
     description: Mongodb mongod list
-  mongodb-server.mongo__state:
+  mongodb-server.state:
     default: "present"
     description: Mongodb mongod state [ 'present', 'absent' ]
-  mongodb-server.mongo__backup:
+  mongodb-server.backup:
     default: "absent"
     description: Mongodb backup state [ 'present', 'absent' ]
-  mongodb-server.mongo_DbCertificate:
-    default: "NOT INITIALIZED"
+  mongodb-server.Db_Certificate:
+    default:
+      ca: "NOT INITIALIZED"
+      private_key: "NOT INITIALIZED"
+      certificate: "NOT INITIALIZED"
     description: Mongodb certificate for ttl/ssl auth
-  mongodb-server.mongo_Conf_ssl:
+  mongodb-server.Db_RootCertificate:
+    default:
+      certificate: "NOT INITIALIZED"
+      private_key: "NOT INITIALIZED"
+    description: Root certificate for ttl/ssl auth
+  mongodb-server.Conf_UseSSL:
     default: 1
     description: use tls/ssl for authent and transactions

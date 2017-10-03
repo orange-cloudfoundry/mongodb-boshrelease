@@ -1,117 +1,111 @@
 <%-
 # Mongodb version
-mongo_DbVersion = p("mongodb-server.mongo_DbVersion")
-mongo_DbToolVersion = p("mongodb-server.mongo_DbToolVersion")
+mongo_DbVersion = p("mongodb-server.Db_Version")
+mongo_DbToolVersion = p("mongodb-server.Db_Tool_Version")
 #Function of the mongod server
-mongo_DbType = p("mongodb-server.mongo_DbType")
+mongo_DbType = p("mongodb-server.Db_Type")
 # Authorize the role to restart the server (don't work with a proxy_ssh)
-mongo_SysReboot = p("mongodb-server.mongo_SysReboot")
-# The interface where the mongodb process should listen on.
-mongo_SysIface = p("mongodb-server.mongo_SysIface")
-# The mongodb extension name
-mongo_SysAliasPrefix = p("mongodb-server.mongo_SysAliasPrefix")
-mongo_SysAlias = p("mongodb-server.mongo_SysAlias")
-mongo_SysDomain = p("mongodb-server.mongo_SysDomain")
+mongo_SysReboot = p("mongodb-server.Sys_Reboot")
 # Mongodb logrotate
-mongo_SysLogrotate = p("mongodb-server.mongo_SysLogrotate")
+mongo_SysLogrotate = p("mongodb-server.Sys_Logrotate")
 # mongodb storage engine part
 mongo_Conf_engine = "wiredTiger" #default engine if not defined
-if_p("mongodb-server.mongo_Conf_engine") do
-  mongo_Conf_engine = p("mongodb-server.mongo_Conf_engine")
+if_p("mongodb-server.Conf_engine") do
+  mongo_Conf_engine = p("mongodb-server.Conf_engine")
 end
-mongo_Conf_mmapv1smallFiles = p("mongodb-server.mongo_Conf_mmapv1smallFiles")
+mongo_Conf_mmapv1smallFiles = p("mongodb-server.Conf_mmapv1smallFiles")
 # NOT CONFIGURED by default but can be set to minimize the wiredTiger cache
 # DEPRECATED
-# mongo_Conf_wiredTigercacheSizeGB: <%#= p("mongodb-server.mongo_Conf_wiredTigercacheSizeGB")
-mongo_Conf_slowOpThresholdMs = p("mongodb-server.mongo_Conf_slowOpThresholdMs")
+# Conf_wiredTigercacheSizeGB: <%#= p("mongodb-server.Conf_wiredTigercacheSizeGB")
+mongo_Conf_slowOpThresholdMs = p("mongodb-server.Conf_slowOpThresholdMs")
 # mongodb replication part
-mongo_Conf_replication = p("mongodb-server.mongo_Conf_replication")
-mongo_Conf_replSetName = p("mongodb-server.mongo_Conf_replSetName")
-mongo_Conf_oplogSizeMB = p("mongodb-server.mongo_Conf_oplogSizeMB")
+mongo_Conf_replication = p("mongodb-server.Conf_replication")
+mongo_Conf_replSetName = p("mongodb-server.Conf_replSetName")
+mongo_Conf_oplogSizeMB = p("mongodb-server.Conf_oplogSizeMB")
 # mongodb Auth part
-mongo_Conf_authorization = p("mongodb-server.mongo_Conf_authorization")
-mongo_DbUserAdminName = p("mongodb-server.mongo_DbUserAdminName")
-mongo_DbUserAdminPwd = p("mongodb-server.mongo_DbUserAdminPwd")
-mongo_DbRootAdminName = p("mongodb-server.mongo_DbRootAdminName")
-mongo_DbRootAdminPwd = p("mongodb-server.mongo_DbRootAdminPwd")
-mongo_Confssl = p("mongodb-server.mongo_Conf_ssl")
-#mongo_DbManagedUsers: <%#= p("mongodb-server.mongo_DbManagedUsers")
+mongo_Conf_authorization = p("mongodb-server.Conf_authorization")
+mongo_DbUserAdminName = p("mongodb-server.Db_UserAdminName")
+mongo_DbUserAdminPwd = p("mongodb-server.Db_UserAdminPwd")
+DbRootAdminName = p("mongodb-server.Db_RootAdminName")
+DbRootAdminPwd = p("mongodb-server.Db_RootAdminPwd")
+Confssl = p("mongodb-server.Conf_UseSSL")
+#DbManagedUsers: <%#= p("mongodb-server.DbManagedUsers")
 #################################################################################################
 # Set default value if not defined in the playbook vars / group_vars / host_vars / inventory vars
 # Do not touch below
 #################################################################################################
 # Mongodb mongod operator
-mongo__operator = p("mongodb-server.mongo__operator")
+Operator = p("mongodb-server.operator")
 # Mongodb mongod list
-mongo_Conf_bindIp = "127.0.0.1," + link('server').instances[spec.index].address
-# mongo_Conf_bindIp = "127.0.0.1," + p("mongodb-server.spec.ip")
+Conf_bindIp = "127.0.0.1,#{spec.ip}"
+# Conf_bindIp = "127.0.0.1," + p("mongodb-server.spec.ip")
 # Mongodb mongod state:
-mongo__state = p("mongodb-server.mongo__state")
+State = p("mongodb-server.state")
 # Mongodb backup state:
-mongo__backup = p("mongodb-server.mongo__backup")
+Backup = p("mongodb-server.backup")
 # Mongodb alias name used for the replica set communication
-#mongo__hostname: = p("mongodb-server.mongo__hostname")
+#_hostname: = p("mongodb-server._hostname")
 # Mongodb backup key file name (stored on the same level as playbook)
-#mongo_Conf_keyfileBackup = p("mongodb-server.mongo_Conf_keyfileBackup")
+#Conf_keyfileBackup = p("mongodb-server.Conf_keyfileBackup")
 # Add tag to the modified line (by ansible tasks)
-mongo_RoleComment= "#BOSH orange.mongodb role comment#"
+RoleComment= "#BOSH orange.mongodb role comment#"
 
 # Managed the mongodb port binding depending on the mongodb role
-if p("mongodb-server.mongo_DbType") == "rs"
-  mongo_DbTypeport=p("mongodb-server.mongo_rs_port")
-  _mongo_rsconfig = ''
+if p("mongodb-server.Db_Type") == "rs"
+  DbTypeport=p("mongodb-server.rs_port")
+  _rsconfig = ''
   link('server').instances.each do |instance|
-    _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport},"
+    _rsconfig = "#{_rsconfig}#{instance.address}:#{DbTypeport},"
   end
   # remove last ,
-  mongo_rsconfig = _mongo_rsconfig[0..-2]
+  rsconfig = _rsconfig[0..-2]
 end
-if p("mongodb-server.mongo_DbType") == "sh"
-  mongo_DbTypeport=p("mongodb-server.mongo_sh_port")
+if p("mongodb-server.Db_Type") == "sh"
+  DbTypeport=p("mongodb-server.sh_port")
 end
-if p("mongodb-server.mongo_DbType") == "cfg"
-  mongo_DbTypeport=p("mongodb-server.mongo_cfg_port")
+if p("mongodb-server.Db_Type") == "cfg"
+  DbTypeport=p("mongodb-server.cfg_port")
 end
-if p("mongodb-server.mongo_DbType") == "mongos"
-  mongo_DbTypeport=p("mongodb-server.mongo_mongos_port")
+if p("mongodb-server.Db_Type") == "mongos"
+  DbTypeport=p("mongodb-server.mongos_port")
 end
 
 # Retrieve all parts of the Mongodb version
-/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("mongodb-server.mongo_DbVersion") #=> 0
+/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("mongodb-server.Db_Version") #=> 0
 
-mongo_DbVersionMaj = _DbVersionMaj
-mongo_DbVersionMid = _DbVersionMid
-mongo_DbVersionMin = _DbVersionMin
+DbVersionMaj = _DbVersionMaj
+DbVersionMid = _DbVersionMid
+DbVersionMin = _DbVersionMin
 
 # Mongodb orange products parameters
-mongo_DbProductName = "mongodb-cf-release"
-#mongo_DbPymongoName: mongodb-orange-python-pymongo
-#mongo_DbToolName: mongodb-orange-tools
-mongo_SysDbUser = "vcap"
-mongo_SysDbGroup = "vcap"
+DbProductName = "mongodb-cf-release"
+#DbPymongoName: mongodb-orange-python-pymongo
+#DbToolName: mongodb-orange-tools
+Sys_DbUser = Operator
+Sys_DbGroup = Operator
 # Mongodb directory
-mongo_SysDb_dirRoot="/var/vcap/store/mongodb-server"
-mongo_SysDb_dirBackup="/var/vcap/store/mongodb-server/backup"
-mongo_SysDb_dirCfg="/var/vcap/jobs/mongodb-server/config"
-mongo_SysDb_dirSSL="/var/vcap/jobs/mongodb-server/ssl"
-mongo_SysDb_dirData="/var/vcap/store/mongodb-server/data"
-mongo_SysDb_dirLog="/var/vcap/sys/log/mongodb-server"
-mongo_SysDb_dirRun="/var/vcap/sys/run/mongodb-server"
-mongo_SysDb_dirManaged=[ mongo_SysDb_dirRoot ,  mongo_SysDb_dirBackup , mongo_SysDb_dirCfg , mongo_SysDb_dirData , mongo_SysDb_dirLog , mongo_SysDb_dirRun ]
+Sys_Db_dirRoot="/var/vcap/store/mongodb-server"
+Sys_Db_dirBackup="/var/vcap/store/mongodb-server/backup"
+Sys_Db_dirCfg="/var/vcap/jobs/mongodb-server/config"
+Sys_Db_dirSSL="/var/vcap/jobs/mongodb-server/ssl"
+Sys_Db_dirData="/var/vcap/store/mongodb-server/data"
+Sys_Db_dirLog="/var/vcap/sys/log/mongodb-server"
+Sys_Db_dirRun="/var/vcap/sys/run/mongodb-server"
+Sys_Db_dirManaged=[ Sys_Db_dirRoot ,  Sys_Db_dirBackup , Sys_Db_dirCfg , Sys_Db_dirData , Sys_Db_dirLog , Sys_Db_dirRun ]
 # Mongodb configuration parameters
-mongo_Conf_systemLog = mongo_SysDb_dirLog + "/mongod.log"
-#mongo_Conf_cfgFile = mongo_SysDb_dirCfg + "/mongod.conf"
-#mongo_Conf_pidFile = mongo_SysDb_dirRun + "/mongod.pid"
-mongo_Conf_port = mongo_DbTypeport
-mongo_Conf_journalenabled = "true"
-mongo_Conf_keyFile = mongo_SysDb_dirCfg + "/keyfile"
-mongo_Conf_PEMKeyFile = mongo_SysDb_dirSSL + "/server.pem"
-mongo_Conf_CAFile = mongo_SysDb_dirSSL + "/mongodb.ca"
+Conf_systemLog = Sys_Db_dirLog + "/mongod.log"
+#Conf_cfgFile = Sys_Db_dirCfg + "/mongod.conf"
+#Conf_pidFile = Sys_Db_dirRun + "/mongod.pid"
+Conf_port = DbTypeport
+Conf_journalenabled = "true"
+Conf_keyFile = Sys_Db_dirCfg + "/keyfile"
+Conf_PEMKeyFile = Sys_Db_dirSSL + "/server.pem"
+Conf_CAFile = Sys_Db_dirSSL + "/mongodb.ca"
 #mongo_Conf_mmapv1smallFiles = "false" #<= deprecated
-tmpjournalenabled = mongo_Conf_journalenabled
+tmpjournalenabled = Conf_journalenabled
 tmpoplogSizeMB = mongo_Conf_oplogSizeMB
 
-if_p("mongo_Conf_mmapv1smallFiles") do
+if_p("Conf_mmapv1smallFiles") do
   tmpsmallFiles = mongo_Conf_mmapv1smallFiles
 end
 _arbiter_only = 0
@@ -127,99 +121,101 @@ if _arbiter_only == 1
 end -%>
 systemLog:
   destination: file
-  path: <%= mongo_Conf_systemLog %>
+  path: <%= Conf_systemLog %>
   logAppend: true
-<%- if mongo_DbVersionMaj == "3" -%>
+<%- if DbVersionMaj == "3" -%>
   logRotate: reopen
 <%- end -%>
 storage:
-<%- if mongo_DbVersionMaj == "2" -%>
-  dbPath: <%= mongo_SysDb_dirData %>
+<%- if DbVersionMaj == "2" -%>
+  dbPath: <%= Sys_Db_dirData %>
   directoryPerDB: true
-	<% if_p("mongo_Conf_syncPeriodSecs") do %>
-  syncPeriodSecs: <%= mongo_Conf_syncPeriodSecs %>
+	<% if_p("Conf_syncPeriodSecs") do %>
+  syncPeriodSecs: <%= Conf_syncPeriodSecs %>
 	<%- end -%>
   journal:
     enabled: <%= tmpjournalenabled %>
- 	<% if_p("mongo_Conf_commitIntervalMs") do %>
-    commitIntervalMs: <%= mongo_Conf_commitIntervalMs %>
+  <% if_p("Conf_commitIntervalMs") do %>
+    commitIntervalMs: <%= Conf_commitIntervalMs %>
 	<%- end -%>
   smallFiles: <%= tmpsmallFiles %>
 <%- end -%>
-<%- if mongo_DbVersionMaj == "3" -%>
+<%- if DbVersionMaj == "3" -%>
   engine: <%= mongo_Conf_engine %>
-  dbPath: <%= mongo_SysDb_dirData %>
+  dbPath: <%= Sys_Db_dirData %>
   directoryPerDB: true
   journal:
     enabled: <%= tmpjournalenabled %>
-	<%- if_p("mongo_Conf_commitIntervalMs") do -%>
-		<% if mongo_DbVersionMid == "2" or mongo_DbVersionMid == "4" -%>
-    commitIntervalMs: <%= mongo_Conf_commitIntervalMs %>
+	<%- if_p("Conf_commitIntervalMs") do -%>
+		<% if DbVersionMid == "2" or DbVersionMid == "4" -%>
+    commitIntervalMs: <%= Conf_commitIntervalMs %>
 		<%- end -%>
 	<%- end -%>
 	<%- if mongo_Conf_engine == "mmapv1" -%>
   mmapv1:
     smallFiles: <%= tmpsmallFiles %>
-		<% if_p("mongo_Conf_mmapv1_preallocDataFiles") do -%>
-    preallocDataFiles: <%= mongo_Conf_mmapv1_preallocDataFiles %>
+		<% if_p("Conf_mmapv1_preallocDataFiles") do -%>
+    preallocDataFiles: <%= Conf_mmapv1_preallocDataFiles %>
 		<%- end -%>
-		<% if_p("mongo_Conf_mmapv1_nsSize") do -%>
-    nsSize: <%= mongo_Conf_mmapv1_nsSize %>
+		<% if_p("Conf_mmapv1_nsSize") do -%>
+    nsSize: <%= Conf_mmapv1_nsSize %>
 		<%- end -%>
-		<%- if_p("mongo_Conf_mmapv1_quota_enforced","mongo_Conf_mmapv1_quota_maxFilesPerDB") do -%>
+		<%- if_p("Conf_mmapv1_quota_enforced","Conf_mmapv1_quota_maxFilesPerDB") do -%>
     quota:
-			<%- if_p("mongo_Conf_mmapv1_quota_enforced") do -%>
-      enforced: <%= mongo_Conf_mmapv1_quota_enforced %>
+			<%- if_p("Conf_mmapv1_quota_enforced") do -%>
+      enforced: <%= Conf_mmapv1_quota_enforced %>
 			<%- end -%>
-			<%- if_p("mongo_Conf_mmapv1_quota_maxFilesPerDB") do -%>
-      maxFilesPerDB: <%= mongo_Conf_mmapv1_quota_maxFilesPerDB %>
+			<%- if_p("Conf_mmapv1_quota_maxFilesPerDB") do -%>
+      maxFilesPerDB: <%= Conf_mmapv1_quota_maxFilesPerDB %>
 			<%- end -%>
 		<%- end -%>
 	<%- end -%>
-	<%- if_p("mongo_Conf_commitIntervalMs") do -%>
-		<%- if mongo_DbVersionMid == "0" -%>
+	<%- if_p("Conf_commitIntervalMs") do -%>
+		<%- if DbVersionMid == "0" -%>
     journal:
-      commitIntervalMs: <%= mongo_Conf_commitIntervalMs %>
+      commitIntervalMs: <%= Conf_commitIntervalMs %>
 		<%- end -%>
 	<%- end -%>
 	<%- if mongo_Conf_engine == "wiredTiger" -%>
   wiredTiger:
     engineConfig:
       directoryForIndexes: true
-		<%- if_p("mongo_Conf_wiredTiger_cacheSizeGB") do -%>
-      cacheSizeGB: <%= mongo_Conf_wiredTiger_cacheSizeGB %>
+		<%- if_p("Conf_wiredTiger_cacheSizeGB") do -%>
+      cacheSizeGB: <%= Conf_wiredTiger_cacheSizeGB %>
 		<%- end -%>
-		<%- if_p("mongo_Conf_wiredTiger_journalCompressor") do -%>
-      journalCompressor: <%= mongo_Conf_wiredTiger_journalCompressor %>
+		<%- if_p("Conf_wiredTiger_journalCompressor") do -%>
+      journalCompressor: <%= Conf_wiredTiger_journalCompressor %>
 		<%- end -%>
-		<%- if_p("mongo_Conf_wiredTiger_blockCompressor") do -%>
+		<%- if_p("Conf_wiredTiger_blockCompressor") do -%>
     collectionConfig:
-			blockCompressor: <%= mongo_Conf_wiredTiger_blockCompressor %>
+			blockCompressor: <%= Conf_wiredTiger_blockCompressor %>
 		<%- end -%>
-		<%- if_p("mongo_Conf_wiredTiger_prefixCompression") do -%>
+		<%- if_p("Conf_wiredTiger_prefixCompression") do -%>
     indexConfig:
-			prefixCompression: <%= mongo_Conf_wiredTiger_prefixCompression %>
+			prefixCompression: <%= Conf_wiredTiger_prefixCompression %>
 		<%- end -%>
 	<%- end -%>
 <%- end -%>
 processManagement:
   fork: true
 net:
-  bindIp: <%= mongo_Conf_bindIp %>
-  port: <%= mongo_Conf_port %>
+  bindIp: <%= Conf_bindIp %>
+  port: <%= Conf_port %>
   unixDomainSocket:
     enabled: true
-    pathPrefix: <%= mongo_SysDb_dirRun %>
-<%- if mongo_Confssl == 1 -%>
+    pathPrefix: <%= Sys_Db_dirRun %>
+<%- if Confssl == 1 -%>
   ssl:
     mode: requireSSL
-    PEMKeyFile: <%= mongo_Conf_PEMKeyFile %>
-    CAFile: <%= mongo_Conf_CAFile %>
+    PEMKeyFile: <%= Conf_PEMKeyFile %>
+    CAFile: <%= Conf_CAFile %>
+    allowConnectionsWithoutCertificates: true
+    allowInvalidHostnames: true
 <%- end -%>
 <%- if mongo_Conf_authorization == 1 -%>
 security:
   authorization: enabled
-  <%- if mongo_Confssl == 1 -%>
+  <%- if Confssl == 1 -%>
   clusterAuthMode: x509
   <%- end -%>
 <%- end -%>
