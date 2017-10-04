@@ -5,6 +5,8 @@ index: 0
 ip: &ip_addr "1.2.3.4"
 properties: &props
   mongodb:
+    db_version: 3.4.6
+    db_tool_version: 1.4.1
     node_role: rs
     rs_port: 27017
     cfg_port: 27019
