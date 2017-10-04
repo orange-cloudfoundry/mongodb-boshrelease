@@ -61,9 +61,10 @@ properties:
     default: wiredTiger
     description: |
       The storage engine for the mongod database.
-      Use "mmapv1" to specify the MMAPv1 Storage Engine.
-      Use "wiredTiger" to specify the WiredTiger Storage Engine.
-      Use "inMemory" to specify the In-Memory Storage Engine.
+      Use "mmapv1" to specify the MMAPv1 storage engine.
+      Use "wiredTiger" to specify the WiredTiger storage engine.
+      Use "inMemory" to specify the In-Memory storage engine.
+      Use "rocksdb" to specify the RocksDB storage engine.
 
       Ref: https://docs.mongodb.com/manual/reference/configuration-options/#storage.engine
   mongodb.mmap_v1_small_files:
