@@ -1,18 +1,17 @@
-<%- if p("mongodb-server.mongo_DbType") == "rs"
-	mongo_DbTypeport=p("mongodb-server.mongo_rs_port")
+<%- if p("mongodb.node_role") == "rs"
+	DbTypeport=p("mongodb.rs_port")
 end
-mongo_Conf_replSetName = p("mongodb-server.mongo_Conf_replSetName")
-mongo_Conf_bindIp = link('server').instances[0].address
-if p("mongodb-server.mongo_DbType") == "sh"
-  mongo_DbTypeport=p("mongodb-server.mongo_sh_port")
+Conf_bindIp = link('server').instances[0].address
+if p("mongodb.node_role") == "sh"
+  DbTypeport=p("mongodb.sh_port")
 end
-if p("mongodb-server.mongo_DbType") == "cfg"
-  mongo_DbTypeport=p("mongodb-server.mongo_cfg_port")
+if p("mongodb.node_role") == "cfg"
+  DbTypeport=p("mongodb.cfg_port")
 end
-if p("mongodb-server.mongo_DbType") == "mongos"
-  mongo_DbTypeport=p("mongodb-server.mongo_mongos_port")
+if p("mongodb.node_role") == "mongos"
+  DbTypeport=p("mongodb.mongos_port")
 end -%>
 rs.initiate( {
-   _id : "<%= mongo_Conf_replSetName %>",
-   members: [ { _id : 0, host : "<%= mongo_Conf_bindIp %>:<%= mongo_DbTypeport %>" } ]
+   _id : "<%= p('mongodb.replication.replica_set_name') %>",
+   members: [ { _id : 0, host : "<%= Conf_bindIp %>:<%= DbTypeport %>" } ]
 } )

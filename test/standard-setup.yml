@@ -2,46 +2,36 @@
 job:
   name: mongo-server
 index: 0
+ip: &ip_addr "1.2.3.4"
 properties: &props
-  mongodb-server:
-    mongo_DbVersion: 3.4.6
-    mongo_DbToolVersion: 1.4.1
-    mongo_SysDriverMongo: rpm
-    mongo_DbType: rs
-    mongo_rs_port: 27017
-    mongo_cfg_port: 27019
-    mongo_sh_port: 27018
-    mongo_mongos_port: 27017
-    mongo_SysReboot: 1
-    mongo_SysIface: eth0
-    mongo_SysAliasPrefix: ""
-    mongo_SysAlias: -prd
-    mongo_SysDomain: ""
-    mongo_SysDb_diskperf_readahead: 16
-    mongo_SysLogrotate: 1
-    mongo_Conf_engine: wiredTiger
-    mongo_Conf_mmapv1smallFiles: "false"
-    mongo_Conf_wiredTiger_cacheSizeGB: 1
-    mongo_Conf_slowOpThresholdMs: 100
-    mongo_Conf_replication: 1
-    mongo_Conf_replSetName: rs0
-    mongo_Conf_oplogSizeMB: 256
-    mongo_Conf_authorization: 1
-    mongo_DbUserAdminName: MongoAdmin
-    mongo_DbUserAdminPwd: MongoAdmin
-    mongo_DbRootAdminName: MongoRoot
-    mongo_DbRootAdminPwd: MongoRoot
-    mongo_DbManagedUsers:
+  mongodb:
+    db_version: 3.4.6
+    db_tool_version: 1.4.1
+    node_role: rs
+    rs_port: 27017
+    cfg_port: 27019
+    sh_port: 27018
+    mongos_port: 27017
+    storage_engine: wiredTiger
+    mmap_v1_small_files: "false"
+    wired_tiger_cache_size_gb: null
+    slow_query_threshold_ms: 100
+    replication:
+      enable: 1
+      replica_set_name: rs0
+      operation_log_max_size_mb: 256
+    enable_role_based_access_control: 1
+    admin_username: MongoAdmin
+    admin_password: MongoAdmin
+    root_username: MongoRoot
+    root_password: MongoRoot
+    Db_ManagedUsers:
       - name: testUser
         password: passw0rd
         roles: readWrite
         database: app_development
-    mongo__operator: "vcap"
-    mongo__state: "present"
-    mongo__backup: "absent"
-    mongo_DbCertificate: "NOT INITIALIZED"
-    mongo_DbKeyfile: "NOT INITIALIZED"
-    mongo_Conf_ssl: 1
+    server_certificate: "NOT INITIALIZED"
+    require_ssl: 1
 
 links:
   server:
@@ -50,6 +40,6 @@ links:
         index: 0
         id: 82D61059-08F7-4748-A4AA-BB14EDA903F1
         az: z1
-        address: 1.2.3.4
+        address: *ip_addr
         properties: *props
         bootstrap: true
