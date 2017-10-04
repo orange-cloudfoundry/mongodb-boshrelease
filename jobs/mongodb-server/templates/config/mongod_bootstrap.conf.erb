@@ -1,18 +1,8 @@
 <%-
 DbVersion = p("mongodb.db_version")
 DbToolVersion = p("mongodb.db_tool_version")
-#DbManagedUsers: <%#= p("mongodb.DbManagedUsers")
-#################################################################################################
-# Set default value if not defined in the playbook vars / group_vars / host_vars / inventory vars
-# Do not touch below
-#################################################################################################
-# Mongodb mongod list
+
 Conf_bindIp = "127.0.0.1," + link('server').instances[spec.index].address
-# Conf_bindIp = "127.0.0.1," + p("mongodb.spec.ip")
-# Mongodb alias name used for the replica set communication
-#_hostname: = p("mongodb._hostname")
-# Add tag to the modified line (by ansible tasks)
-RoleComment= "#BOSH orange.mongodb role comment#"
 
 # Managed the mongodb port binding depending on the mongodb role
 if p("mongodb.node_role") == "rs"
