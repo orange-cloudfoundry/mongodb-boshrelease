@@ -9,7 +9,7 @@ export PARAM="$@"
 
 pushd /var/vcap/packages/mongodb/bin >/dev/null
 su -m vcap -c 'HOME=/home/vcap;'${MONGODB_BIN}'/mongo --ssl \
---sslCAFile /var/vcap/jobs/${JOB_NAME}/ssl/mongodb.ca \
---sslPEMKeyFile /var/vcap/jobs/${JOB_NAME}/ssl/client.pem $PARAM'
+  --sslCAFile /var/vcap/jobs/${JOB_NAME}/ssl/mongodb.ca \
+  --sslPEMKeyFile /var/vcap/jobs/${JOB_NAME}/ssl/client.pem $PARAM'
 popd >/dev/null
 exit 0

@@ -167,4 +167,16 @@ properties:
     description: Mongodb certificate for ttl/ssl auth
   mongodb.require_ssl:
     default: 1
-    description: Use TLS/SSL for connecting to the server.
+    description: |
+      Enforce TLS/SSL for connecting to the server.
+
+      When this options is set to '1', all connections to mongod must be
+      encrypted with TLS/SSL, and un-encrypted connections will be refused.
+      For example, when using the 'mongo' client, the '--ssl' argument will be
+      mandatory.
+
+      When this options is set to '0', then all connections to mongod must not
+      be encrypted, and SSL/TLS will not be possible. For example, when using
+      the 'mongo' client, the '--ssl' argument will not be possible. This
+      should be reserved to development environments and be avoided in
+      production.
