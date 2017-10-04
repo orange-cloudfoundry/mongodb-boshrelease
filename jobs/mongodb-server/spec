@@ -63,8 +63,9 @@ properties:
       The storage engine for the mongod database.
       Use "mmapv1" to specify the MMAPv1 storage engine.
       Use "wiredTiger" to specify the WiredTiger storage engine.
-      Use "inMemory" to specify the In-Memory storage engine.
       Use "rocksdb" to specify the RocksDB storage engine.
+
+      Here the "inMemory" engine is not supported.
 
       Ref: https://docs.mongodb.com/manual/reference/configuration-options/#storage.engine
   mongodb.mmap_v1_small_files:
