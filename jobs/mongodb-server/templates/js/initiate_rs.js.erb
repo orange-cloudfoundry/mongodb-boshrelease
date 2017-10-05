@@ -7,7 +7,7 @@ def esc(x)
     when String
         x.to_json[1..-2]
     else
-        x.to_json
+        x.to_json.to_json[1..-2]
     end
 end
 

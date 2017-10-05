@@ -132,7 +132,7 @@ net:
     allowConnectionsWithoutCertificates: true
     allowInvalidHostnames: true
 <%- end -%>
-<%- if p("mongodb.enable_role_based_access_control") == 1 -%>
+<%- if p("mongodb.enable_role_based_access_control") == 1 && defined?(do_disable_authorization).nil? -%>
 security:
   authorization: enabled
   <%- if p("mongodb.require_ssl") == 1 -%>

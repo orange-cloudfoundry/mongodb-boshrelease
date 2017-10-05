@@ -19,6 +19,10 @@ class BoshTemplateRenderer
     end
 end
 
+if ARGV.size() == 0 then
+	STDERR.puts "Usage: #{File.basename($0)} <bosh_template_erb_file> <bosh_spec_vars_yaml_file>"
+	exit 2
+end
 
 # First argument is a BOSH ERB template file
 bosh_template_file = ARGV[0]

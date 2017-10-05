@@ -2,8 +2,13 @@
 
 require "json"
 
-def esc(str)
-    str.to_json[1..-2]
+def esc(x)
+    case x
+    when String
+        x.to_json[1..-2]
+    else
+        x.to_json.to_json[1..-2]
+    end
 end
 
 -%>

@@ -31,9 +31,16 @@ function look_for_deviance() {
 
 fixtures=(standard-setup)
 job=mongodb-server
+
+export RELEASE_DIR
+
 for fixture in "${fixtures[@]}"; do
+
 	template=config/mongod.conf.erb
 	look_for_deviance $job $template $fixture mongod-${fixture}.conf
+
+	template=config/mongod_bootstrap.conf.erb
+	look_for_deviance $job $template $fixture mongod_bootstrap-${fixture}.conf
 
 	template=js/create_admin_user.js.erb
 	look_for_deviance $job $template $fixture create_admin_user-${fixture}.js
