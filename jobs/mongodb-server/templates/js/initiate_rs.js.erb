@@ -1,17 +1,33 @@
-<%- if p("mongodb.node_role") == "rs"
-	DbTypeport=p("mongodb.rs_port")
+<%
+
+require "json"
+
+def esc(x)
+    case x
+    when String
+        x.to_json[1..-2]
+    else
+        x.to_json
+    end
 end
-Conf_bindIp = link('server').instances[0].address
-if p("mongodb.node_role") == "sh"
-  DbTypeport=p("mongodb.sh_port")
+
+tcp_port = case p("mongodb.node_role")
+    when "rs"
+        p("mongodb.rs_port")
+    when "sh"
+        p("mongodb.sh_port")
+    when "cfg"
+        p("mongodb.cfg_port")
+    when "mongos"
+        p("mongodb.mongos_port")
 end
-if p("mongodb.node_role") == "cfg"
-  DbTypeport=p("mongodb.cfg_port")
-end
-if p("mongodb.node_role") == "mongos"
-  DbTypeport=p("mongodb.mongos_port")
-end -%>
-rs.initiate( {
-   _id : "<%= p('mongodb.replication.replica_set_name') %>",
-   members: [ { _id : 0, host : "<%= Conf_bindIp %>:<%= DbTypeport %>" } ]
-} )
+-%>
+rs.initiate({
+    _id : "<%= esc(p('mongodb.replication.replica_set_name')) %>",
+    members: [
+        {
+            _id: 0,
+            host: "<%= esc(spec.ip) %>:<%= esc(tcp_port) %>"
+        }
+    ]
+});

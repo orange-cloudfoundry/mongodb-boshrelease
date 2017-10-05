@@ -37,6 +37,9 @@ for fixture in "${fixtures[@]}"; do
 
 	template=js/create_admin_user.js.erb
 	look_for_deviance $job $template $fixture create_admin_user-${fixture}.js
+
+	template=js/initiate_rs.js.erb
+	look_for_deviance $job $template $fixture initiate_rs-${fixture}.js
 done
 
 echo
