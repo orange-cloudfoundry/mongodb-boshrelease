@@ -5,8 +5,8 @@ packages:
 - openjdk
 - mongodb-broker-pkg
 consumes:
-- name: nodes
-  type: mongodb_nodes
+- name: server
+  type: mongodb-server
 
 templates:
   bin/ctl: bin/ctl
