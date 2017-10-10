@@ -1,0 +1,7 @@
+---
+name: mongodb-broker-pkg 
+dependencies: []
+files:
+- mongodb-open-service-broker/**/*
+- openjdk/*
+- common/setup-java-prepackaging.sh

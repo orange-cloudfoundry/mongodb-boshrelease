@@ -1,0 +1,23 @@
+---
+logging:
+  level: DEBUG
+
+management:
+  context-path: /admin
+
+pidfile: /var/vcap/sys/run/broker/broker.pid
+
+security:
+  user:
+    name: <%= p('broker.user') %>
+    password: <%= p('broker.password') %>
+
+spring:
+  main:
+    show-banner: true
+
+mongodb:
+  host: <% nodes = link('nodes') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>  
+  port: 27017
+  username: <%= p('mongodb_node.admin_username') %> 
+  password: <%= p('mongodb_node.admin_password') %> 
