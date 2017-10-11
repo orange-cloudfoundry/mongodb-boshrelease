@@ -42,12 +42,12 @@ properties:
   mongodb.node_role:
     default: rs
     description: |
-      Role for the mongod server in the Mongodb cluster: 'rs' for replica set.
+      Role for the mongod server in the Mongodb cluster: 'rs' for replica set, 'sa' for stand alone server
       In the future, 'cfg' (for config server), 'sh' (for shard server) will
       also be supported.
   mongodb.rs_port:
     default: 27017
-    description: Default mongodb port for replicasets
+    description: Default mongodb port for replicasets AND standalone server
   mongodb.cfg_port:
     default: 27019
     description: Default mongodb port for configserver / NOT IMPLEMENTED YET
