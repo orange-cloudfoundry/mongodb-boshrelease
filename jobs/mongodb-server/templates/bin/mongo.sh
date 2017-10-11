@@ -3,10 +3,7 @@
 set -e # exit immediately if a simple command exits with a non-zero status.
 set -u # report the usage of uninitialized variables.
 
-if [ $# -eq 0 || $(grep "nosource" $*|wc -l) -eq 0 ]
-then
 source `dirname $(readlink --canonicalize-existing $0)`/setenv
-fi
 
 export PARAM="$@"
 
