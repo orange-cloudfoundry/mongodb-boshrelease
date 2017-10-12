@@ -22,9 +22,9 @@ properties:
     default: broker
   broker.password:
     description: mongodb service broker password
-  mongodb_node.admin_username:
-    description: mongodb admin username
-  mongodb_node.admin_password:
-    description: mongodb admin password
+  mongodb_node.root_username:
+    description: mongodb root username
+  mongodb_node.root_password:
+    description: mongodb root password
  
 
