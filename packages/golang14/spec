@@ -1,8 +1,0 @@
----
-name: golang14
-dependencies: 
--  python
--  scons
--  gcc
-files:
--  golang14/go1.4-bootstrap-20170531.tar.gz
