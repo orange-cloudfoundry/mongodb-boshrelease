@@ -1,1 +1,3 @@
+<%- if p("mongodb.require_ssl") == 1 -%>
 <%= p("mongodb.server_certificate.certificate") -%>
+<%- end -%>
