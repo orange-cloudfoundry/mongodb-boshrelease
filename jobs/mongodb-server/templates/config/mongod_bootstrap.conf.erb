@@ -5,7 +5,7 @@ mongo_DbToolVersion = p("mongodb.db_tool_version")
 Conf_bindIp = "127.0.0.1,#{spec.ip}"
 
 # Managed the mongodb port binding depending on the mongodb role
-if p("mongodb.node_role") == "rs"
+if p("mongodb.node_role") == "rs" || p("mongodb.node_role") == "sa"
   DbTypeport=p("mongodb.rs_port")
   _rsconfig = ''
   link('server').instances.each do |instance|
@@ -133,7 +133,7 @@ net:
 <%- end -%>
 operationProfiling:
   slowOpThresholdMs: <%= p("mongodb.slow_query_threshold_ms") %>
-<%- if p("mongodb.replication.enable") == 1 -%>
+<%- if p("mongodb.replication.enable") == 1 && p("mongodb.node_role") != "sa" -%>
 replication:
   replSetName: <%= p("mongodb.replication.replica_set_name") %>
   oplogSizeMB: <%= replication_oplog_size_mb %>
