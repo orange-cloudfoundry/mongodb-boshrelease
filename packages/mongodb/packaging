@@ -21,7 +21,7 @@ do
   export C_INCLUDE_PATH=${package_inc_dir}:$C_INCLUDE_PATH
 done
 
-export PATH=/var/vcap/packages/gcc/bin:/var/vcap/packages/golang/bin:/var/vcap/packages/binutils/bin:/var/vcap/packages/python/bin/:/var/vcap/packages/scons/bin:$PATH
+export PATH=/var/vcap/packages/gcc/bin:/var/vcap/packages/binutils/bin:/var/vcap/packages/python/bin/:/var/vcap/packages/scons/bin:$PATH
 
 # Retrieving number of cpus on compilation server
 export cpun_=`lscpu | grep '^CPU('|tr -d [:space:]|cut -d":" -f2`
@@ -123,6 +123,7 @@ do
   tar xf $i
   cd $ext_dir
   # need libpcap for mongoreplay
+  source /var/vcap/packages/golang-1.8-linux/bosh/compile.env
   export CGO_LDFLAGS="-L/var/vcap/packages/gcc/lib -L/var/vcap/packages/gcc/lib64"
   ./set_gopath.sh
   ./build.sh

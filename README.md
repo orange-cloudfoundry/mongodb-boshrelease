@@ -4,12 +4,16 @@
 
 ## Table of contents
 
-* [Purpose](#L18)
-* [Prerequisites](#L27)
-* [Installation](#L148)
-  * [Add needed blobs](#L150)
-  * [Deployment Manifest](#L181)
-* [Mongodb-server job variables]
+* [Purpose](#purpose)
+* [What should the Release do](#what-should-the-release-do)
+* [Prerequisites](#prerequisites)
+* [Packages versions summary](#packages-versions-summary)
+* [Release tree](#release-tree)
+* [Installation](#installation)
+  - [Get vendor package](#get-vendor-package)
+  * [Add needed blobs](#add-needed-blobs)
+  * [Deployment Manifest](#create-the-deployment-manifest)
+* [Mongodb-server job variables]()
 
 ## Purpose
 
@@ -19,7 +23,7 @@ It also allow to use more recents libraries than the ones provided by bosh.io st
 
 Because of this choice it could be implemented on ubuntu or centos Stemcell.
 
-## What should do the Release
+## What should the Release do
 
 >* Configure a replica set (Shard and config server are not implemented yet)
 * Complete requirements for mongodb servers ([production notes](https://docs.mongodb.org/manual/administration/production-notes/))
@@ -59,7 +63,7 @@ m4        | `1.4.18` |
 mpc       | `1.0.3`  |
 mpfr      | `3.1.5`  |
 isl       | `0.18`   |
-go        | `1.8.3`  | need to compile go 1.4 as bootstrap
+go       | `1.8.3`  | ~~need to compile go 1.4 as bootstrap~~ replaced by vendor package release
 Python    | `2.7.13` |
 scons     | `2.5.1`  |
 openssl   | `1.0.2l` |
@@ -73,11 +77,11 @@ coreutils | `8.27`   |
 
 ## Release tree
 > 
-```sh
-├── config  
-│   ├── blobs.yml  
-│   ├── final.yml  
-│   └── settings.yml  
+```tree
+├── config
+│   ├── blobs.yml
+│   ├── final.yml
+│   └── settings.yml
 ├── jobs
 │   └── mongodb-server
 │       ├── monit
@@ -124,12 +128,6 @@ coreutils | `8.27`   |
 │   ├── gcc
 │   │   ├── packaging
 │   │   └── spec
-│   ├── golang
-│   │   ├── packaging
-│   │   └── spec
-│   ├── golang14
-│   │   ├── packaging
-│   │   └── spec
 │   ├── mongodb
 │   │   ├── packaging
 │   │   └── spec
@@ -150,12 +148,24 @@ coreutils | `8.27`   |
 
 ## Installation
 
+> 
+### Get vendor package
+As go is a prerequisite to mongo-tools compilation, you have to get the golang-1.8 vendor package and link it with the release
+
+```sh
+cd [work-dir]
+git clone https://github.com/bosh-packages/golang-release
+cd [mongodb-boshrelease-dir]
+bosh vendor-package golang-1.8-linux [work-dir]/golang-release
+```
+
+> 
 ### Add needed blobs
 
 * fill the **config/final.yml** with your appropriate blobstore
 here is an example for a local store
 
->
+> 
 ```yml
 ---
 final_name: mongodb-service
@@ -175,7 +185,7 @@ the file **src/downloadblob.sh** perform a curl request to each needed blob
 
 for each downloaded blob perform an add-blob to the director to reference it
 
->
+> 
 ```sh
 bosh -e [director name] add-blob [archive] [blob_path]/[archive]
 ```
@@ -188,11 +198,11 @@ An example is provided, update and complete it with your own configuration
 
 ### Deploy
 
->
+>  
 ```sh
-bosh -e [director name] cr
-bosh -e [director name] ur
-bosh -e [director name] -d [deployment name] -n deploy manifest.yml --vars-store=credentials.yml -v appli="mongodb"
+bosh -d [deployment name] cr
+bosh -d [deployment name] ur
+bosh -d [deployment name] -n deploy manifest.yml --vars-store=credentials.yml -v appli="mongodb"
 ```
 
 > >
