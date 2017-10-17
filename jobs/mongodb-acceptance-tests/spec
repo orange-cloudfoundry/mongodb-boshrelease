@@ -1,0 +1,15 @@
+---
+name: mongodb-acceptance-tests
+
+packages:
+  - golang-1.8-linux
+  - mongodb-acceptance-tests
+
+templates:
+  config.json.erb: config.json
+  errand.sh.erb: bin/run
+
+properties:
+  acceptance_tests.timeout_scale:
+    description: Timeout scale to be used by the acceptance tests errand
+    default: 1.0

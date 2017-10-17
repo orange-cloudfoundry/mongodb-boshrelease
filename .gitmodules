@@ -1,3 +1,6 @@
 [submodule "src/cf-mongodb-example-app"]
 	path = src/cf-mongodb-example-app
 	url = https://github.com/JCL38-ORANGE/cf-mongodb-example-app
+[submodule "src/mongodb-acceptance-tests"]
+	path = src/mongodb-acceptance-tests
+	url = https://github.com/FoOTOo/cf-mongodb-smoke-tests.git

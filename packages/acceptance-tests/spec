@@ -1,0 +1,8 @@
+---
+name: acceptance-tests
+
+dependencies:
+  - golang-1.8-linux
+
+files:
+  - mongodb-acceptance-tests/**/*

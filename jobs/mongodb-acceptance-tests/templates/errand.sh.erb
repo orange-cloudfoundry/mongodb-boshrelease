@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -e
+
+export GOPATH=/var/vcap/packages/mongodb-acceptance-tests
+export GOROOT=$(readlink -nf /var/vcap/packages/golang-1.8-linux)
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+export REPO_NAME=github.com/orange-cloudfoundry/mongodb-acceptance-tests
+export REPO_DIR=${GOPATH}/src/${REPO_NAME}
+
+export CONFIG_PATH=/var/vcap/jobs/mongodb-acceptance-tests/config.json
+
+pushd ${REPO_DIR}
+ chmod +x ./bin/test
+ ./bin/test
+popd
