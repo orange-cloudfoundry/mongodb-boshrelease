@@ -1,5 +1,5 @@
 ---
-name: acceptance-tests
+name: mongodb-acceptance-tests
 
 dependencies:
   - golang-1.8-linux
