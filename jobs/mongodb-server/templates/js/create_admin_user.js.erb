@@ -1,23 +1,33 @@
-use admin
-if (db.system.users.find({user:'<%= p("mongodb.admin_username") %>'}).count() == 0) {
-  db.createUser(
-  {
-    user: "<%= p("mongodb.admin_username") %>",
-    pwd: "<%= p("mongodb.admin_password") %>",
-    roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
-  }
-)
+<%
+
+require "json"
+
+def esc(str)
+    str.to_json[1..-2]
+end
+
+-%>
+use admin;
+
+if (db.system.users.find({ user: "<%= esc(p('mongodb.admin_username')) %>" }).count() == 0) {
+    db.createUser({
+        user: "<%= esc(p('mongodb.admin_username')) %>",
+        pwd: "<%= esc(p('mongodb.admin_password')) %>",
+        roles: [
+            { role: "userAdminAnyDatabase", db: "admin" }
+        ]
+    });
 } else {
-  db.changeUserPassword("<%= p("mongodb.admin_username") %>","<%= p("mongodb.admin_password") %>")
+    db.changeUserPassword("<%= esc(p('mongodb.admin_username')) %>", "<%= esc(p('mongodb.admin_password')) %>");
 }
-if (db.system.users.find({user:'<%= p("mongodb.root_username") %>'}).count() == 0) {
-db.createUser(
-  {
-    user: "<%= p("mongodb.root_username") %>",
-    pwd: "<%= p("mongodb.root_password") %>",
-    roles: [ { role: "root", db: "admin" } ]
-  }
-)
+if (db.system.users.find({ user: "<%= esc(p('mongodb.root_username')) %>" }).count() == 0) {
+    db.createUser({
+        user: "<%= esc(p('mongodb.root_username')) %>",
+        pwd: "<%= esc(p('mongodb.root_password')) %>",
+        roles: [
+            { role: "root", db: "admin" }
+        ]
+    });
 } else {
-  db.changeUserPassword("<%= p("mongodb.root_username") %>","<%= p("mongodb.root_password") %>")
+    db.changeUserPassword("<%= esc(p('mongodb.root_username')) %>", "<%= esc(p('mongodb.root_password')) %>");
 }
