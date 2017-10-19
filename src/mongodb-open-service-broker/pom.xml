@@ -80,7 +80,6 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-<!--
 			<plugin>
 				<groupId>com.syncleus.maven.plugins</groupId>
 				<artifactId>maven-mongodb-plugin</artifactId>
@@ -111,7 +110,7 @@
 					</execution>
 				</executions>
 			</plugin>
--->
+<!--
 			<plugin>
 				<groupId>com.github.joelittlejohn.embedmongo</groupId>
 				<artifactId>embedmongo-maven-plugin</artifactId>
@@ -137,6 +136,7 @@
 					</execution>
 				</executions>
 			</plugin>
+-->
          </plugins>
 	</build>
 </project>
