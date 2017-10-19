@@ -77,41 +77,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>com.syncleus.maven.plugins</groupId>
-				<artifactId>maven-mongodb-plugin</artifactId>
-				<version>1.1.1</version>
-				<executions>
-					<execution>
-						<id>start</id>
-						<phase>process-test-resources</phase>
-						<goals>
-							<goal>start</goal>
-						</goals>
-						<configuration>
-							<port>27017</port>
-							<version>3.4.9</version>
-							<databaseDirectory>/tools/mongodb-embedded/data/db</databaseDirectory>
-							<artifactDirectory>/tools/mongodb-embedded/mongoartifact</artifactDirectory>
-							<logging>console</logging>
-							<logFile>${project.build.directory}/myfile.log</logFile>
-							<logFileEncoding>utf-8</logFileEncoding>
-							<proxyHost>localhost</proxyHost>
-							<proxyPort>3128</proxyPort>
-							<bindIp>127.0.0.1</bindIp>
-							<syncDelay>0</syncDelay>
-							<defaultImportDatabase>test</defaultImportDatabase>
-							<storageEngine>wiredTiger</storageEngine>
-							<skip>false</skip>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-<!--
-			<plugin>
 				<groupId>com.github.joelittlejohn.embedmongo</groupId>
 				<artifactId>embedmongo-maven-plugin</artifactId>
 				<version>0.3.4</version>
@@ -136,7 +101,6 @@
 					</execution>
 				</executions>
 			</plugin>
--->
          </plugins>
 	</build>
 </project>
