@@ -56,15 +56,64 @@
 			<version>3.6</version>
 		</dependency>
 
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.5</version>
+			<scope>test</scope>
+		</dependency>
+
+<!--
+		<dependency>
+			<groupId>de.flapdoodle.embed</groupId>
+			<artifactId>de.flapdoodle.embed.mongo</artifactId>
+			<version>2.0.0</version>
+			<scope>test</scope>
+		</dependency>
+-->
+
 	</dependencies>
 	
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+				<groupId>com.github.joelittlejohn.embedmongo</groupId>
+				<artifactId>embedmongo-maven-plugin</artifactId>
+				<version>0.3.4</version>
+				<executions>
+					<execution>
+						<id>start</id>
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+						<configuration>
+							<port>27017</port>
+							<version>3.4.9</version>
+							<databaseDirectory>${project.build.directory}/mongodb-embedded/data/db</databaseDirectory>
+							<logging>console</logging>
+							<logFile>${project.build.directory}/myfile.log</logFile>
+							<logFileEncoding>utf-8</logFileEncoding>
+							<bindIp>127.0.0.1</bindIp>
+							<storageEngine>wiredTiger</storageEngine>
+							<skip>false</skip>
+						</configuration>
+					</execution>
+					<execution>
+						<id>mongo-scripts</id>
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>mongo-scripts</goal>
+						</goals>
+						<configuration>
+							<version>3.4.9</version>
+							<scriptsDirectory>${project.basedir}/js</scriptsDirectory>
+							<scriptCharsetEncoding>UTF-8</scriptCharsetEncoding>
+							<databaseName>admin</databaseName>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
-		</plugins>
+         </plugins>
 	</build>
-
 </project>
