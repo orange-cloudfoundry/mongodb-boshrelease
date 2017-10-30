@@ -2,9 +2,9 @@
 
 set -e
 
-export GOPATH=/var/vcap/packages/mongodb-acceptance-tests
-export GOROOT=$(readlink -nf /var/vcap/packages/golang-1.8-linux)
-export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+pushd /var/vcap/packages/mongodb-acceptance-tests || exit 115
+    source /var/vcap/packages/golang-1.8-linux/bosh/compile.env
+popd
 
 export MATS_PKG_NAME=github.com/orange-cloudfoundry/mongodb-acceptance-tests
 export MATS_PKG_DIR=${GOPATH}/src/${MATS_PKG_NAME}
