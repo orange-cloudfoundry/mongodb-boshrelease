@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+fixtures=(standard-setup)
+job=mongod
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd -P || exit 115)
 RELEASE_DIR=$(cd "$SCRIPT_DIR/.." && pwd -P || exit 115)
@@ -19,7 +21,7 @@ function look_for_deviance() {
 	echo -e "\nTesting template '$BOLD$BLUE$template$NORMAL' with fixture '$BOLD$BLUE$fixture_spec$NORMAL'."
 	colordiff -u \
 		"$SCRIPT_DIR/expected-results/$expected_result_file" \
-		<("$SCRIPT_DIR/render.rb" \
+		<(bundle exec ruby "$SCRIPT_DIR/render.rb" \
 			"$RELEASE_DIR/jobs/$job/templates/$template" \
 			"$SCRIPT_DIR/fixtures/${fixture_spec}.yml")
 	if [ "$?" -eq 0 ]; then
@@ -29,8 +31,6 @@ function look_for_deviance() {
 	fi
 }
 
-fixtures=(standard-setup)
-job=mongodb-server
 for fixture in "${fixtures[@]}"; do
 	template=config/mongod.conf.erb
 	look_for_deviance $job $template $fixture mongod-${fixture}.conf
