@@ -11,19 +11,19 @@ def esc(x)
     end
 end
 
-tcp_port = case p("mongodb.node_role")
+tcp_port = case p("node_role")
     when "rs"
-        p("mongodb.rs_port")
+        p("rs_port")
     when "sh"
-        p("mongodb.sh_port")
+        p("sh_port")
     when "cfg"
-        p("mongodb.cfg_port")
+        p("cfg_port")
     when "mongos"
-        p("mongodb.mongos_port")
+        p("mongos_port")
 end
 -%>
 rs.initiate({
-    _id : "<%= esc(p('mongodb.replication.replica_set_name')) %>",
+    _id : "<%= esc(p('replication.replica_set_name')) %>",
     members: [
         {
             _id: 0,

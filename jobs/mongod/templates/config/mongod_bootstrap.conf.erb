@@ -1,12 +1,12 @@
 <%-
-mongo_DbVersion = p("mongodb.db_version")
-mongo_DbToolVersion = p("mongodb.db_tool_version")
+mongo_DbVersion = p("db_version")
+mongo_DbToolVersion = p("db_tool_version")
 
 Conf_bindIp = "127.0.0.1,#{spec.ip}"
 
 # Managed the mongodb port binding depending on the mongodb role
-if p("mongodb.node_role") == "rs" || p("mongodb.node_role") == "sa"
-  DbTypeport=p("mongodb.rs_port")
+if p("node_role") == "rs" || p("node_role") == "sa"
+  DbTypeport=p("rs_port")
   _rsconfig = ''
   link('server').instances.each do |instance|
     _rsconfig = "#{_rsconfig}#{instance.address}:#{DbTypeport},"
@@ -14,18 +14,18 @@ if p("mongodb.node_role") == "rs" || p("mongodb.node_role") == "sa"
   # remove last ,
   rsconfig = _rsconfig[0..-2]
 end
-if p("mongodb.node_role") == "sh"
-  DbTypeport=p("mongodb.sh_port")
+if p("node_role") == "sh"
+  DbTypeport=p("sh_port")
 end
-if p("mongodb.node_role") == "cfg"
-  DbTypeport=p("mongodb.cfg_port")
+if p("node_role") == "cfg"
+  DbTypeport=p("cfg_port")
 end
-if p("mongodb.node_role") == "mongos"
-  DbTypeport=p("mongodb.mongos_port")
+if p("node_role") == "mongos"
+  DbTypeport=p("mongos_port")
 end
 
 # Retrieve all parts of the Mongodb version
-/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("mongodb.db_version") #=> 0
+/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("db_version") #=> 0
 
 DbVersionMaj = _DbVersionMaj
 DbVersionMid = _DbVersionMid
@@ -52,11 +52,11 @@ Conf_PEMKeyFile = Sys_Db_dirSSL + "/server.pem"
 Conf_CAFile = Sys_Db_dirSSL + "/ca_chain.crt"
 
 storage_journal_enabled = "true"
-storage_mmap_v1_small_files = p("mongodb.mmap_v1_small_files")
-replication_oplog_size_mb = p("mongodb.replication.operation_log_max_size_mb")
+storage_mmap_v1_small_files = p("mmap_v1_small_files")
+replication_oplog_size_mb = p("replication.operation_log_max_size_mb")
 
-if_p("mongodb.arbiter_only") do
-  if p("mongodb.arbiter_only") == "yes"
+if_p("arbiter_only") do
+  if p("arbiter_only") == "yes"
     storage_journal_enabled = "false"
     storage_mmap_v1_small_files = "true"
     replication_oplog_size_mb = 1
@@ -69,7 +69,7 @@ systemLog:
   logAppend: true
   logRotate: reopen
 storage:
-  engine: <%= p("mongodb.storage_engine") %>
+  engine: <%= p("storage_engine") %>
   dbPath: <%= Sys_Db_dirData %>
   directoryPerDB: true
   journal:
@@ -77,7 +77,7 @@ storage:
   <%- if_p("Conf_commitIntervalMs") do -%>  
     commitIntervalMs: <%= Conf_commitIntervalMs %>
   <%- end -%>
-  <%- if p("mongodb.storage_engine") == "mmapv1" -%>
+  <%- if p("storage_engine") == "mmapv1" -%>
   mmapv1:
     smallFiles: <%= storage_mmap_v1_small_files %>
     <% if_p("Conf_mmapv1_preallocDataFiles") do -%>
@@ -96,12 +96,12 @@ storage:
       <%- end -%>
     <%- end -%>
   <%- end -%>
-  <%- if p("mongodb.storage_engine") == "wiredTiger" -%>
+  <%- if p("storage_engine") == "wiredTiger" -%>
   wiredTiger:
     engineConfig:
       directoryForIndexes: true
-    <%- if_p("mongodb.wired_tiger_cache_size_gb") do -%>
-      cacheSizeGB: <%= p("mongodb.wired_tiger_cache_size_gb") %>
+    <%- if_p("wired_tiger_cache_size_gb") do -%>
+      cacheSizeGB: <%= p("wired_tiger_cache_size_gb") %>
     <%- end -%>
     <%- if_p("Conf_wiredTiger_journalCompressor") do -%>
       journalCompressor: <%= Conf_wiredTiger_journalCompressor %>
@@ -123,7 +123,7 @@ net:
   unixDomainSocket:
     enabled: true
     pathPrefix: <%= Sys_Db_dirRun %>
-<%- if p("mongodb.require_ssl") == 1 -%>
+<%- if p("require_ssl") == 1 -%>
   ssl:
     mode: requireSSL
     PEMKeyFile: <%= Conf_PEMKeyFile %>
@@ -132,10 +132,10 @@ net:
     allowInvalidHostnames: true
 <%- end -%>
 operationProfiling:
-  slowOpThresholdMs: <%= p("mongodb.slow_query_threshold_ms") %>
-<%- if p("mongodb.replication.enable") == 1 && p("mongodb.node_role") != "sa" -%>
+  slowOpThresholdMs: <%= p("slow_query_threshold_ms") %>
+<%- if p("replication.enable") == 1 && p("node_role") != "sa" -%>
 replication:
-  replSetName: <%= p("mongodb.replication.replica_set_name") %>
+  replSetName: <%= p("replication.replica_set_name") %>
   oplogSizeMB: <%= replication_oplog_size_mb %>
 <%- end -%>
 setParameter:

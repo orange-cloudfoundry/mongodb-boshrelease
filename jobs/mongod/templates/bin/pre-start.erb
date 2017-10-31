@@ -5,8 +5,8 @@ set -eux
 source `dirname $(readlink --canonicalize-existing $0)`/setenv
 
 <%-
-if p("mongodb.node_role") == "rs" || p("mongodb.node_role") == "sa"
-  mongo_DbTypeport = p("mongodb.rs_port")
+if p("node_role") == "rs" || p("node_role") == "sa"
+  mongo_DbTypeport = p("rs_port")
   _mongo_rsconfig = ''
   link('server').instances.each do |instance|
     _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport},"
@@ -15,7 +15,7 @@ if p("mongodb.node_role") == "rs" || p("mongodb.node_role") == "sa"
   mongo_rsconfig = _mongo_rsconfig[0..-2]
   mongo_current_ip = spec.ip
 end
-if p("mongodb.require_ssl") == 0 -%>
+if p("require_ssl") == 0 -%>
 export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo.sh"
 <%- else -%>
 # Generate the certificates
@@ -102,8 +102,8 @@ check_master()
     then
       Master=$Server
     else
-      if [ "`${MONGO_CMD} --host $Server -u '<%= p("mongodb.root_username") %>' \
-          -p '<%= p("mongodb.root_password") %>' --authenticationDatabase admin \
+      if [ "`${MONGO_CMD} --host $Server -u '<%= p("root_username") %>' \
+          -p '<%= p("root_password") %>' --authenticationDatabase admin \
           ${MONGO_CMD_PARAM} --eval 'db.isMaster().ismaster' 2>/dev/null`" == "true" ]
       then
         Master=$Server
@@ -116,14 +116,14 @@ check_master()
 remove_unwanted_nodes()
 {
   export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
-    -u <%= p("mongodb.root_username") %> -p <%= p("mongodb.root_password") %> --authenticationDatabase admin"
+    -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin"
 
   wanted_servers=$(echo <%= mongo_rsconfig -%>|tr -s "," " ")
   for defined_server in $( get_actual_members )
   do
     if [ `echo $wanted_servers| grep $defined_server|wc -l` -eq 0 ]
     then
-      ${MONGO_CMD} --host <%= p("mongodb.replication.replica_set_name") %>/$Master \
+      ${MONGO_CMD} --host <%= p("replication.replica_set_name") %>/$Master \
         ${MONGO_CMD_PARAM} --eval 'rs.remove("'$defined_server':<%= mongo_DbTypeport %>")'
     fi
   done
@@ -136,13 +136,13 @@ create_admin_users()
     while [ $CR -ne 0 ]
     do
       created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mongo_current_ip %> \
-        --eval 'db.getUser("<%= p("mongodb.admin_username") %>")' admin`
+        --eval 'db.getUser("<%= p("admin_username") %>")' admin`
       CR=$?
       [ $CR -eq 0 -a "$created" == "null" ] && CR=1
       if [ $CR -eq 0 ]
       then
         created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mongo_current_ip %> \
-          --eval 'db.getUser("<%= p("mongodb.root_username") %>")' admin`
+          --eval 'db.getUser("<%= p("root_username") %>")' admin`
         CR=$?
         [ $CR -eq 0 -a "$created" == "null" ] && CR=1
       fi
@@ -189,16 +189,16 @@ then
   fi
 else
   start_bs
-  export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u <%= p("mongodb.root_username") %> -p <%= p("mongodb.root_password") %> --authenticationDatabase admin"
+  export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin"
   # check Master node if admin users have already been created
   admin_initialized=`${MONGO_CMD} --host $Master ${MONGO_CMD_PARAM} \
-    --eval 'db.getUser("<%= p("mongodb.admin_username") %>")' admin`
+    --eval 'db.getUser("<%= p("admin_username") %>")' admin`
   CR=$?
   [ $CR -eq 0 -a "$admin_initialized" == "null" ] && CR=1
   if [ $CR -eq 0 ]
   then
     admin_initialized=`${MONGO_CMD} --host $Master  ${MONGO_CMD_PARAM} \
-      --eval 'db.getUser("<%= p("mongodb.root_username") %>")' admin`
+      --eval 'db.getUser("<%= p("root_username") %>")' admin`
     CR=$?
     [ $CR -eq 0 -a "$admin_initialized" == "null" ] && CR=1
   fi
@@ -214,7 +214,7 @@ else
   fi
 
   # Adding current node to rs
-  ${MONGO_CMD} --host <%= p("mongodb.replication.replica_set_name") %>/$Master \
+  ${MONGO_CMD} --host <%= p("replication.replica_set_name") %>/$Master \
     ${MONGO_CMD_PARAM} --eval 'rs.add("<%= mongo_current_ip %>:<%= mongo_DbTypeport %>")'
   [ $? -ne 0 ] && exit 1
   # need to wait for complete add before restarting
@@ -243,7 +243,7 @@ sys_update
 
 export MONGO_CMD_PARAM="--quiet"
 
-<%- if  p("mongodb.node_role") == "sa" %>
+<%- if  p("node_role") == "sa" %>
 # In standalone mode
 start_bs
 create_admin_users
