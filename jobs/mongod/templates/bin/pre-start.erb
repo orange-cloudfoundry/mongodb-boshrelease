@@ -89,6 +89,12 @@ system_update()
       chmod 775 ${dir}
     done
 
+    # permissions on keyfile have to be 600
+    # otherwise "permissions on /var/vcap/jobs/mongod/config/keyfile are too open" occur
+    keyfile=/var/vcap/jobs/mongod/config/keyfile
+    chmod 600 $keyfile
+    chown vcap:vcap $keyfile
+
     # updating vcap limits
     if [ -f /etc/security/limits.conf ]
     then
