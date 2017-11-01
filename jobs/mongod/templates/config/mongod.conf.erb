@@ -36,12 +36,12 @@ DbProductName = "mongodb-cf-release"
 #DbPymongoName: mongodb-orange-python-pymongo
 #DbToolName: mongodb-orange-tools
 # Mongodb directory
-Sys_Db_dirRoot="/var/vcap/store/mongodb-server"
-Sys_Db_dirCfg="/var/vcap/jobs/mongodb-server/config"
-Sys_Db_dirSSL="/var/vcap/jobs/mongodb-server/ssl"
-Sys_Db_dirData="/var/vcap/store/mongodb-server/data"
-Sys_Db_dirLog="/var/vcap/sys/log/mongodb-server"
-Sys_Db_dirRun="/var/vcap/sys/run/mongodb-server"
+Sys_Db_dirRoot="/var/vcap/store/mongod"
+Sys_Db_dirCfg="/var/vcap/jobs/mongod/config"
+Sys_Db_dirSSL="/var/vcap/jobs/mongod/ssl"
+Sys_Db_dirData="/var/vcap/store/mongod/data"
+Sys_Db_dirLog="/var/vcap/sys/log/mongod"
+Sys_Db_dirRun="/var/vcap/sys/run/mongod"
 Sys_Db_dirManaged = [ Sys_Db_dirRoot, Sys_Db_dirCfg, Sys_Db_dirData, Sys_Db_dirLog, Sys_Db_dirRun ]
 # Mongodb configuration parameters
 Conf_systemLog = Sys_Db_dirLog + "/mongod.log"

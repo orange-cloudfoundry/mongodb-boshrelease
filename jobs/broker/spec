@@ -6,7 +6,7 @@ packages:
 - mongodb-broker-pkg
 consumes:
 - name: server
-  type: mongodb-server
+  type: mongod
 
 templates:
   bin/ctl: bin/ctl

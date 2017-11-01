@@ -17,7 +17,7 @@ templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
   bin/pre-start.erb: bin/pre-start
-  bin/mongodb-server_ctl: bin/mongodb_server_ctl
+  bin/mongod_ctl: bin/mongod_ctl
   bin/mongo.sh: bin/mongo.sh
   bin/mongo-ssl.sh: bin/mongo-ssl.sh
   bin/mongoadmin.sh.erb: bin/mongoadmin.sh
@@ -86,11 +86,6 @@ properties:
       description: |
         The maximum size of the internal cache that WiredTiger will use for all
         data. Values can range from 256MB to 10TB and can be a float.
-
-        When this option is set to 'null' (without quotes), the WiredTiger
-        internal cache, by default, will use the larger of either: 50% of RAM
-        minus 1 GB, or 256 MB. Avoid increasing the WiredTiger internal cache
-        size above such default values.
 
         The default WiredTiger internal cache size value assumes that there is a
         single mongod instance per machine. If a single machine contains
