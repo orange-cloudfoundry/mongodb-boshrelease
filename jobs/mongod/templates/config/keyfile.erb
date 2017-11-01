@@ -1,1 +1,1 @@
-<% if_p("mongodb.replication.enable") do %><% if p("mongodb.require_ssl") == 0 %><%= p("mongodb.replication.key") %><% end %><% end %>
+<% if_p("replication.enable") do %><% if p("require_ssl") == 0 %><%= p("replication.key") %><% end %><% end %>
