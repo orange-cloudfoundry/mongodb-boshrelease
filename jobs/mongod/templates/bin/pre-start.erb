@@ -48,7 +48,8 @@ start_mongod_noauth()
     pid_guard $PIDFILE ${JOB_NAME}
 
     # start mongod without auth
-    su -m vcap -c "$MONGODB_BIN/mongod --config $MONGODB_CONF/mongod_bootstrap.conf  --pidfilepath $PIDFILE"
+    chpst -u vcap:vcap $MONGODB_BIN/mongod --config $MONGODB_CONF/mongod_bootstrap.conf \
+      --pidfilepath $PIDFILE
 }
 ################################################################################################
 
@@ -66,7 +67,8 @@ start_mongod_with_auth()
     pid_guard $PIDFILE ${JOB_NAME}
 
     # start mongod without auth
-    su -m vcap -c "$MONGODB_BIN/mongod --config $MONGODB_CONF/mongod.conf --pidfilepath $PIDFILE"
+    chpst -u vcap:vcap $MONGODB_BIN/mongod --config $MONGODB_CONF/mongod.conf \
+      --pidfilepath $PIDFILE
 }
 ################################################################################################
 
