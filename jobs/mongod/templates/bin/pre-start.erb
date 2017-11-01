@@ -46,9 +46,14 @@ start_mongod_noauth()
     fi
 
     pid_guard $PIDFILE ${JOB_NAME}
+    
+    # create temporary conf file excluding keyfile
+    [ -f /tmp/mongod_bs.conf ] && rm -f /tmp/mongod_bs.conf
+    grep -v keyfile $MONGODB_CONF/mongod.conf >/tmp/mongod_bs.conf
+    chmod a+r /tmp/mongod_bs.conf
 
     # start mongod without auth
-    chpst -u vcap:vcap $MONGODB_BIN/mongod --config $MONGODB_CONF/mongod.conf --noauth \
+    chpst -u vcap:vcap $MONGODB_BIN/mongod --config /tmp/mongod_bs.conf --noauth \
       --pidfilepath $PIDFILE
 }
 ################################################################################################

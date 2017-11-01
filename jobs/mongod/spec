@@ -26,6 +26,7 @@ templates:
   bin/generate_ssl_cert.sh.erb: bin/generate_ssl_cert.sh
   data/properties.sh.erb: data/properties.sh
   config/mongod.conf.erb: config/mongod.conf
+  config/keyfile.erb: config/keyfile
   config/vcap_limits.conf.erb: config/vcap_limits.conf
   ssl/mongodb.key.erb: ssl/mongodb.key
   ssl/mongodb.crt.erb: ssl/mongodb.crt
