@@ -128,6 +128,12 @@ properties:
         size of the oplog.
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.oplogSizeMB
+  replication.key:
+      description: |
+        Specify key which will be used in keyfile. Mandatory for replication without ssl
+        With keyfile authentication, each mongod instances in the replica set uses the contents of the keyfile as the shared password for authenticating other members in the deployment. Only mongod instances with the correct keyfile can join the replica set.
+
+        The content of the keyfile must be between 6 and 1024 characters long and must be the same for all members of the replica set.        
   enable_role_based_access_control:
       default: 1
       description: |
