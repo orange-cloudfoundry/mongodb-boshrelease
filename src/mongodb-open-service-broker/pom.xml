@@ -90,13 +90,26 @@
 						<configuration>
 							<port>27017</port>
 							<version>3.4.9</version>
-							<databaseDirectory>/tools/mongodb-embedded/data/db</databaseDirectory>
+							<databaseDirectory>${project.build.directory}/mongodb-embedded/data/db</databaseDirectory>
 							<logging>console</logging>
 							<logFile>${project.build.directory}/myfile.log</logFile>
 							<logFileEncoding>utf-8</logFileEncoding>
 							<bindIp>127.0.0.1</bindIp>
 							<storageEngine>wiredTiger</storageEngine>
 							<skip>false</skip>
+						</configuration>
+					</execution>
+					<execution>
+						<id>mongo-scripts</id>
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>mongo-scripts</goal>
+						</goals>
+						<configuration>
+							<version>3.4.9</version>
+							<scriptsDirectory>${project.basedir}/js</scriptsDirectory>
+							<scriptCharsetEncoding>UTF-8</scriptCharsetEncoding>
+							<databaseName>admin</databaseName>
 						</configuration>
 					</execution>
 				</executions>
