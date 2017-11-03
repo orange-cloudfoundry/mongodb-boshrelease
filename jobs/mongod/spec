@@ -22,6 +22,7 @@ templates:
   bin/mongo-ssl.sh: bin/mongo-ssl.sh
   bin/mongoadmin.sh.erb: bin/mongoadmin.sh
   bin/setenv.erb: bin/setenv
+  bin/mdb-functions.erb: bin/mdb-functions
   bin/monit_debugger: bin/monit_debugger
   bin/generate_ssl_cert.sh.erb: bin/generate_ssl_cert.sh
   data/properties.sh.erb: data/properties.sh
