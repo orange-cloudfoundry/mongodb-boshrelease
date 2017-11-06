@@ -16,7 +16,7 @@ provides:
 templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
-  bin/pre-start.erb: bin/pre-start
+  bin/pre-start: bin/pre-start
   bin/mongod_ctl: bin/mongod_ctl
   bin/mongo.sh: bin/mongo.sh
   bin/mongo-ssl.sh: bin/mongo-ssl.sh
