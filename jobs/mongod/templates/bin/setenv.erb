@@ -1,6 +1,12 @@
 #!/bin/bash
 
-ulimit -n 131072
+# fixing the limits 
+ulimit -n 64000
+ulimit -u 64000
+ulimit -f unlimited
+ulimit -t unlimited
+ulimit -v unlimited
+ulimit -m unlimited 
 
 export LANG=en_US.UTF-8
 
