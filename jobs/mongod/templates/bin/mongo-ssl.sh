@@ -8,7 +8,7 @@ source `dirname $(readlink -f $0)`/setenv
 export PARAM="$@"
 
 pushd /var/vcap/packages/mongodb/bin >/dev/null
-exec chpst -u vcap:vcap ${MONGODB_BIN}/mongo --ssl \
+exec chpst -u vcap:vcap env HOME=/home/vcap ${MONGODB_BIN}/mongo --ssl \
   --sslCAFile /var/vcap/jobs/${JOB_NAME}/ssl/mongodb.ca \
   --sslPEMKeyFile /var/vcap/jobs/${JOB_NAME}/ssl/client.pem $PARAM
 popd >/dev/null
