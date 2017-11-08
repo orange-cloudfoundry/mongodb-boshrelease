@@ -2,13 +2,13 @@
 
 source `dirname $(readlink --canonicalize-existing $0)`/setenv
 
-<%- if p("mongodb.require_ssl") == 0 -%>
+<%- if p("require_ssl") == 0 -%>
 export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo.sh"
 <%- else -%>
 export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo-ssl.sh"
 <%- end -%>
-<%- if p("mongodb.node_role") == "rs" || p("mongodb.node_role") == "sa"
-     mongo_DbTypeport=p("mongodb.rs_port")
+<%- if p("node_role") == "rs" || p("node_role") == "sa"
+     mongo_DbTypeport=p("rs_port")
      _mongo_rsconfig = ''
      link('server').instances.each do |instance|
        _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport},"
@@ -20,13 +20,13 @@ end -%>
 export PARAM="$@"
 
 pushd /var/vcap/packages/mongodb/bin >/dev/null
-<%- if p("mongodb.node_role") == "sa" -%>
+<%- if p("node_role") == "sa" -%>
 ${MONGO_CMD} --host <%= mongo_rsconfig %> \
- -u <%= p("mongodb.root_username") %> -p <%= p("mongodb.root_password") %> --authenticationDatabase admin \
+ -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin \
  $PARAM
 <%- else -%>
-${MONGO_CMD} --host <%= p("mongodb.replication.replica_set_name") %>/<%= mongo_rsconfig %> \
- -u <%= p("mongodb.root_username") %> -p <%= p("mongodb.root_password") %> --authenticationDatabase admin \
+${MONGO_CMD} --host <%= p("replication.replica_set_name") %>/<%= mongo_rsconfig %> \
+ -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin \
  $PARAM
 <%- end -%> 
 popd >/dev/null

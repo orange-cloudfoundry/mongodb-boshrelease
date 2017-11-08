@@ -8,7 +8,7 @@ ulimit -n 131072
 source `dirname $(readlink --canonicalize-existing $0)`/setenv
 
 # Setup env vars and folders for the webapp_ctl script
-source /var/vcap/jobs/mongodb-server/helpers/ctl_setup.sh 'mongodb-server'
+source /var/vcap/jobs/mongod/helpers/ctl_setup.sh 'mongod'
 
 case $1 in
 
