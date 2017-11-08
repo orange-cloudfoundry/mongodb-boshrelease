@@ -1,5 +1,5 @@
 ---
-name: mongodb-server
+name: mongod
 packages:
   - mongodb
   - gcc
@@ -7,11 +7,11 @@ packages:
   - compressors
 consumes:
   - name: server
-    type: mongodb-server
+    type: mongod
 
 provides:
   - name: server
-    type: mongodb-server
+    type: mongod
 
 templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
