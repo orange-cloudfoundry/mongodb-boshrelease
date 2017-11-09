@@ -101,24 +101,6 @@ rights_and_directories()
 ###################### Perform the OS mandatories ##############################################
 system_update()
 {
-    # updating vcap limits
-    if [ -f /etc/security/limits.conf ]
-    then
-      if [ `grep "$(cat $JOB_DIR/config/vcap_limits.conf)" /etc/security/limits.conf|wc -l` -eq 0 ]
-      then
-        cat $JOB_DIR/config/vcap_limits.conf >> /etc/security/limits.conf
-      fi
-    # Allow limits apply without rebooting
-      if [ -f /etc/pam.d/common-session ]
-      then
-        if [ `grep "^session required pam_limits.so" /etc/pam.d/common-session|wc -l` -eq 0 ]
-        then
-          echo "# Allow limits apply without rebooting" >> /etc/pam.d/common-session
-          echo "session required pam_limits.so" >> /etc/pam.d/common-session
-        fi
-      fi
-    fi
-
     # disabeling transparent_hugepage
     if [ -d /sys/kernel/mm/transparent_hugepage ]; then
           thp_path=/sys/kernel/mm/transparent_hugepage

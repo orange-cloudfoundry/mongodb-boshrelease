@@ -3,8 +3,6 @@
 set -e # exit immediately if a simple command exits with a non-zero status.
 set -u # report the usage of uninitialized variables.
 
-ulimit -n 131072
-
 source `dirname $(readlink -f $0)`/setenv
 
 # Setup env vars and folders for the webapp_ctl script

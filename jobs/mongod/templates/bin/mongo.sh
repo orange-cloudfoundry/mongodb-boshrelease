@@ -8,6 +8,6 @@ source `dirname $(readlink -f $0)`/setenv
 export PARAM="$@"
 
 pushd /var/vcap/packages/mongodb/bin >/dev/null
-exec chpst -u vcap:vcap ${MONGODB_BIN}/mongo $PARAM
+exec chpst -u vcap:vcap env HOME=/home/vcap ${MONGODB_BIN}/mongo $PARAM
 popd >/dev/null
 exit 0
