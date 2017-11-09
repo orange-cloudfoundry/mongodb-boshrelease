@@ -136,6 +136,8 @@ security:
   authorization: enabled
   <%- if p("require_ssl") == 1 -%>
   clusterAuthMode: x509
+  <%- else -%>
+  keyFile: /var/vcap/jobs/mongod/config/keyfile
   <%- end -%>
 <%- end -%>
 operationProfiling:

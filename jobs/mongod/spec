@@ -26,6 +26,7 @@ templates:
   bin/generate_ssl_cert.sh.erb: bin/generate_ssl_cert.sh
   data/properties.sh.erb: data/properties.sh
   config/mongod.conf.erb: config/mongod.conf
+  config/keyfile.erb: config/keyfile
   config/vcap_limits.conf.erb: config/vcap_limits.conf
   ssl/mongodb.key.erb: ssl/mongodb.key
   ssl/mongodb.crt.erb: ssl/mongodb.crt
@@ -41,9 +42,11 @@ properties:
   node_role:
       default: rs
       description: |
+
         Role for the mongod server in the Mongodb cluster: 'rs' for replica set, 'sa' for stand alone server
         In the future, 'cfg' (for config server), 'sh' (for shard server) will
         also be supported.
+
   rs_port:
       default: 27017
       description: Default mongodb port for replicasets AND standalone server
@@ -127,6 +130,16 @@ properties:
         size of the oplog.
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.oplogSizeMB
+  replication.key:
+      description: |
+        Specify key which will be used in keyfile. Mandatory for replication
+        without ssl With keyfile authentication, each mongod instances in the
+        replica set uses the contents of the keyfile as the shared password
+        for authenticating other members in the deployment. Only mongod
+        instances with the correct keyfile can join the replica set.
+
+        The content of the keyfile must be between 6 and 1024 characters long
+        and must be the same for all members of the replica set.
   enable_role_based_access_control:
       default: 1
       description: |
@@ -175,7 +188,6 @@ properties:
         the 'mongo' client, the '--ssl' argument will not be possible. This
         should be reserved to development environments and be avoided in
         production.
-
   arbiter_only:
       default: no
       example: yes

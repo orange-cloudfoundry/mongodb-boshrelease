@@ -46,9 +46,14 @@ start_mongod_noauth()
     fi
 
     pid_guard $PIDFILE ${JOB_NAME}
+    
+    # create temporary conf file excluding keyfile
+    [ -f /tmp/mongod_bs.conf ] && rm -f /tmp/mongod_bs.conf
+    grep -v '^ *keyFile:' $MONGODB_CONF/mongod.conf >/tmp/mongod_bs.conf
+    chmod a+r /tmp/mongod_bs.conf
 
     # start mongod without auth
-    chpst -u vcap:vcap $MONGODB_BIN/mongod --config $MONGODB_CONF/mongod.conf --noauth \
+    chpst -u vcap:vcap $MONGODB_BIN/mongod --config /tmp/mongod_bs.conf --noauth \
       --pidfilepath $PIDFILE
 }
 ################################################################################################
@@ -72,9 +77,8 @@ start_mongod_with_auth()
 }
 ################################################################################################
 
-
-###################### Perform the OS mandatories ##############################################
-system_update()
+##################### Create mongodb directories and update rights #############################
+rights_and_directories()
 {
     # creating needed directories
     for dir in $RUN_DIR $LOG_DIR $TMP_DIR $STORE_DIR $DATA_DIR
@@ -84,6 +88,17 @@ system_update()
       chmod 775 ${dir}
     done
 
+    # permissions on keyfile have to be 600
+    # otherwise "permissions on /var/vcap/jobs/mongod/config/keyfile are too open" occur
+    keyfile=/var/vcap/jobs/mongod/config/keyfile
+    chmod 600 $keyfile
+    chown vcap:vcap $keyfile
+}
+################################################################################################
+
+###################### Perform the OS mandatories ##############################################
+system_update()
+{
     # updating vcap limits
     if [ -f /etc/security/limits.conf ]
     then
@@ -274,6 +289,7 @@ add_secondary()
 ################################################################################################
 
 system_update            # Updating system mandatories
+rights_and_directories   # Create Mongodb directories and update rights on keyfile
 
 export MONGO_CMD_PARAM="--quiet"
 
