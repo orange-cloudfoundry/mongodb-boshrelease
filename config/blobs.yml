@@ -22,10 +22,6 @@ cf-cli/cf-cli_6.30.0_linux_x86-64.tgz:
   size: 5909858
   object_id: e57130b7-9c58-447b-43b2-bd83770093cf
   sha: 10a795927fd6f03f1b7212f21ac508e6278270fd
-cf-mongodb-example-app/cf-mongodb-example-app.tgz:
-  size: 2853
-  object_id: 28299828-1969-432b-5611-fd0136705e24
-  sha: 76b1aa7eb07af56d32503cfa3e965485f902b248
 cmake/cmake-3.8.2.tar.gz:
   size: 7504706
   object_id: 398c67bd-fbf0-44f2-4e73-b99131e0b747

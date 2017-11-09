@@ -9,7 +9,7 @@ cd ${BUILD_DIR}/mongodb-open-service-broker
 function extract_host_port() {
 	sed -e 's`https\?://\([^/]*\).*`\1`i'
 }
-
+set +u
 declare -a JAVA_OPTS
 if [ -n "$http_proxy" ]; then
 	JAVA_OPTS+=(-Dhttp.proxyHost=$(echo "$http_proxy" | extract_host_port | cut -d: -f1))
@@ -20,6 +20,7 @@ if [ -n "$https_proxy" ]; then
 	JAVA_OPTS+=(-Dhttps.proxyPort=$(echo "$https_proxy" | extract_host_port | cut -d: -f2))
 fi
 export MAVEN_OPTS="${JAVA_OPTS[@]}"
+set -u
 ./mvnw clean install -DskipTests=true
 mv target/mongodb-open-service-broker-0.0.1-SNAPSHOT.jar ${BUILD_DIR}
 
