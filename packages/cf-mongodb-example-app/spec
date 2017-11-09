@@ -1,0 +1,5 @@
+---
+name: cf-mongodb-example-app
+dependencies: []
+files:
+- cf-mongodb-example-app/cf-mongodb-example-app*.tgz
