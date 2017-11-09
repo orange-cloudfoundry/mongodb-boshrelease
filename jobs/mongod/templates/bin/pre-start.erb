@@ -49,7 +49,7 @@ start_mongod_noauth()
     
     # create temporary conf file excluding keyfile
     [ -f /tmp/mongod_bs.conf ] && rm -f /tmp/mongod_bs.conf
-    grep -v keyfile $MONGODB_CONF/mongod.conf >/tmp/mongod_bs.conf
+    grep -v '^ *keyFile:' $MONGODB_CONF/mongod.conf >/tmp/mongod_bs.conf
     chmod a+r /tmp/mongod_bs.conf
 
     # start mongod without auth
