@@ -26,3 +26,6 @@ curl -o texinfo-6.4.tar.gz -L https://ftp.gnu.org/gnu/texinfo/texinfo-6.4.tar.gz
 curl -o bc-1.07.1.tar.gz -L https://ftp.gnu.org/gnu/bc/bc-1.07.1.tar.gz
 curl -o binutils-2.28.tar.gz -L https://ftp.gnu.org/gnu/binutils/binutils-2.28.tar.gz
 curl -o coreutils-8.27.tar.xz -L https://ftp.gnu.org/gnu/coreutils/coreutils-8.27.tar.xz
+wget https://s3-us-west-1.amazonaws.com/cf-cli-releases/releases/v6.30.0/cf-cli_6.30.0_linux_x86-64.tgz
+git clone https://github.com/JCL38-ORANGE/cf-mongodb-example-app.git
+

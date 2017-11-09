@@ -9,6 +9,8 @@
 * [Prerequisites](#prerequisites)
 * [Packages versions summary](#packages-versions-summary)
 * [Release tree](#release-tree)
+* [Broker](#broker)
+* [Configuring CF to use Mongodb service](#configuring)
 * [Installation](#installation)
   - [Get vendor package](#get-vendor-package)
   * [Add needed blobs](#add-needed-blobs)
@@ -145,6 +147,69 @@ coreutils | `8.27`   |
     └── downloadblob.sh
 ```
 
+## Broker
+
+### Mongodb Broker (broker job)
+
+The mongodb broker implements the 5 REST endpoints required by Cloud Foundry to write V2 services : 
+* Catalog management in order to register the broker to the platform
+* Provisioning in order to create resource in the mongodb server
+* Deprovisioning in order to release resource previously allocated
+* Binding (credentials type) in order to provide application with a set of information required to use the allocated service
+* Unbinding in order to delete credentials resources previously allocated
+  
+### Mongodb Broker Smoke Tests (broker-smoke-tests job)
+
+The mongodb broker smoke test acts as an end user developper who wants to host its application in a cloud foundry.
+
+For that, it relies on a sample mongodb application : https://github.com/JCL38-ORANGE/cf-mongodb-example-app
+
+The following steps are performed by the smoke tests job : 
+* Authentication on Cloud Foundry by targeting org and space (cf auth and cf target)
+* Deployment of the sample mongodb application (cf push)
+* Provisioning of the service (cf create-service)
+* Binding of the service (cf bind-service)
+* Restaging of the sample mongodb application (cf restage)
+* Table creation in the mongodb cluster (HTTP POST command to the sample mongodb application)
+* Table deletion in the mongodb cluster (HTTP DELETE command to the sample mongodb application)
+
+## Configuring CF to use Mongodb service
+
+### Available Plans
+
+For the moment, only 1 default plan available for shared Mongodb.
+
+### Broker registration
+
+The broker uses HTTP basic authentication to authenticate clients. The `cf create-service-broker` command expects the credentials for the cloud
+controller to authenticate itself to the broker. 
+
+```bash
+cf create-service-broker p-mongodb-broker <user> <password> <url> 
+cf enable-service-access mongodb
+```
+
+### Service provisioning
+
+```bash
+cf create-service mongodb default mongodb-instance
+```
+
+### Service binding
+
+```bash
+cf bind-service mongodb-example-app mongodb-instance
+```
+### Service unbinding
+
+```bash
+cf unbind-service mongodb-example-app mongodb-instance
+```
+### Service deprovisioning
+
+```bash
+cf delete-service mongodb-instance
+```
 
 ## Installation
 
