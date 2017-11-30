@@ -1,6 +1,0 @@
----
-name: coreutils
-dependencies: 
--  gcc
-files:
--  coreutils/coreutils-*.tar.xz
