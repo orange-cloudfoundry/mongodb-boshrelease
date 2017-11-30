@@ -2,9 +2,6 @@
 name: mongod
 packages:
   - mongodb
-  - gcc
-  - openssl
-  - compressors
 consumes:
   - name: server
     type: mongod
