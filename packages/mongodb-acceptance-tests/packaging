@@ -2,8 +2,9 @@
 
 set -e # abort script on any command that exits with a non zero value
 
-REPO_SOURCE_DIR=mongodb-acceptance-tests
 REPO_NAME=github.com/orange-cloudfoundry/mongodb-acceptance-tests
+
+REPO_SOURCE_DIR=${REPO_NAME}
 REPO_TARGET_DIR=${BOSH_INSTALL_TARGET}/src/${REPO_NAME}
 
 GINKGO_REPO_NAME=github.com/onsi/ginkgo

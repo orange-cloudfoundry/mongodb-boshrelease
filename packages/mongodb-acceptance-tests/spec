@@ -5,4 +5,4 @@ dependencies:
   - golang-1.8-linux
 
 files:
-  - mongodb-acceptance-tests/**/*
+  - github.com/orange-cloudfoundry/mongodb-acceptance-tests/**/*
