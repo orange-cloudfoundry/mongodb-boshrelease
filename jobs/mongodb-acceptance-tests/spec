@@ -17,3 +17,7 @@ properties:
     description: The MongoDB host that the acceptance tests will connect to
   acceptance_tests.mongo_port:
     description: The TCP port on which the mongod to be tested is listening
+  acceptance_tests.mongo_root:
+    description: The username used to connect to MongoDB
+  acceptance_tests.mongo_root_password:
+    description: The password used to connect to MongoDB
