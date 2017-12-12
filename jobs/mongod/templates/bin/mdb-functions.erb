@@ -164,7 +164,7 @@ create_admin_users()
 {
      # check if admin users have already been created
     created=""
-    while [ "$created" != "null" -o "$created" == "" ]
+    while [ "$created" == "" ]
     do
       created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mongo_current_ip %>:<%= mongo_DbTypeport %> \
         --eval 'db.getUser("<%= p("admin_username") %>")' admin 2>/dev/null||echo 1`
