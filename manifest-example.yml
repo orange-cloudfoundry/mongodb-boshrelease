@@ -44,7 +44,46 @@ instance_groups:
           ca: ((mongo_certificate.ca))
           private_key: ((mongo_certificate.private_key))
           certificate: ((mongo_certificate.certificate))
-        
+
+- name: mongodb-broker
+  instances: 1
+  vm_type: default
+  stemcell: trusty
+#  azs: [z1]
+  networks: [{name: mongo1}]
+  persistent_disk_type: test_disk
+  jobs:
+  - name: broker-smoke-tests
+    release: mongodb-services
+    properties:
+      cf:
+        api:
+          url: ((cf.api.url))
+        admin:
+          username: admin
+          password: ((cf.admin.password))
+        skip:
+          ssl:
+            validation: true
+        org: service-sandbox
+        space: mongodb-smoke-tests
+        mongodb:
+          appdomain: ((cf.mongodb.appdomain))
+          servicename: mongodb
+          serviceplan: default
+          serviceinstancename: mongodb-instance
+  - name: broker
+    release: mongodb-services
+    consumes:
+      server: {from: deployment-server}
+    properties:
+      broker:
+        user: mongodb-broker
+        password: ((broker.password))
+      mongodb_node:
+        root_username: MongoRoot
+        root_password: ((!mongo_root_password))
+
 variables:
 - name: mongo_admin_password
   type: password
