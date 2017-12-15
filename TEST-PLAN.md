@@ -100,22 +100,23 @@ These tests use the `mongo` CLI.
     - Verify that having both `mongodb.replication.enable: true` and `role: sa` raises an error when deploying
 
 
-4. Replication
+5. Replication
 
     - Insert some data on master node
     - Toggle slaves to `slaveOK`
     - verify data is present on slaves
 
 
-5. Soft Failover
+6. Soft Failover
 
     - Build a 3-nodes Replica Set
-    - Turn the resurrector off
+    - Turn the BOSH resurrector off
     - Find the primary node (using `rs.status().isMaster()` on each node)
     - *Stop* the primary node *gracefully*
     - Verify another node takes the master role over
 
-6. Cluster re-join after graceful stop
+
+7. Cluster re-join after graceful stop
 
     - Same begining as above
 
@@ -123,7 +124,8 @@ These tests use the `mongo` CLI.
     - verify it joins the cluster as secondary node
     - verify the data is here
 
-7. Dirty Failover
+
+8. Dirty Failover
 
     - Build a 3-nodes Replica Set
     - Turn the resurrector on
@@ -131,7 +133,8 @@ These tests use the `mongo` CLI.
     - *Kill* the primary node (access the IaaS API)
     - Verify another node takes the master role over
 
-8. Cluster recovery
+
+9. Cluster recovery
 
     - Same begining as above
 
@@ -139,14 +142,14 @@ These tests use the `mongo` CLI.
     - verify
 
 
-9. Scale-in (general case)
+10. Scale-in (general case)
 
     - Build a 3-nodes Replica Set
     - Scale in to 1 node
     - Verify that deleted nodes have properly left the cluster
 
 
-10. Scale-in (involing a master node)
+11. Scale-in (involing a master node)
 
     - Build a 3-nodes Replica Set
     - Have a non-bootstrap node take over the master role
@@ -155,13 +158,13 @@ These tests use the `mongo` CLI.
     - Verify that deleted nodes have properly left the cluster
 
 
-11. Scale-out
+12. Scale-out
 
     - Build a 1-node Replica Set
     - Scale out to 3 nodes
     - Verify that new nodes join the cluster properly
 
 
-12. SSL
+13. SSL
 
     - Verify SSL is properly implemented
