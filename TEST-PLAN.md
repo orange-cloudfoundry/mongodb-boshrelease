@@ -128,7 +128,7 @@ These tests use the `mongo` CLI.
 8. Dirty Failover
 
     - Build a 3-nodes Replica Set
-    - Turn the resurrector on
+    - Turn the BOSH resurrector on
     - Find the primary node (using `rs.status().isMaster()` on each node)
     - *Kill* the primary node (access the IaaS API)
     - Verify another node takes the master role over
