@@ -90,6 +90,10 @@ mongodb/mongo-tools-3.4.6.tar.gz:
   size: 4715206
   object_id: 1b46290c-9d05-4830-4301-ad60625decb6
   sha: 4d7950d37f57d4fe156873e3c786a4270442f746
+mongodb/mongodb-linux-x86_64-3.4.6.tar.gz:
+  size: 153718654
+  object_id: 00129c4e-9d62-431c-4868-149822c0f927
+  sha: 0807b58a9d1f41d79fa9a5410fc0b36e9bdf9d67
 mongodb/mongodb-src-r3.4.6.tar.gz:
   size: 39922209
   object_id: fa06b29a-37bd-4499-64bd-cfdc4a21096b
