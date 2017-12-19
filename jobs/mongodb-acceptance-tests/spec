@@ -1,0 +1,30 @@
+---
+name: mongodb-acceptance-tests
+
+packages:
+  - golang-1.8-linux
+  - mongodb-acceptance-tests
+
+templates:
+  config.json.erb: config.json
+  errand.sh.erb: bin/run
+
+properties:
+  acceptance_tests.timeout_scale:
+    description: Timeout scale to be used by the acceptance tests errand
+    default: 1.0
+  acceptance_tests.mongo_host:
+    description: The MongoDB host that the acceptance tests will connect to
+  acceptance_tests.mongo_port:
+    description: The TCP port on which the mongod to be tested is listening
+  acceptance_tests.mongo_root_username:
+    default: MongoRoot
+    description: |
+      Username of the default root user.
+  acceptance_tests.mongo_root_password:
+    description: |
+      Password for the root user, in clear text.
+  acceptance_tests.mongo_replica_set_name:
+    default: rs0
+    description: |
+      The name of the replica set.

@@ -1,0 +1,8 @@
+---
+name: mongodb-acceptance-tests
+
+dependencies:
+  - golang-1.8-linux
+
+files:
+  - github.com/orange-cloudfoundry/mongodb-acceptance-tests/**/*
