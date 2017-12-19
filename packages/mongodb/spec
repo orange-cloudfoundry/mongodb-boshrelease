@@ -1,18 +1,5 @@
 ---
 name: mongodb
-dependencies: 
--  python
--  scons
--  golang-1.8-linux
--  gcc
--  compressors
--  openssl
--  binutils
--  coreutils
--  cmake
+dependencies: []
 files:
--  mongodb/mongodb-src-*.tar.gz
--  mongodb/mongo-tools-*.tar.gz
--  mongodb/rocksdb-*.tar.gz
--  mongodb/mongo-rocks-*.tar.gz
-
+-  mongodb/mongodb-linux-x86_64-*.tar.gz

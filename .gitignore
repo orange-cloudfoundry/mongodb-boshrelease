@@ -11,6 +11,7 @@
 .gitreview
 .idea
 .dev_builds/
+config/*
 config/dev.yml
 config/private.yml
 dev_releases
@@ -21,8 +22,4 @@ src_alt
 releases/**/*.tgz
 .DS_Store
 blobs
-manifest.yml
-manifest.yml.NEW
-manifest.yml.OLD
-manifest.yml.POblin
-bosh-release_cassandra39_ok_26072017
+manifest*.yml

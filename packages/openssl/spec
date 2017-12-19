@@ -1,8 +1,0 @@
----
-name: openssl
-dependencies: 
--  gcc
--  binutils
-files:
--  openssl/openssl-*.tar.gz
-
