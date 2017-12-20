@@ -15,42 +15,45 @@ update:
 stemcells:
 - alias: trusty
   os: ubuntu-trusty
-  version: 3421.11
+  version: latest
 
 instance_groups:
-- name: mongodb-server
-  release: mongodb-service
-#  azs: [z1]
-  instances: 3
-  vm_type: medium
+- name: mongod
+  release: mongodb-services
+  azs: [z1]
+  instances: 3 # 
+  vm_type: small
   env:
     bosh:
       swap_size: 0
-
   stemcell: trusty
   networks:
-  - name: mongo1
-  persistent_disk_type: test_disk
+  - name: mongodb-net
+  persistent_disk_type: small
   env:
     persistent_disk_fs: xfs
   jobs:
-  - name: mongodb-server
-    release: mongodb-service
+  - name: mongod
+    release: mongodb-services
     properties: 
-      mongodb-server:
-        morDbUserAdminPwd: ((mongo_admin_password))
-        morDbRootAdminPwd: ((mongo_root_password))
-        morDbCertificate: 
-          ca: ((mongo_certificate.ca))
-          private_key: ((mongo_certificate.private_key))
-          certificate: ((mongo_certificate.certificate))
+      node_role: rs
+      require_ssl: 0
+      replication:
+        enable: 1
+        key: ((mongo_keyfile_content))
+      root_password: ((mongo_root_password))
+      admin_password: ((mongo_admin_password))
+      server_certificate: 
+        ca: ((mongo_ca.ca))
+        private_key: ((mongo_ca.private_key))
+        certificate: ((mongo_ca.certificate))
 
 - name: mongodb-broker
   instances: 1
   vm_type: default
   stemcell: trusty
 #  azs: [z1]
-  networks: [{name: mongo1}]
+  networks: [{name: mongodb-net}]
   persistent_disk_type: test_disk
   jobs:
   - name: broker-smoke-tests
