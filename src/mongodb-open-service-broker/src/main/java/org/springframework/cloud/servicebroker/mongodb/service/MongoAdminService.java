@@ -166,8 +166,8 @@ public class MongoAdminService {
 		
 		if(System.getenv("MONGODB_REPLICASET_NAME") != null && ! System.getenv("MONGODB_REPLICASET_NAME").isEmpty()){
 			strB.append("?replicaSet=")
-			.append(System.getenv("MONGODB_REPLICASET_NAME"))
-			.append("&readPreference=secondary");
+			.append(System.getenv("MONGODB_REPLICASET_NAME"));
+			//.append("&readPreference=secondary");
 		}
 		
 		return strB.toString();
