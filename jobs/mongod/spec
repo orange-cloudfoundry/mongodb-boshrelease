@@ -9,7 +9,9 @@ consumes:
 provides:
   - name: server
     type: mongod
-
+    properties:
+    - replication.enable
+    - replication.replica_set_name    
 templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh

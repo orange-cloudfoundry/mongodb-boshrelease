@@ -26,5 +26,18 @@ properties:
     description: mongodb root username
   mongodb_node.root_password:
     description: mongodb root password
- 
-
+  broker.service_id:
+    description: broker service ID
+    default: mongodb-service-broker
+  broker.service_name:
+    description: broker service name
+    default: mongodb
+  broker.service_plan_id:
+    description: broker plan ID
+    default: mongo-plan
+  broker.service_marketplace_label:
+    description: service label in marketplace
+    default: "MongoDB 3.4"
+  broker.service_marketplace_description:
+    description: service description in marketplace  
+    default: "A MongoDB database on demand."
