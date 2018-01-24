@@ -10,9 +10,9 @@ templates:
   errand.sh.erb: bin/run
 
 properties:
-  acceptance_tests.mongo_test_suites:
-    description: Test suites to run
-    default: [ readwrite ]
-  acceptance_tests.timeout_scale:
+  mongo_test_suite:
+    description: Test suites to run (["readwrite"] or ["replicaset"])
+    default: ["readwrite"] 
+  timeout_scale:
     description: Timeout scale to be used by the acceptance tests errand
     default: 1.0
