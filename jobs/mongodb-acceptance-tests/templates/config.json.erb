@@ -1,8 +1,31 @@
+<%-
+lnk = link('server')
+
+mongo_port = lnk.p("rs_port")
+if lnk.p("node_role") == "sh"
+  mongo_port = lnk.p("sh_port")
+end
+if lnk.p("node_role") == "cfg"
+  mongo_port = lnk.p("cfg_port")
+end
+if lnk.p("node_role") == "mongos"
+  mongo_port = lnk.p("mongos_port")
+end
+
+mongo_hosts = []
+mongo_ports = []
+lnk.instances.each do |instance|
+	mongo_hosts << "#{instance.address}"
+  mongo_ports << "#{mongo_port}"
+end
+
+-%>
 {
-  "timeout_scale":                    <%= p('acceptance_tests.timeout_scale') %>,
-  "mongo_host":                       "<%= p('acceptance_tests.mongo_host') %>",
-  "mongo_port":                       "<%= p('acceptance_tests.mongo_port') %>",
-  "mongo_root_username":              "<%= p('acceptance_tests.mongo_root_username') %>",
-  "mongo_root_password":              "<%= p('acceptance_tests.mongo_root_password') %>",
-  "mongo_replica_set_name":           "<%= p('acceptance_tests.mongo_replica_set_name') %>"
+  "timeout_scale":                    <%= p('timeout_scale') %>,
+  "mongo_hosts":                      <%= mongo_hosts.to_json %>,
+  "mongo_ports":                      <%= mongo_ports.to_json %>,
+  "mongo_root_username":              "<%= lnk.p('root_username') %>",
+  "mongo_root_password":              "<%= lnk.p('root_password') %>",
+  "mongo_replica_set_name":           "<%= lnk.p('replication.replica_set_name') %>",
+  "mongo_replica_set_enable":         <%= lnk.p('replication.enable') %>
 }

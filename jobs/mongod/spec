@@ -11,8 +11,12 @@ provides:
     type: mongod
     properties:
     - root_username
-    - root_password  
+    - root_password
+    - node_role
     - rs_port
+    - sh_port
+    - mongos_port
+    - cfg_port
     - replication.enable
     - replication.replica_set_name
 

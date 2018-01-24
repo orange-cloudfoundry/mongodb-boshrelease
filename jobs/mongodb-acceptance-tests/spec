@@ -1,6 +1,10 @@
 ---
 name: mongodb-acceptance-tests
 
+consumes:
+  - name: server
+    type: mongod
+
 packages:
   - golang-1.8-linux
   - mongodb-acceptance-tests
