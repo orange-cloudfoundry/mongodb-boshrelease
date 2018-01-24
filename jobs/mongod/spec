@@ -10,8 +10,12 @@ provides:
   - name: server
     type: mongod
     properties:
+    - root_username
+    - root_password  
+    - rs_port
     - replication.enable
-    - replication.replica_set_name    
+    - replication.replica_set_name
+
 templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
