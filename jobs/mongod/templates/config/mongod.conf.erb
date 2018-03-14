@@ -71,7 +71,11 @@ systemLog:
 storage:
   engine: <%= p("storage_engine") %>
   dbPath: <%= Sys_Db_dirData %>
+  <%- if p("storage_engine") == "rocksdb" -%>
+  directoryPerDB: false
+  <%- else -%>
   directoryPerDB: true
+  <%- end -%>
   journal:
     enabled: <%= storage_journal_enabled %>
   <%- if_p("Conf_commitIntervalMs") do -%>  
