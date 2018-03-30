@@ -8,17 +8,21 @@
 * [Prerequisites](#prerequisites)
 * [Packages versions summary](#packages-versions-summary)
 * [Installation](#installation)
-	* [Clone the repository](#clone-the-repository)
-	* [Deployment Manifest](#create-the-deployment-manifest)
-	* [Deployment](#deployment)
+  * [Clone the repository](#clone-the-repository)
+  * [Deployment Manifest](#create-the-deployment-manifest)
+  * [Deployment](#deployment)
 * [Broker](#broker)
 * [Configuring CF to use Mongodb service](#configuring)
 * [Mongodb-server job variables]()
 
 ## What's new
 * 2017-12-20:
-> 
-mongodb compilation has been delayed to it's own [bosh release](https://github.com/orange-cloudfoundry/mongodb-compilation-boshrelease). Now only the compiled blob is provided, which allow to considerably reducing compilation times
+> mongodb compilation has been delayed to it's own [bosh release](https://github.com/orange-cloudfoundry/mongodb-compilation-boshrelease). Now only the compiled blob is provided, which allow to considerably reducing compilation times
+
+* 2018-03-30:
+
+> * Two different blobs condidering the stemcell used for deployments (centos or ubuntu)
+> * Enhencing acceptance tests integration
 
 
 ## Purpose
@@ -41,12 +45,12 @@ As it is compiled with statics libraries, the release could be implemented on ub
 
 * Mongodb database and modules version
 
-Package     | Version  |  Note
-------------|----------|-------
-mongodb     | `3.4.6`  |
-mongo-rocks | `3.4.6`  |
-mongo-tools | `3.4.6`  |
-rocksdb     | `5.5.5`  |
+| Package     | Version | Note |
+| ----------- | ------- | ---- |
+| mongodb     | `3.4.7` |      |
+| mongo-rocks | `3.4.7` |      |
+| mongo-tools | `3.4.7` |      |
+| rocksdb     | `5.7.3` |      |
 
 
 ## Installation
@@ -80,7 +84,7 @@ The mongodb broker implements the 5 REST endpoints required by Cloud Foundry to 
 * Deprovisioning in order to release resource previously allocated
 * Binding (credentials type) in order to provide application with a set of information required to use the allocated service
 * Unbinding in order to delete credentials resources previously allocated
-  
+
 ### Mongodb Broker Smoke Tests (broker-smoke-tests job)
 
 The mongodb broker smoke test acts as an end user developper who wants to host its application in a cloud foundry.

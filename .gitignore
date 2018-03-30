@@ -23,3 +23,4 @@ releases/**/*.tgz
 .DS_Store
 blobs
 manifest*.yml
+config/final.yml
