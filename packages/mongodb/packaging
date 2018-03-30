@@ -7,7 +7,11 @@ set -u # report the usage of uninitialized variables
 
 export HOME=/var/vcap
 
-for i in `find mongodb/ -type f -name 'mongodb-linux-x86_64-*.tar.gz' -print`
+# retrieve the stemcell type
+
+typeset -l stemcell=$(grep -w "^ID" /etc/os-release|cut -d"=" -f2|tr -d \")
+
+for i in `find mongodb/ -type f -name "mongodb-${stemcell}-x86_64-*.tar.gz" -print`
 do
    tar xf $i -C $BOSH_INSTALL_TARGET
 done

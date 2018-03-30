@@ -2,4 +2,4 @@
 name: mongodb
 dependencies: []
 files:
--  mongodb/mongodb-linux-x86_64-*.tar.gz
+-  mongodb/mongodb-*-x86_64-*.tar.gz
