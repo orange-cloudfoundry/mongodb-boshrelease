@@ -43,7 +43,7 @@ templates:
 
 properties:
   db_version:
-      default: 3.4.6
+      default: 3.4.7
   db_tool_version:
       default: 1.4.1
   node_role:
