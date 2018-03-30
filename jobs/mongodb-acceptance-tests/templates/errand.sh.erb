@@ -18,5 +18,5 @@ pushd ${MATS_PKG_DIR}
     # stemcells, so we use this as temporary directory instead.
     export TMPDIR=/var/vcap/data/tmp
 
-    ./bin/test <%= p('acceptance_tests.mongo_test_suites').join(' ') %>
+    ./bin/test <%= p('mongo_test_suite').join(' ') %>
 popd
