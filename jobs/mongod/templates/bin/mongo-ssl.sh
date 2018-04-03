@@ -10,6 +10,6 @@ export PARAM="$@"
 pushd /var/vcap/packages/mongodb/bin >/dev/null
 exec chpst -u vcap:vcap env HOME=/home/vcap ${MONGODB_BIN}/mongo --ssl \
   --sslCAFile /var/vcap/jobs/${JOB_NAME}/ssl/CA.crt \
-  --sslPEMKeyFile /var/vcap/jobs/${JOB_NAME}/ssl/CA.key $PARAM
+  --sslPEMKeyFile /var/vcap/jobs/${JOB_NAME}/ssl/mongodb.pem $PARAM
 popd >/dev/null
 exit 0
