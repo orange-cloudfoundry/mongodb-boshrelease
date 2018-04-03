@@ -132,6 +132,7 @@ net:
     mode: requireSSL
     PEMKeyFile: <%= Conf_PEMKeyFile %>
     CAFile: <%= Conf_CAFile %>
+    clusterFile: <%= Conf_PEMKeyFile %>
     allowConnectionsWithoutCertificates: true
     allowInvalidHostnames: true
 <%- end -%>
