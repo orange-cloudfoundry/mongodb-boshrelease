@@ -12,13 +12,17 @@ cd ${MONGODB_SSL}
 if [ ! -f ${MONGODB_SSL}/mongodb.pem ]
 then
 	<%- mongo__current_ip = spec.ip -%>
+
+	# retrieving openssl.cnf - location is OS ependent
+	OPENSSL_CNF=`find /etc -name 'openssl.cnf'`
+
     openssl genrsa -out ${MONGODB_SSL}/mongodb.key 2048
     
     openssl req -new -key ${MONGODB_SSL}/mongodb.key \
 	    -out ${MONGODB_SSL}/mongodb.csr \
 	    -reqexts SAN \
 		-extensions SAN \
-		-config <(cat /usr/lib/ssl/openssl.cnf \
+		-config <(cat ${OPENSSL_CNF} \
           <(printf "[SAN]\nsubjectAltName=IP.1:<%= mongo__current_ip -%>,IP.2:127.0.0.1\nextendedKeyUsage=serverAuth,clientAuth")) \
 	    -subj "/C=FR/ST=Paris/L=Paris/O=Orange/OU=CloudFoundry/CN=<%= mongo__current_ip -%>"
 	    
