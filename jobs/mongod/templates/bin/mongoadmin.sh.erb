@@ -26,7 +26,7 @@ pushd /var/vcap/packages/mongodb/bin >/dev/null
 ${MONGO_CMD} mongodb://<%= mongo_rsconfig %>/${DB} \
  -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin ${PARAM}
 <%- else -%>
-${MONGO_CMD} mongodb://<%= mongo_rsconfig %>/${DB}?replicaSet=<%= p("replication.replica_set_name") %>/ \
+${MONGO_CMD} mongodb://<%= mongo_rsconfig %>/${DB}?replicaSet=<%= p("replication.replica_set_name") %> \
  -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin ${PARAM}
 <%- end -%> 
 popd >/dev/null
