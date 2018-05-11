@@ -1,0 +1,44 @@
+---
+name: cfgsrv
+packages:
+  - mongodb
+consumes:
+  - name: cfgsrv
+    type: mongod
+provides:
+  - name: cfgsrv
+    type: mongod
+
+properties:
+  node_role:
+    default: cfg
+    description: |
+      Role for the mongod server in the Mongodb cluster: 'rs' for replica set, 'sa' for stand alone server
+      In the future, 'cfg' (for config server), 'sh' (for shard server) will
+      also be supported.
+  replica_set_name:
+    default: cs0
+    description: |
+      The name of the replica set that the mongod is part of. All hosts in the
+      replica set must have the same set name.
+
+      If your application connects to more than one replica set, each set
+      should have a distinct name. Some drivers group replica set connections
+      by replica set name.
+
+      Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.replSetName
+  require_ssl:
+    default: 1
+    description: |
+      Enforce TLS/SSL for connecting to the server.
+
+      When this options is set to '1', all connections to mongod must be
+      encrypted with TLS/SSL, and un-encrypted connections will be refused.
+      For example, when using the 'mongo' client, the '--ssl' argument will be
+      mandatory.
+
+      When this options is set to '0', then all connections to mongod must not
+      be encrypted, and SSL/TLS will not be possible. For example, when using
+      the 'mongo' client, the '--ssl' argument will not be possible. This
+      should be reserved to development environments and be avoided in
+      production.      
