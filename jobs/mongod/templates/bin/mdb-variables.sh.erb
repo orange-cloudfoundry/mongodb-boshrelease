@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+<%-
+  require "shellwords"
+
+  def esc(x)
+    Shellwords.shellescape(x)
+  end
+
+if p("node_role") == "rs" || p("node_role") == "sa"
+  mongo_DbTypeport = p("rs_port")
+  _mongo_rsconfig = ''
+  link('server').instances.each do |instance|
+    _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport},"
+  end
+  # remove last ,
+  mongo_rsconfig = _mongo_rsconfig[0..-2]
+  mongo_current_ip = spec.ip
+end
+%>
+
+property_require_ssl=<%= esc(p("require_ssl")) %>
+property_node_role=<%= esc(p("node_role")) %>
+property_mongod_listen_port=<% esc(p("port")) %>
+property_mongos_listen_port=<% esc(link("mongos").p("port")) %>
+property_cfgsrv_listen_port=<% esc(link("cfgsrv").p("port")) %>
+property_shdsrv_listen_port=<% esc(link("shdsrv").p("port")) %>
+property_current_ip=<% esc(mongo_current_ip) %>
