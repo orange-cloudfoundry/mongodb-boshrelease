@@ -6,6 +6,9 @@ consumes:
   - name: server
     type: mongod
 
+  - name: cfgsrv
+    type: mongod
+
 provides:
   - name: server
     type: mongod
@@ -20,6 +23,26 @@ provides:
     - replication.enable
     - replication.replica_set_name
 
+  - name: cfgsrv
+    type: mongod
+    properties:
+    - cfg_port
+    - node_role
+    - replication.enable
+    - storage_engine
+    - mmap_v1_small_files
+    - wired_tiger_cache_size_gb
+    - slow_query_threshold_ms
+    - replication.operation_log_max_size_mb
+    - replication.key
+    - enable_role_based_access_control
+    - admin_username
+    - admin_password
+    - root_username
+    - root_password
+    - server_certificate
+    - arbiter_only
+
 templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
@@ -30,7 +53,6 @@ templates:
   bin/mongoadmin.sh.erb: bin/mongoadmin.sh
   bin/setenv.erb: bin/setenv
   bin/mdb-functions.erb: bin/mdb-functions
-  bin/monit_debugger: bin/monit_debugger
   bin/generate_ssl_cert.sh.erb: bin/generate_ssl_cert.sh
   data/properties.sh.erb: data/properties.sh
   config/mongod.conf.erb: config/mongod.conf
