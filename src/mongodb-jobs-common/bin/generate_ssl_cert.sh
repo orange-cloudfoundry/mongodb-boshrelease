@@ -3,7 +3,10 @@
 set -e # exit immediately if a simple command exits with a non-zero status.
 set -u # report the usage of uninitialized variables.
 
-source `dirname $(readlink -f $0)`/setenv
+source ${JOB_DIR}/bin/setenv
+
+source ${JOB_DIR}/bin/mdb-variables.sh
+
 
 pushd `dirname $(readlink -f $0)` >/dev/null
 cd ${MONGODB_SSL}
@@ -11,8 +14,6 @@ cd ${MONGODB_SSL}
 # generate only if client and server keys doesnt already exists
 if [ ! -f ${MONGODB_SSL}/mongodb.pem ]
 then
-	<%- mongo__current_ip = spec.ip -%>
-
 	# retrieving openssl.cnf - location is OS ependent
 	OPENSSL_CNF=`find /etc -name 'openssl.cnf'`
 
@@ -23,8 +24,8 @@ then
 	    -reqexts SAN \
 		-extensions SAN \
 		-config <(cat ${OPENSSL_CNF} \
-          <(printf "[SAN]\nsubjectAltName=IP.1:<%= mongo__current_ip -%>,IP.2:127.0.0.1\nextendedKeyUsage=serverAuth,clientAuth")) \
-	    -subj "/C=FR/ST=Paris/L=Paris/O=Orange/OU=CloudFoundry/CN=<%= mongo__current_ip -%>"
+          <(printf "[SAN]\nsubjectAltName=IP.1:"${deployment_current_ip}",IP.2:127.0.0.1\nextendedKeyUsage=serverAuth,clientAuth")) \
+	    -subj "/C=FR/ST=Paris/L=Paris/O=Orange/OU=CloudFoundry/CN="${deployment_current_ip}
 	    
     openssl x509 -req -in ${MONGODB_SSL}/mongodb.csr \
 	    -CA ${MONGODB_SSL}/CA.crt \
