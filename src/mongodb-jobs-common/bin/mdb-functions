@@ -1,35 +1,26 @@
 #!/usr/bin/env bash
-<%-
-if p("node_role") == "rs" || p("node_role") == "sa"
-  mongo_DbTypeport = p("rs_port")
-  _mongo_rsconfig = ''
-  link('server').instances.each do |instance|
-    _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport},"
-  end
-  # remove last ,
-  mongo_rsconfig = _mongo_rsconfig[0..-2]
-  mongo_current_ip = spec.ip
-end%>
+
+source ${JOB_DIR}/bin/mdb-variables.sh
 
 ####################### return if ssl is in use or not ########################
 check_ssl()
 {
-    echo <%= p("require_ssl") %>
+    echo "$property_require_ssl"
 }
 #################################################################################################
 
 ####################### return if replicaset is in use or not ########################
 get_node_role()
 {
-    echo <%= p("node_role") %>
+    echo "$property_node_role"
 }
-#################################################################################################
+###############################################################################################
 
 ####################### List the nodes actually referenced in replicaset ########################
 get_actual_members()
 {
     m_list=""
-    for i in `${MONGO_CMD} --host rs0/<%= mongo_current_ip %>:<%= mongo_DbTypeport %> ${MONGO_CMD_PARAM} --eval 'rs.status().members' \
+    for i in `${MONGO_CMD} --host rs0/${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} --eval 'rs.status().members' \
         | grep name | tr -s [:space:] | tr -d '"' | cut -d ":" -f2`
     do
       m_list="$m_list $i"
@@ -124,7 +115,7 @@ check_master()
 {
     # looking for already created master node
     Master=""
-    for Server in $(echo <%= mongo_rsconfig -%>|tr -s "," " ")
+    for Server in $(echo ${deployment_rs_config}|tr -s "," " ")
     do
 
       if [ "`${MONGO_CMD} --host $Server \
@@ -132,8 +123,8 @@ check_master()
       then
         Master=$Server
       else
-        if [ "`${MONGO_CMD} --host $Server -u '<%= p("root_username") %>' \
-            -p '<%= p("root_password") %>' --authenticationDatabase admin \
+        if [ "`${MONGO_CMD} --host $Server -u ${property_root_username} \
+            -p ${property_root_password} --authenticationDatabase admin \
             ${MONGO_CMD_PARAM} --eval 'db.isMaster().ismaster' 2>/dev/null`" == "true" ]
         then
           Master=$Server
@@ -148,15 +139,15 @@ check_master()
 remove_unwanted_nodes()
 {
     export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
-      -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin"
+      -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
 
-    wanted_servers=$(echo <%= mongo_rsconfig -%>|tr -s "," " ")
+    wanted_servers=$(echo ${deployment_rs_config}|tr -s "," " ")
     for defined_server in $( get_actual_members )
     do
       if [ `echo $wanted_servers| grep $defined_server|wc -l` -eq 0 ]
       then
-        ${MONGO_CMD} --host <%= p("replication.replica_set_name") %>/$Master \
-          ${MONGO_CMD_PARAM} --eval 'rs.remove("'$defined_server':<%= mongo_DbTypeport %>")'
+        ${MONGO_CMD} --host ${property_replica_set_name}/$Master \
+          ${MONGO_CMD_PARAM} --eval 'rs.remove("'$defined_server':'${property_mongod_listen_port}'")'
       fi
     done
 }
@@ -169,22 +160,22 @@ create_admin_users()
     created=""
     while [ "$created" == "" ]
     do
-      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mongo_current_ip %>:<%= mongo_DbTypeport %> \
-        --eval 'db.getUser("<%= p("admin_username") %>")' admin 2>/dev/null||echo 1`
+      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host ${deployment_current_ip}:${property_mongod_listen_port} \
+        --eval 'db.getUser("'${property_admin_username'")' admin 2>/dev/null||echo 1`
       if [ $(echo "$created"|grep "Error: not master and slaveOk=false"|wc -l) -gt 0 ]
       then 
          created=""
       fi   
       if [ "$created" != "" -a "$created" != "null" ]
       then
-        created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mongo_current_ip %> \
-          --eval 'db.getUser("<%= p("root_username") %>")' admin||echo 1`        
+        created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host ${deployment_current_ip} \
+          --eval 'db.getUser("'${property_admin_username'")' admin||echo 1`        
       fi      
     done
     # Create admin users if not already created
     if [ "$created" == "null" ]
     then
-       ${MONGO_CMD} ${MONGO_CMD_PARAM} --host <%= mongo_current_ip %>:<%= mongo_DbTypeport %> < /var/vcap/jobs/${JOB_NAME}/js/create_admin_user.js
+       ${MONGO_CMD} ${MONGO_CMD_PARAM} --host ${deployment_current_ip}:${property_mongod_listen_port} < ${JOBS_COMMON_DIR}/js/create_admin_user.js
     fi
 }
 ################################################################################################
@@ -195,12 +186,12 @@ init_primary()
     CR=1
     while [ $CR -ne 0 ]
     do
-      ${MONGO_CMD} --host <%= mongo_current_ip %>:<%= mongo_DbTypeport %> \
-        ${MONGO_CMD_PARAM} < /var/vcap/jobs/${JOB_NAME}/js/initiate_rs.js
+      ${MONGO_CMD} --host ${deployment_current_ip}:${property_mongod_listen_port} \
+        ${MONGO_CMD_PARAM} < ${JOBS_COMMON_DIR}/js/initiate_rs.js
       CR=$?
     done
     # wait until rs is fully active
-    while [ `${MONGO_CMD} --host <%= mongo_current_ip %>:<%= mongo_DbTypeport %> ${MONGO_CMD_PARAM} --eval 'rs.status().ok'||echo 0` -ne 1 ]
+    while [ `${MONGO_CMD} --host ${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} --eval 'rs.status().ok'||echo 0` -ne 1 ]
     do
       sleep 3
     done
@@ -211,10 +202,10 @@ init_primary()
 run_replicaset()
 {
     Master=$( check_master )
-    if [ "$Master" == "" -o "$Master" == "<%= mongo_current_ip %>:<%= mongo_DbTypeport %>" ]
+    if [ "$Master" == "" -o "$Master" == "${deployment_current_ip}:${property_mongod_listen_port}" ]
     then
       # check if rs is already initialized
-      if [ "$(${MONGO_CMD} --host <%= mongo_current_ip %>:<%= mongo_DbTypeport %> ${MONGO_CMD_PARAM} \
+      if [ "$(${MONGO_CMD} --host ${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
           --eval 'rs.status().codeName' || echo 'Err')" == "NotYetInitialized" ]
       then
         init_primary          # perform rs.initiate
@@ -234,7 +225,7 @@ add_secondary()
 
 
   # At this point primary should be started with authentication too
-  export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin"
+  export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
 
   # if root user is not available, primary has probably not finish his job, wait for it
   
@@ -242,14 +233,14 @@ add_secondary()
   while [ "$root_initialized" == "" ]
   do
     root_initialized=`${MONGO_CMD} --host $Master \
-      ${MONGO_CMD_PARAM} --eval 'db.getUser("<%= p("root_username") %>")' admin||echo "null"`
+      ${MONGO_CMD_PARAM} --eval 'db.getUser("'${property_root_username}'")' admin||echo "null"`
     
     [ "$root_initialized" == "null" ] && sleep 2
   done
 
    # Adding current node to rs
   ${MONGO_CMD} --host $Master \
-    ${MONGO_CMD_PARAM} --eval 'rs.add("<%= mongo_current_ip %>:<%= mongo_DbTypeport %>")'
+    ${MONGO_CMD_PARAM} --eval 'rs.add("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
 
   [ $? -ne 0 ] && exit 1
   # need to wait for complete add before restarting
@@ -257,14 +248,14 @@ add_secondary()
   add_ok="false"
   while [ "$add_ok" == "false" ]
   do
-    add_ok=`${MONGO_CMD} --host <%= mongo_current_ip %>:<%= mongo_DbTypeport %> ${MONGO_CMD_PARAM} \
+    add_ok=`${MONGO_CMD} --host ${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
       --eval 'rs.isMaster().secondary'||echo "false"`
     if [ "$add_ok" != "true" ]
     then
       add_ok="false"
       sleep 2
       _timeout=$((_timeout-2))
-      [ ${_timeout} -le 0 ] && echo "node <%= mongo_current_ip %>:<%= mongo_DbTypeport %> hasn\'t been added. Timeout reached" && exit 1
+      [ ${_timeout} -le 0 ] && echo "node ${deployment_current_ip}:${property_mongod_listen_port} hasn\'t been added. Timeout reached" && exit 1
     fi
   done
 }
