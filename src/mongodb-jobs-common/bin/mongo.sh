@@ -3,7 +3,7 @@
 set -e # exit immediately if a simple command exits with a non-zero status.
 set -u # report the usage of uninitialized variables.
 
-source `dirname $(readlink -f $0)`/setenv
+source ${JOB_DIR}/bin/setenv
 
 export PARAM="$@"
 
