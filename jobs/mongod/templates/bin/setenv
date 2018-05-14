@@ -14,6 +14,8 @@ export JOB_NAME='mongod'
 output_label=${2:-${JOB_NAME}}
 
 export JOB_DIR=/var/vcap/jobs/$JOB_NAME
+export JOBS_COMMON_DIR=/var/vcap/packages/mongodb-jobs-common
+
 chmod 755 $JOB_DIR # to access file via symlink
 
 # Load some bosh deployment properties into env vars
@@ -21,7 +23,7 @@ chmod 755 $JOB_DIR # to access file via symlink
 # incl $NAME, $JOB_INDEX, $WEBAPP_DIR
 source $JOB_DIR/data/properties.sh
 
-source $JOB_DIR/helpers/ctl_utils.sh
+source ${JOBS_COMMON_DIR}/helpers/ctl_utils.sh
 
 # Add all packages' /bin & /sbin into $PATH
 for package_bin_dir in $(ls -d /var/vcap/packages/*/*bin)
