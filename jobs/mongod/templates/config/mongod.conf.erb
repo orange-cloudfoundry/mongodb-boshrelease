@@ -1,7 +1,4 @@
 <%-
-mongo_DbVersion = p("db_version")
-mongo_DbToolVersion = p("db_tool_version")
-
 Conf_bindIp = "127.0.0.1,#{spec.ip}"
 
 # Managed the mongodb port binding depending on the mongodb role
@@ -23,13 +20,6 @@ Conf_bindIp = "127.0.0.1,#{spec.ip}"
 #if p("node_role") == "mongos"
 #  DbTypeport=p("mongos_port")
 #end
-
-# Retrieve all parts of the Mongodb version
-/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("db_version") #=> 0
-
-DbVersionMaj = _DbVersionMaj
-DbVersionMid = _DbVersionMid
-DbVersionMin = _DbVersionMin
 
 # Mongodb orange products parameters
 DbProductName = "mongodb-cf-release"
