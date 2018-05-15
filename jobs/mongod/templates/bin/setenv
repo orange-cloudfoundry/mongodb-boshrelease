@@ -18,11 +18,6 @@ export JOBS_COMMON_DIR=/var/vcap/packages/mongodb-jobs-common
 
 chmod 755 ${JOB_DIR} # to access file via symlink
 
-# Load some bosh deployment properties into env vars
-# Try to put all ERb into data/properties.sh.erb
-# incl $NAME, $JOB_INDEX, $WEBAPP_DIR
-source ${JOB_DIR}/data/properties.sh
-
 source ${JOBS_COMMON_DIR}/helpers/ctl_utils.sh
 
 # Add all packages' /bin & /sbin into $PATH
