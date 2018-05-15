@@ -166,7 +166,7 @@ create_admin_users()
     while [ "${created}" == "" ]
     do
       created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host ${deployment_current_ip}:${property_mongod_listen_port} \
-                                               --eval 'db.getUser("'${property_admin_username'")' admin \
+                                               --eval 'db.getUser("'${property_admin_username}'")' admin \
                                                2>/dev/null||echo 1`
       if [ $(echo "${created}"|grep "Error: not master and slaveOk=false"|wc -l) -gt 0 ]
       then 
