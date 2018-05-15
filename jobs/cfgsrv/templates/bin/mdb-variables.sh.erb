@@ -8,7 +8,7 @@
 
   mongo_DbTypeport = p("port")
   _mongo_rsconfig = ''
-  link('server').instances.each do |instance|
+  link('config_server').instances.each do |instance|
     _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport},"
   end
   # remove last ,
