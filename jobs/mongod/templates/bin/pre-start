@@ -29,6 +29,6 @@ else
     run_replicaset
 fi
 
-kill_and_wait $PIDFILE
+kill_and_wait ${PIDFILE}
 
 exit 0
