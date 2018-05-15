@@ -2,25 +2,21 @@ use admin;
 
 // retrieve variables from conf file
 // job_dir must be passed when calling mongo shell using the --eval and --shell option
+// **cf create_admin_users function in mdb_functions.sh script
 
-db.system.js.save({_id: "getDeploymentVar",
-                   value : function(key)
-                   {
-                      var file=cat(job_dir+"/bin/mdb-variables.sh");
-                      var objectId = file.split('\n');
-                      value=null;
-                      for (var i =0; i<objectId.length-1; i++){
-                        var keyval = objectId[i].split("=");
-                        if (keyval[0] == key)
-                        {
-                        value=keyval[1];
-                        }
-                      }
-                      return value;
-                    }
-});
-
-db.loadServerScripts("getDeploymentVar");
+function getDeploymentVar(key){
+  var file=cat(job_dir+"/bin/mdb-variables.sh");
+  var objectId = file.split('\n');
+  value=null;
+  for (var i =0; i<objectId.length-1; i++){
+    var keyval = objectId[i].split("=");
+    if (keyval[0] == key)
+    {
+    value=keyval[1];
+    }
+  }
+  return value;
+}
 
 if (db.system.users.find({ user: getDeploymentVar("property_admin_username") }).count() == 0) {
     db.createUser({
