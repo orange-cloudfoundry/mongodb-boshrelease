@@ -56,10 +56,6 @@ templates:
   ssl/CA.crt.erb: ssl/CA.crt
 
 properties:
-  db_version:
-      default: 3.4.7
-  db_tool_version:
-      default: 1.4.1
   node_role:
       default: rs
       description: |
@@ -117,42 +113,45 @@ properties:
         'system.profile' collection.
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#operationProfiling.slowOpThresholdMs
-  replication.enable:
-      default: 1
-      description: |
-        When set to 1, this settings activates replication.
-  replication.replica_set_name:
-      default: rs0
-      description: |
-        The name of the replica set that the mongod is part of. All hosts in the
-        replica set must have the same set name.
 
-        If your application connects to more than one replica set, each set
-        should have a distinct name. Some drivers group replica set connections
-        by replica set name.
+  replication:
+      enable:
+          default: 1
+          description: |
+            When set to 1, this settings activates replication.
+      replica_set_name:
+          default: rs0
+          description: |
+            The name of the replica set that the mongod is part of. All hosts in the
+            replica set must have the same set name.
 
-        Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.replSetName
-  replication.operation_log_max_size_mb:
-      default: 256
-      description: |
-        The maximum size in megabytes for the replication operation log (i.e.,
-        the oplog). The mongod process creates an oplog based on the maximum
-        amount of space available. For 64-bit systems, the oplog is typically 5%
-        of available disk space. Once the mongod has created the oplog for the
-        first time, changing the this maximum size option will not affect the
-        size of the oplog.
+            If your application connects to more than one replica set, each set
+            should have a distinct name. Some drivers group replica set connections
+            by replica set name.
 
-        Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.oplogSizeMB
-  replication.key:
-      description: |
-        Specify key which will be used in keyfile. Mandatory for replication
-        without ssl With keyfile authentication, each mongod instances in the
-        replica set uses the contents of the keyfile as the shared password
-        for authenticating other members in the deployment. Only mongod
-        instances with the correct keyfile can join the replica set.
+            Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.replSetName
+      operation_log_max_size_mb:
+          default: 256
+          description: |
+            The maximum size in megabytes for the replication operation log (i.e.,
+            the oplog). The mongod process creates an oplog based on the maximum
+            amount of space available. For 64-bit systems, the oplog is typically 5%
+            of available disk space. Once the mongod has created the oplog for the
+            first time, changing the this maximum size option will not affect the
+            size of the oplog.
 
-        The content of the keyfile must be between 6 and 1024 characters long
-        and must be the same for all members of the replica set.
+            Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.oplogSizeMB
+      key:
+          description: |
+            Specify key which will be used in keyfile. Mandatory for replication
+            without ssl With keyfile authentication, each mongod instances in the
+            replica set uses the contents of the keyfile as the shared password
+            for authenticating other members in the deployment. Only mongod
+            instances with the correct keyfile can join the replica set.
+
+            The content of the keyfile must be between 6 and 1024 characters long
+            and must be the same for all members of the replica set.
+            
   enable_role_based_access_control:
       default: 1
       description: |
