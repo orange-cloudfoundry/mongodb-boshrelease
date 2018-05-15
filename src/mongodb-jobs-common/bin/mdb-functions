@@ -42,15 +42,15 @@ start_mongod_noauth()
     pid_guard ${PIDFILE} ${JOB_NAME}
     
     # create temporary conf file excluding keyfile and clusterAuthMode (for x509)
-    [ -f /tmp/mongod_bs.conf ] && rm -f /tmp/mongod_bs.conf
-    #grep -v '^ *keyFile:' $MONGODB_CONF/mongod.conf >/tmp/mongod_bs.conf
+    [ -f /tmp/${JOB_NAME}_bs.conf ] && rm -f /tmp/${JOB_NAME}_bs.conf
+    #grep -v '^ *keyFile:' $MONGODB_CONF/mongod.conf >/tmp/${JOB_NAME}_bs.conf
     sed -e '/^[[:space:]]*keyFile:/d' \
         -e '/^[[:space:]]*clusterAuthMode:[[:space:]]*x509.*/d' \
-        $MONGODB_CONF/mongod.conf >/tmp/mongod_bs.conf
-    chmod a+r /tmp/mongod_bs.conf
+        $MONGODB_CONF/mongod.conf >/tmp/${JOB_NAME}_bs.conf
+    chmod a+r /tmp/${JOB_NAME}_bs.conf
 
     # start mongod without auth
-    chpst -u vcap:vcap $MONGODB_BIN/mongod --config /tmp/mongod_bs.conf --noauth \
+    chpst -u vcap:vcap $MONGODB_BIN/mongod --config /tmp/${JOB_NAME}_bs.conf --noauth \
       --pidfilepath ${PIDFILE}
 }
 ################################################################################################
