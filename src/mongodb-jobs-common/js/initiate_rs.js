@@ -1,33 +1,33 @@
-<%
+use admin;
 
-require "json"
+// retrieve variables from conf file
+// job_dir must be passed when calling mongo shell using the --eval and --shell option
 
-def esc(x)
-    case x
-    when String
-        x.to_json[1..-2]
-    else
-        x.to_json
-    end
-end
+db.system.js.save({_id: "getDeploymentVar",
+                   value : function(key)
+                   {
+                      var file=cat(job_dir+"/bin/mdb-variables.sh");
+                      var objectId = file.split('\n');
+                      value=null;
+                      for (var i =0; i<objectId.length-1; i++){
+                        var keyval = objectId[i].split("=");
+                        if (keyval[0] == key)
+                        {
+                        value=keyval[1];
+                        }
+                      }
+                      return value;
+                    }
+});
 
-tcp_port = case p("node_role")
-    when "rs"
-        p("rs_port")
-    when "sh"
-        p("sh_port")
-    when "cfg"
-        p("cfg_port")
-    when "mongos"
-        p("mongos_port")
-end
--%>
+db.loadServerScripts("getDeploymentVar");
+
 rs.initiate({
-    _id : "<%= esc(p('replication.replica_set_name')) %>",
+    _id : getDeploymentVar("property_replica_set_name"),
     members: [
         {
             _id: 0,
-            host: "<%= esc(spec.ip) %>:<%= esc(tcp_port) %>"
+            host: getDeploymentVar("deployment_current_ip")+":"+getDeploymentVar("property_mongod_listen_port")
         }
     ]
 });
