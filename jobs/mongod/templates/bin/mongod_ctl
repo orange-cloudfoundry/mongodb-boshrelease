@@ -5,9 +5,6 @@ set -u # report the usage of uninitialized variables.
 
 source `dirname $(readlink -f $0)`/setenv
 
-# Setup env vars and folders for the webapp_ctl script
-source /var/vcap/jobs/mongod/helpers/ctl_setup.sh 'mongod'
-
 case $1 in
 
   start)
@@ -34,7 +31,7 @@ case $1 in
 
     ;;
   *)
-    echo "Usage: mongodb_server_ctl {start|stop}"
+    echo "Usage: mongod_ctl {start|stop}"
 
     ;;
 
