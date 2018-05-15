@@ -1,0 +1,120 @@
+<%-
+Conf_bindIp = "127.0.0.1,#{spec.ip}"
+
+# Mongodb directories
+Sys_Db_dirRoot="/var/vcap/store/cfgsrv"
+Sys_Db_dirCfg="/var/vcap/jobs/cfgsrv/config"
+Sys_Db_dirSSL="/var/vcap/jobs/cfgsrv/ssl"
+Sys_Db_dirData="/var/vcap/store/cfgsrv/data"
+Sys_Db_dirLog="/var/vcap/sys/log/cfgsrv"
+Sys_Db_dirRun="/var/vcap/sys/run/cfgsrv"
+
+# Mongodb configuration parameters
+Conf_systemLog = Sys_Db_dirLog + "/cfgsrv.log"
+Conf_port = p("port")
+Conf_PEMKeyFile = Sys_Db_dirSSL + "/mongodb.pem"
+Conf_CAFile = Sys_Db_dirSSL + "/CA.crt"
+
+storage_journal_enabled = "true"
+storage_mmap_v1_small_files = p("mmap_v1_small_files")
+replication_oplog_size_mb = p("replication.operation_log_max_size_mb")
+
+if_p("arbiter_only") do
+  if p("arbiter_only") == "yes"
+    storage_journal_enabled = "false"
+    storage_mmap_v1_small_files = "true"
+    replication_oplog_size_mb = 1
+  end
+end
+-%>
+systemLog:
+  destination: file
+  path: <%= Conf_systemLog %>
+  logAppend: true
+  logRotate: reopen
+storage:
+  engine: <%= p("storage_engine") %>
+  dbPath: <%= Sys_Db_dirData %>
+  <%- if p("storage_engine") == "rocksdb" -%>
+  directoryPerDB: false
+  <%- else -%>
+  directoryPerDB: true
+  <%- end -%>
+  journal:
+    enabled: <%= storage_journal_enabled %>
+  <%- if_p("Conf_commitIntervalMs") do -%>  
+    commitIntervalMs: <%= Conf_commitIntervalMs %>
+  <%- end -%>
+  <%- if p("storage_engine") == "mmapv1" -%>
+  mmapv1:
+    smallFiles: <%= storage_mmap_v1_small_files %>
+    <% if_p("Conf_mmapv1_preallocDataFiles") do -%>
+    preallocDataFiles: <%= Conf_mmapv1_preallocDataFiles %>
+    <%- end -%>
+    <% if_p("Conf_mmapv1_nsSize") do -%>
+    nsSize: <%= Conf_mmapv1_nsSize %>
+    <%- end -%>
+    <%- if_p("Conf_mmapv1_quota_enforced","Conf_mmapv1_quota_maxFilesPerDB") do -%>
+    quota:
+      <%- if_p("Conf_mmapv1_quota_enforced") do -%>
+      enforced: <%= Conf_mmapv1_quota_enforced %>
+      <%- end -%>
+      <%- if_p("Conf_mmapv1_quota_maxFilesPerDB") do -%>
+      maxFilesPerDB: <%= Conf_mmapv1_quota_maxFilesPerDB %>
+      <%- end -%>
+    <%- end -%>
+  <%- end -%>
+  <%- if p("storage_engine") == "wiredTiger" -%>
+  wiredTiger:
+    engineConfig:
+      directoryForIndexes: true
+    <%- if_p("wired_tiger_cache_size_gb") do -%>
+      cacheSizeGB: <%= p("wired_tiger_cache_size_gb") %>
+    <%- end -%>
+    <%- if_p("Conf_wiredTiger_journalCompressor") do -%>
+      journalCompressor: <%= Conf_wiredTiger_journalCompressor %>
+    <%- end -%>
+    <%- if_p("Conf_wiredTiger_blockCompressor") do -%>
+    collectionConfig:
+      blockCompressor: <%= Conf_wiredTiger_blockCompressor %>
+    <%- end -%>
+    <%- if_p("Conf_wiredTiger_prefixCompression") do -%>
+    indexConfig:
+      prefixCompression: <%= Conf_wiredTiger_prefixCompression %>
+    <%- end -%>
+  <%- end -%>
+processManagement:
+  fork: true
+net:
+  bindIp: <%= Conf_bindIp %>
+  port: <%= Conf_port %>
+  unixDomainSocket:
+    enabled: true
+    pathPrefix: <%= Sys_Db_dirRun %>
+<%- if p("require_ssl") == 1 -%>
+  ssl:
+    mode: requireSSL
+    PEMKeyFile: <%= Conf_PEMKeyFile %>
+    CAFile: <%= Conf_CAFile %>
+    clusterFile: <%= Conf_PEMKeyFile %>
+    allowConnectionsWithoutCertificates: true
+    allowInvalidHostnames: true
+<%- end -%>
+<%- if p("enable_role_based_access_control") == 1 -%>
+security:
+  authorization: enabled
+  <%- if p("require_ssl") == 1 -%>
+  clusterAuthMode: x509
+  <%- else -%>
+  keyFile: /var/vcap/jobs/cfgsrv/config/keyfile
+  <%- end -%>
+<%- end -%>
+operationProfiling:
+  slowOpThresholdMs: <%= p("slow_query_threshold_ms") %>
+replication:
+  replSetName: <%= p("replication.replica_set_name") %>
+  oplogSizeMB: <%= replication_oplog_size_mb %>
+sharding:
+  clusterRole: configsvr
+setParameter:
+  enableLocalhostAuthBypass: 1
