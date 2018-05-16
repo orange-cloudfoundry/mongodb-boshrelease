@@ -1,0 +1,5 @@
+check process config_server
+  with pidfile /var/vcap/sys/run/cfgsvr/cfgsvr.pid
+  start program "/var/vcap/jobs/cfgsvr/bin/cfgsvr_ctl start"
+  stop program "/var/vcap/jobs/cfgsvr/bin/cfgsvr_ctl stop"
+  group vcap
