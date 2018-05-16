@@ -1,5 +1,5 @@
-check process mongodb_server
-  with pidfile /var/vcap/sys/run/mongod/mongod.pid
-  start program "/var/vcap/jobs/mongod/bin/mongod_ctl start"
-  stop program "/var/vcap/jobs/mongod/bin/mongod_ctl stop"
+check process shard_server
+  with pidfile /var/vcap/sys/run/shardsvr/shardsvr.pid
+  start program "/var/vcap/jobs/shardsvr/bin/shardsvr_ctl start"
+  stop program "/var/vcap/jobs/shardsvr/bin/shardsvr_ctl stop"
   group vcap
