@@ -1,5 +1,5 @@
 check process config_server
-  with pidfile /var/vcap/sys/run/cfgsrv/mongod.pid
-  start program "/var/vcap/jobs/cfgsrv/bin/mongod_ctl start"
-  stop program "/var/vcap/jobs/cfgsrv/bin/mongod_ctl stop"
+  with pidfile /var/vcap/sys/run/cfgsrv/cfgsrv.pid
+  start program "/var/vcap/jobs/cfgsrv/bin/cfgsrv_ctl start"
+  stop program "/var/vcap/jobs/cfgsrv/bin/cfgsrv_ctl stop"
   group vcap
