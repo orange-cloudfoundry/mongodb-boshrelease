@@ -32,7 +32,7 @@ case $1 in
 
     ;;
   *)
-    echo "Usage: mongod_ctl {start|stop}"
+    echo "Usage: shardsvr_ctl {start|stop}"
 
     ;;
 
