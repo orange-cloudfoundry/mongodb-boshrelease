@@ -3,7 +3,7 @@
 set -e # exit immediately if a simple command exits with a non-zero status.
 set -u # report the usage of uninitialized variables.
 
-source ${JOB_DIR}/bin/setenv
+source ${JOBS_COMMON_DIR}/bin/setenv ${JOB_NAME}
 
 export PARAM="$@"
 
