@@ -8,8 +8,6 @@ consumes:
   - name: server
     type: mongod
 
-#  - name: cfgsrv
-#    type: mongod
 
 provides:
   - name: server
@@ -25,30 +23,9 @@ provides:
     - server_certificate.private_key
     - server_certificate.certificate
 
-#  - name: cfgsrv
-#    type: mongod
-#    properties:
-#    - cfg_port
-#    - node_role
-#    - replication.enable
-#    - storage_engine
-#    - mmap_v1_small_files
-#    - wired_tiger_cache_size_gb
-#    - slow_query_threshold_ms
-#    - replication.operation_log_max_size_mb
-#    - replication.key
-#    - enable_role_based_access_control
-#    - admin_username
-#    - admin_password
-#    - root_username
-#    - root_password
-#    - server_certificate
-#    - arbiter_only
-
 templates:
   bin/mdb-variables.sh.erb: bin/mdb-variables.sh
   bin/pre-start: bin/pre-start
-  bin/setenv: bin/setenv
   bin/mongod_ctl : bin/mongod_ctl
   config/mongod.conf.erb: config/mongod.conf
   config/keyfile.erb: config/keyfile
