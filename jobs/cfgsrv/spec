@@ -23,9 +23,8 @@ provides:
 templates:
   bin/mdb-variables.sh.erb: bin/mdb-variables.sh
   bin/pre-start: bin/pre-start
-  bin/setenv: bin/setenv
   bin/cfgsrv_ctl : bin/cfgsrv_ctl
-  config/mongod.conf.erb: config/mongod.conf
+  config/cfgsrv.conf.erb: config/cfgsrv.conf
   config/keyfile.erb: config/keyfile
   ssl/CA.key.erb: ssl/CA.key
   ssl/CA.crt.erb: ssl/CA.crt
