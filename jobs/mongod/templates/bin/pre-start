@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -eu
 
-source `dirname $(readlink -f $0)`/setenv
+export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
+source ${JOBS_COMMON_DIR}/bin/setenv mongod
 source ${JOBS_COMMON_DIR}/bin/mdb-functions
 
 if [ $(check_ssl) -eq 0 ]

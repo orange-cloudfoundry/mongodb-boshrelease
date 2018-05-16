@@ -10,7 +10,7 @@ ulimit -m unlimited
 
 export LANG=en_US.UTF-8
 
-export JOB_NAME='mongod'
+export JOB_NAME=$1
 output_label=${2:-${JOB_NAME}}
 
 export JOB_DIR=/var/vcap/jobs/${JOB_NAME}
