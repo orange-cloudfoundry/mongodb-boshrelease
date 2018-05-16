@@ -2,15 +2,15 @@
 Conf_bindIp = "127.0.0.1,#{spec.ip}"
 
 # Mongodb directories
-Sys_Db_dirRoot="/var/vcap/store/cfgsrv"
-Sys_Db_dirCfg="/var/vcap/jobs/cfgsrv/config"
-Sys_Db_dirSSL="/var/vcap/jobs/cfgsrv/ssl"
-Sys_Db_dirData="/var/vcap/store/cfgsrv/data"
-Sys_Db_dirLog="/var/vcap/sys/log/cfgsrv"
-Sys_Db_dirRun="/var/vcap/sys/run/cfgsrv"
+Sys_Db_dirRoot="/var/vcap/store/cfgsvr"
+Sys_Db_dirCfg="/var/vcap/jobs/cfgsvr/config"
+Sys_Db_dirSSL="/var/vcap/jobs/cfgsvr/ssl"
+Sys_Db_dirData="/var/vcap/store/cfgsvr/data"
+Sys_Db_dirLog="/var/vcap/sys/log/cfgsvr"
+Sys_Db_dirRun="/var/vcap/sys/run/cfgsvr"
 
 # Mongodb configuration parameters
-Conf_systemLog = Sys_Db_dirLog + "/cfgsrv.log"
+Conf_systemLog = Sys_Db_dirLog + "/cfgsvr.log"
 Conf_port = p("port")
 Conf_PEMKeyFile = Sys_Db_dirSSL + "/mongodb.pem"
 Conf_CAFile = Sys_Db_dirSSL + "/CA.crt"
@@ -106,7 +106,7 @@ security:
   <%- if p("require_ssl") == 1 -%>
   clusterAuthMode: x509
   <%- else -%>
-  keyFile: /var/vcap/jobs/cfgsrv/config/keyfile
+  keyFile: /var/vcap/jobs/cfgsvr/config/keyfile
   <%- end -%>
 <%- end -%>
 operationProfiling:
