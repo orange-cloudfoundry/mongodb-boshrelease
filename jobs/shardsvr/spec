@@ -8,14 +8,18 @@ consumes:
   - name: shard-server
     type: shardsvr
 
+  - name: config-server
+    type: cfgsvr
+
 provides:
   - name: shard-server
     type: shardsvr
     properties:
-    - root_username
-    - root_password
     - port
     - replication.replica_set_name
+    - enable_role_based_access_control
+    - server_certificate.certificate
+    - server_certificate.private_key
 
 templates:
   bin/mdb-variables.sh.erb: bin/mdb-variables.sh
@@ -76,7 +80,6 @@ properties:
         'system.profile' collection.
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#operationProfiling.slowOpThresholdMs
-
   replication.replica_set_name:
       description: |
         The name of the replica set that the mongod is part of. All hosts in the
@@ -98,16 +101,6 @@ properties:
         size of the oplog.
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.oplogSizeMB
-  replication.key:
-      description: |
-        Specify key which will be used in keyfile. Mandatory for replication
-        without ssl With keyfile authentication, each mongod instances in the
-        replica set uses the contents of the keyfile as the shared password
-        for authenticating other members in the deployment. Only mongod
-        instances with the correct keyfile can join the replica set.
-
-        The content of the keyfile must be between 6 and 1024 characters long
-        and must be the same for all members of the replica set.
   enable_role_based_access_control:
       default: 1
       description: |
@@ -121,41 +114,6 @@ properties:
         only. Never disable this option in production.
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#security.authorization
-  admin_username:
-      default: MongoAdmin
-      description: |
-        Username of the default admin user.
-  admin_password:
-      description: |
-        Password for the admin user, in clear text.
-  root_username:
-      default: MongoRoot
-      description: |
-        Username of the default root user.
-  root_password:
-      description: |
-        Password for the root user, in clear text.
-  server_certificate:
-      default:
-        ca: "NOT INITIALIZED"
-        private_key: "NOT INITIALIZED"
-        certificate: "NOT INITIALIZED"
-      description: Mongodb certificate for ttl/ssl auth
-  require_ssl:
-      default: 1
-      description: |
-        Enforce TLS/SSL for connecting to the server.
-
-        When this options is set to '1', all connections to mongod must be
-        encrypted with TLS/SSL, and un-encrypted connections will be refused.
-        For example, when using the 'mongo' client, the '--ssl' argument will be
-        mandatory.
-
-        When this options is set to '0', then all connections to mongod must not
-        be encrypted, and SSL/TLS will not be possible. For example, when using
-        the 'mongo' client, the '--ssl' argument will not be possible. This
-        should be reserved to development environments and be avoided in
-        production.
   arbiter_only:
       default: no
       example: yes
