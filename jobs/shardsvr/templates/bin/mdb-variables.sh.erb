@@ -14,6 +14,16 @@
   # remove last ,
   mongo_rsconfig = _mongo_rsconfig[0..-2]
   mongo_current_ip = spec.ip
+
+  mongos_port = link('routing-service').p("port")
+  _mongos_config = ''
+  link('routing-service').instances.each do |instance|
+    _mongos_config = "#{_mongos_config}#{instance.address}:#{mongos_port},"
+  end
+  # remove last ,
+  mongos_config = _mongos_config[0..-2]
+  mongo_current_ip = spec.ip
+
 %>
 property_require_ssl=<%= esc(link('config-server').p("require_ssl")) %>
 property_mongod_listen_port=<%= esc(mongo_DbTypeport) %>
@@ -25,4 +35,5 @@ property_replica_set_name=<%= esc(p("replication.replica_set_name")) %>
 
 deployment_current_ip=<%= esc(mongo_current_ip) %>
 deployment_rs_config=<%= esc(mongo_rsconfig) %>
+deployment_mongos_config=<%= esc(mongos_config) %>
 
