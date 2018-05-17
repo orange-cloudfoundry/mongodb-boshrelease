@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+<%-
+  require "shellwords"
+
+  def esc(x)
+    Shellwords.shellescape(x)
+  end
+
+  # config servers connect string 
+  cfgsvr_port = link('config-server').p("port")
+  _cfgsvr_rsconfig = ''
+  link('config-server').instances.each do |instance|
+    _cfgsvr_rsconfig = "#{_cfgsvr_rsconfig}#{instance.address}:#{cfgsvr_port},"
+  end
+  # remove last ,
+  cfgsvr_rsconfig = _cfgsvr_rsconfig[0..-2]
+
+  # mongos servers connect string 
+  mongo_current_ip = spec.ip
+  mongos_port = p("port")
+  _mongos_config = ''
+  link('routing-service').instances.each do |instance|
+    _mongos_config = "#{_mongos_config}#{instance.address}:#{mongos_port},"
+  end
+  # remove last ,
+  mongos_config = _mongos_config[0..-2]
+%>
+property_require_ssl=<%= esc(link('config-server').p("require_ssl")) %>
+property_mongod_listen_port=<%= esc(p("port")) %>
+property_root_username=<%= esc(link('config-server').p("root_username")) %>
+property_root_password=<%= esc(link('config-server').p("root_password")) %>
+property_admin_username=<%= esc(link('config-server').p("admin_username")) %>
+property_admin_password=<%= esc(link('config-server').p("admin_password")) %>
+property_sharded_rs=<%= esc(p("sharded_rs")) %>
+
+deployment_current_ip=<%= esc(mongo_current_ip) %>
+deployment_cfgsvr_config=<%= esc(cfgsvr_rsconfig) %>
+deployment_mongos_config=<%= esc(mongos_config) %>
