@@ -8,7 +8,6 @@ Sys_Db_dirSSL="/var/vcap/jobs/shardsvr/ssl"
 Sys_Db_dirData="/var/vcap/store/shardsvr/data"
 Sys_Db_dirLog="/var/vcap/sys/log/shardsvr"
 Sys_Db_dirRun="/var/vcap/sys/run/shardsvr"
-Sys_Db_dirManaged = [ Sys_Db_dirRoot, Sys_Db_dirCfg, Sys_Db_dirData, Sys_Db_dirLog, Sys_Db_dirRun ]
 
 # Mongodb configuration parameters
 Conf_systemLog = Sys_Db_dirLog + "/shardsvr.log"
@@ -92,7 +91,7 @@ net:
   unixDomainSocket:
     enabled: true
     pathPrefix: <%= Sys_Db_dirRun %>
-<%- if p("require_ssl") == 1 -%>
+<%- if link('config-server').p("require_ssl") == 1 -%>
   ssl:
     mode: requireSSL
     PEMKeyFile: <%= Conf_PEMKeyFile %>
@@ -104,7 +103,7 @@ net:
 <%- if p("enable_role_based_access_control") == 1 -%>
 security:
   authorization: enabled
-  <%- if p("require_ssl") == 1 -%>
+  <%- if link('config-server').p("require_ssl") == 1 -%>
   clusterAuthMode: x509
   <%- else -%>
   keyFile: /var/vcap/jobs/mongod/config/keyfile
