@@ -8,7 +8,7 @@
 
   mongo_DbTypeport = p("port")
   _mongo_rsconfig = ''
-  link('config_server').instances.each do |instance|
+  link('config-server').instances.each do |instance|
     _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport},"
   end
   # remove last ,
@@ -16,7 +16,6 @@
   mongo_current_ip = spec.ip
 %>
 property_require_ssl=<%= esc(p("require_ssl")) %>
-property_node_role=<%= esc(p("node_role")) %>
 property_mongod_listen_port=<%= esc(mongo_DbTypeport) %>
 property_root_username=<%= esc(p("root_username")) %>
 property_root_password=<%= esc(p("root_password")) %>
