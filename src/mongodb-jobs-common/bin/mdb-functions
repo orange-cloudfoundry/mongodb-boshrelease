@@ -143,7 +143,7 @@ check_master()
 ######################### Removing nodes that are not in cluster (scale out) ###################
 remove_unwanted_nodes()
 {
-    export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
+    MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
       -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
 
     wanted_servers=$(echo ${deployment_rs_config}|tr -s "," " ")
@@ -237,7 +237,7 @@ add_secondary()
 
 
   # At this point primary should be started with authentication too
-  export MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
+  MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
 
   # if root user is not available, primary has probably not finish his job, wait for it
   
@@ -272,3 +272,45 @@ add_secondary()
   done
 }
 ################################################################################################
+
+########################## Adding shard server to cluster #################################
+add_shard()
+{
+  # We only need to ad it once, on the master node
+
+  Master=$( check_master )
+  if [ "${Master}" == "" -o "${Master}" == "${deployment_current_ip}:${property_mongod_listen_port}" ]
+  then
+
+    MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
+
+    # before 3.6 mongos could only connect to spcefic address and do not accept addresses list
+    current_version=$(${MONGODB_BIN}/mongos --version \
+            | perl -e '@in=<STDIN>;
+                  foreach $ln (@in){
+                    if ($ln=~/mongos version v(\d+.\d+.\d+).*/){
+                      print $1
+                    }
+                  }')
+    major_version=$(echo ${current_version}|perl -e 'print((split(/\./,<STDIN>))[0])')
+    mid_version=$(echo ${current_version}|perl -e 'print((split(/\./,<STDIN>))[1])')
+
+    if [ ${major_version} -lt 3 ] || [ ${mid_version} -lt 6 ]
+    then
+      # trying each ip one by one
+      add_ok="false"
+      for mongos_ip in $(echo ${deployment_mongos_config}|tr -s "," " ")
+      do
+        if [ "${add_ok}" != "true" ]
+        then
+          add_ok=`${MONGO_CMD} mongodb://${mongos_ip} ${MONGO_CMD_PARAM} \
+              --eval "sh.addShard(\"${property_replica_set_name}/${deployment_rs_config}\")"||echo "false"`
+          [ "${add_ok}" != "false" ] && add_ok=true
+        fi
+      done
+    else
+      ${MONGO_CMD} mongodb://${deployment_mongos_config}:${deployment_mongos_port} ${MONGO_CMD_PARAM} \
+        --eval "sh.addShard(\"${property_replica_set_name}/${deployment_rs_config}\")"
+    fi
+  fi
+}
