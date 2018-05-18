@@ -35,5 +35,6 @@ property_replica_set_name=<%= esc(p("replication.replica_set_name")) %>
 
 deployment_current_ip=<%= esc(mongo_current_ip) %>
 deployment_rs_config=<%= esc(mongo_rsconfig) %>
+deployment_mongos_port=<%= link('routing-service').p("port") %>
 deployment_mongos_config=<%= esc(mongos_config) %>
 
