@@ -23,6 +23,8 @@ start_mongod_noauth          # Start mongod without authentication
 
 run_replicaset
 
+add_shard
+
 kill_and_wait ${PIDFILE}
 
 exit 0
