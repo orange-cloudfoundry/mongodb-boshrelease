@@ -11,6 +11,9 @@ consumes:
   - name: config-server
     type: cfgsvr
 
+  - name: routing-service
+    type: mongos  
+
 provides:
   - name: shard-server
     type: shardsvr
@@ -18,8 +21,6 @@ provides:
     - port
     - replication.replica_set_name
     - enable_role_based_access_control
-    - server_certificate.certificate
-    - server_certificate.private_key
 
 templates:
   bin/mdb-variables.sh.erb: bin/mdb-variables.sh
