@@ -30,3 +30,6 @@ properties:
   port:
       default: 27017
       description: Default mongodb port for mongos
+  deployment_timeout:
+      default: 120
+      description: The maximum time to wait for config-server availability before exiting with error

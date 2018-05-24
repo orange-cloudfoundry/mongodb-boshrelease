@@ -32,6 +32,7 @@ property_root_password=<%= esc(link('config-server').p("root_password")) %>
 property_admin_username=<%= esc(link('config-server').p("admin_username")) %>
 property_admin_password=<%= esc(link('config-server').p("admin_password")) %>
 property_replica_set_name=<%= esc(p("replication.replica_set_name")) %>
+property_deployment_timeout=<%= esc(p("deployment_timeout")) %>
 
 deployment_current_ip=<%= esc(mongo_current_ip) %>
 deployment_rs_config=<%= esc(mongo_rsconfig) %>
