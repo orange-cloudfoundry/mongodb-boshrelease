@@ -14,6 +14,31 @@ else
   export MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo-ssl.sh"
 fi
 
+# waiting for mongos availability
+_timeout=${property_deployment_timeout}
+reached=0
+while [ ${_timeout} -gt 0 ] && [ ${reached} -ne 1 ]
+do
+
+	for mongos in $(echo ${deployment_mongos_config}|tr -s "," " ")
+	do
+		mongos_ip=$(echo ${mongos}|cut -d":" -f1)
+		mongos_port=$(echo ${mongos}|cut -d":" -f2)
+		if  nc -z "${mongos_ip}" "${mongos_port}"
+		then
+			[ ${reached} -eq 0 ] && reached=1
+		fi
+	done
+	if [ ${reached} -eq 0 ]
+	then
+		sleep 1
+		_timeout=$(($_timeout-1))
+	fi
+done
+[ ${_timeout} -le 0 ] \
+			&& echo "Cannot connect to routing service servers. Timeout reached" \
+			&& exit 1
+
 system_update            # Updating system mandatories
 rights_and_directories   # Create Mongodb directories and update rights on keyfile
 
@@ -26,5 +51,7 @@ run_replicaset
 add_shard
 
 kill_and_wait ${PIDFILE}
+
+${JOB_DIR}/bin/shardsvr_ctl start 
 
 exit 0
