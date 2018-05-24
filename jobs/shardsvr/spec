@@ -124,3 +124,6 @@ properties:
 
         This option overrides any value set to 'mongodb.mmap_v1_small_files' and
         'mongodb.replication.operation_log_max_size_mb'.
+  deployment_timeout:
+      default: 120
+      description: The maximum time to wait for mongos availability before exiting with error
