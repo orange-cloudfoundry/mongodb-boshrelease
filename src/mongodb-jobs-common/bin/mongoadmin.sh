@@ -46,9 +46,13 @@ else
 
 	if [ ${major_version} -lt 3 -o ${mid_version} -lt 6 ]
 	then
-		connect_string="mongodb://${deployment_current_ip}:${property_mongod_listen_port}/${DB}"
-
-
+		# if we are on one of the mongos nodes
+		if [ ! -z ${deployment_mongos_config} ]
+		then
+			connect_string="mongodb://${deployment_current_ip}:${property_mongod_listen_port}/${DB}"
+		else
+			connect_string="mongodb://$(echo ${deployment_mongos_config}|cut -d"," -f1)/${DB}"
+		fi
 	else
 		connect_string="mongodb://${deployment_mongos_config}/${DB}"
 	fi
