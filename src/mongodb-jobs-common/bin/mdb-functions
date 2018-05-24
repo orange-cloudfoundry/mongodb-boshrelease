@@ -142,24 +142,6 @@ check_master()
 }
 ################################################################################################
 
-######################### Removing nodes that are not in cluster (scale out) ###################
-remove_unwanted_nodes()
-{
-    MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
-      -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
-
-    wanted_servers=$(echo ${deployment_rs_config}|tr -s "," " ")
-    for defined_server in $( get_actual_members )
-    do
-      if [ `echo ${wanted_servers}| grep ${defined_server}|wc -l` -eq 0 ]
-      then
-        ${MONGO_CMD} mongodb://${property_replica_set_name}/${Master} ${MONGO_CMD_PARAM} \
-                     --eval 'rs.remove("'${defined_server}':'${property_mongod_listen_port}'")'
-      fi
-    done
-}
-################################################################################################
-
 ######################### Create Mongodb Admin and Root users ##################################
 create_admin_users()
 {
@@ -331,6 +313,7 @@ add_shard()
   fi
 }
 ################################################################################################
+
 # this function perform a crypted backup of the current root password
 # allowing pasword changes in deployment manifest
 backup_root_password()
@@ -356,3 +339,29 @@ backup_root_password()
   rm -f /tmp/mongo_ident.conf.tmp
 
 }
+################################################################################################
+
+############# Removing node from replicaset when reducing number of instances ##################
+rs_scaleDown()
+{
+    MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
+      -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
+
+    # stopping the instance
+    ${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port}/admin \
+          ${MONGO_CMD_PARAM} \
+          --eval "db.shutdownServer()"
+
+    # getting master uri
+    Master=$( check_master )
+
+    if [ ${Master} != "" ]
+    then
+      ${MONGO_CMD} mongodb://${Master}/admin\?replicaSet=${property_replica_set_name} \
+            ${MONGO_CMD_PARAM} \
+            --eval "rs.remove("${deployment_current_ip}:${property_mongod_listen_port}")"
+    fi
+
+}
+################################################################################################
+
