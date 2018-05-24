@@ -25,4 +25,6 @@ run_replicaset
 
 kill_and_wait ${PIDFILE}
 
+${JOB_DIR}/bin/cfgsvr_ctl start 
+
 exit 0
