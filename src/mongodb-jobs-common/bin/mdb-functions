@@ -119,9 +119,8 @@ check_master()
     for Server in $(echo ${deployment_rs_config}|tr -s "," " ")
     do
 
-
       if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
-                          --eval 'db.isMaster().ismaster' \
+                        --eval 'db.isMaster().ismaster' \
                         2>/dev/null`" == "true" ]
       then
         Master=${Server}
@@ -341,27 +340,57 @@ backup_root_password()
 }
 ################################################################################################
 
-############# Removing node from replicaset when reducing number of instances ##################
-rs_scaleDown()
+############# setting mongo connection script depending if we are on ssl mode or not ###########
+setMongoCmd()
 {
-    MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
-      -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
+    if [ $(check_ssl) -eq 0 ]
+    then
+      MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo.sh"
+    else
+      # Generate the certificates
+      ${JOBS_COMMON_DIR}/bin/generate_ssl_cert.sh
+      MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo-ssl.sh"
+    fi
+    echo $MONGO_CMD
+}
+################################################################################################
+
+############# Removing node from replicaset when reducing number of instances ##################
+rs_scaleIn()
+{
+    set -x
+#    touch /tmp/continue
+
+    MONGO_CMD="$(setMongoCmd)"
+
+    MONGO_CMD_PARAM="-u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
 
     # stopping the instance
     ${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port}/admin \
           ${MONGO_CMD_PARAM} \
           --eval "db.shutdownServer()"
+    CR=$?      
 
-    # getting master uri
-    Master=$( check_master )
+    if [ ${CR} -eq 0 ]      
+    then  
+      # getting master uri
+      Master=$( check_master )
 
-    if [ ${Master} != "" ]
-    then
-      ${MONGO_CMD} mongodb://${Master}/admin\?replicaSet=${property_replica_set_name} \
-            ${MONGO_CMD_PARAM} \
-            --eval "rs.remove("${deployment_current_ip}:${property_mongod_listen_port}")"
+      if [ "${Master}" != "" ]
+      then
+        ${MONGO_CMD} mongodb://${Master}/admin\?replicaSet=${property_replica_set_name} \
+              ${MONGO_CMD_PARAM} \
+              --eval "rs.remove("${deployment_current_ip}:${property_mongod_listen_port}")"
+        CR=$?
+      fi
     fi
 
+  #  while [ -f /tmp/continue ]
+  #  do
+  #    sleep 60
+  #  done
+#
+    return ${CR}
 }
 ################################################################################################
 

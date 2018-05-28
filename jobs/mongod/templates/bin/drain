@@ -1,32 +1,44 @@
 #!/usr/bin/env bash
-set -eu
 
-export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
+set -eo pipefail
+
+function prepend_datetime() {
+  awk -W interactive '{ system("echo -n [$(date +%FT%T%z)]"); print " " $0 }'
+}
+
+
+output_for_bosh() {
+    exit_code=$?
+
+    if [ $exit_code -eq 0 ]; then
+        echo "$(date +%F_%T): mongodb member removed"
+    else
+        echo "$(date +%F_%T): drain failed"
+    fi
+
+    echo $exit_code >&3
+}
+
+exec 3>&1
+trap output_for_bosh EXIT
+exec \
+    1> >(prepend_datetime >> /var/vcap/sys/log/mongod/drain.stdout.log) \
+    2> >(prepend_datetime >> /var/vcap/sys/log/mongod/drain.stderr.log)
+
+JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
 source ${JOBS_COMMON_DIR}/bin/setenv mongod
 source ${JOBS_COMMON_DIR}/bin/mdb-functions
 
-if [ $(check_ssl) -eq 0 ]
+echo "current_state : ${BOSH_JOB_STATE}\nnext_state:${BOSH_JOB_NEXT_STATE}" 
+if echo "${BOSH_JOB_NEXT_STATE}" | grep -Fq '"persistent_disk":0'
 then
-  export MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo.sh"
-else
-  # Generate the certificates
-  ${JOBS_COMMON_DIR}/bin/generate_ssl_cert.sh
-  export MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo-ssl.sh"
+	echo "$(date +%F_%T): detected 'scale-in' condition, decommissioning current node"
+    
+    # In standalone mode node is simply removed
+	# otherwise
+	if [ "$(get_node_role)" != "sa" ]
+	then
+	    rs_scaleIn # remove the node from replicaset
+	fi
 fi
 
-export MONGO_CMD_PARAM="--quiet"
-
-# In standalone mode node is simply removed
-# otherwise
-if [ "$(get_node_role)" != "sa" ]
-then
-	# monit must not restart the process
-	# toogle it to not monitored
-	monit unmonitor mongodb_server
-    rs_scaleDown # remove the node from replicaset   
-fi
-
-# then kill mongod preocess
-kill_and_wait ${PIDFILE}
-
-exit 0
