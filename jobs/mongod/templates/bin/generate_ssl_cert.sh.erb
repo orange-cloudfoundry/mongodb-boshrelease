@@ -9,6 +9,8 @@ cd "${MONGODB_SSL}" || exit 666
 
 # generate only if client and server keys doesnt already exists
 if [ ! -f "${MONGODB_SSL}/mongodb.pem" ]; then
+    # We need to reset LD Library path to use system deployed openssl version
+    LD_LIBRARY_PATH=""
 
     # retrieving openssl.cnf - location is OS ependent
     OPENSSL_CNF=$(find /etc -name openssl.cnf)
@@ -16,7 +18,7 @@ if [ ! -f "${MONGODB_SSL}/mongodb.pem" ]; then
     # generate private key
     openssl genrsa -out "${MONGODB_SSL}/mongodb.key" 2048
     
-    SAN_SECTION="[SAN]\nsubjectAltName=IP:<%= spec.ip %>,IP:127.0.0.1\nextendedKeyUsage=serverAuth,clientAuth\n"
+    SAN_SECTION="[SAN]\nsubjectAltName=DNS.1:<%= spec.ip %>,DNS.2:127.0.0.1\nextendedKeyUsage=serverAuth,clientAuth\n"
 
     # generate certification request
     openssl req -new -key "${MONGODB_SSL}/mongodb.key" \
