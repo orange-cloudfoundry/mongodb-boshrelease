@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export JOBS_COMMON_DIR=/var/vcap/packages/mongodb-jobs-common
-export JOB_NAME=$1
+JOBS_COMMON_DIR=/var/vcap/packages/mongodb-jobs-common
+JOB_NAME=$1
 
 shift
 
@@ -11,14 +11,14 @@ source ${JOB_DIR}/bin/mdb-variables.sh
 
 if [ ${property_require_ssl} == 0 ]
 then
-	export MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo.sh"
+	MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo.sh"
 else	
-	export MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo-ssl.sh"
+	MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo-ssl.sh"
 fi
 
-export DB=$1
+DB=$1
 shift
-export PARAM="$@"
+PARAM="$@"
 
 pushd /var/vcap/packages/mongodb/bin >/dev/null
 if [ "${JOB_NAME}" != "mongos" ]
