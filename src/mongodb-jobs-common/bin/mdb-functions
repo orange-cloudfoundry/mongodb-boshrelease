@@ -20,7 +20,7 @@ get_node_role()
 get_actual_members()
 {
     m_list=""
-    for i in `${MONGO_CMD} --host rs0/${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+    for i in `${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port}/?replicaSet=rs0 ${MONGO_CMD_PARAM} \
                            --eval 'rs.status().members' \
                           | grep name | tr -s [:space:] | tr -d '"' | cut -d ":" -f2`
     do
@@ -119,16 +119,18 @@ check_master()
     for Server in $(echo ${deployment_rs_config}|tr -s "," " ")
     do
 
-      if [ "`${MONGO_CMD} --host ${Server} ${MONGO_CMD_PARAM} \
+
+      if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
                           --eval 'db.isMaster().ismaster' \
                         2>/dev/null`" == "true" ]
       then
         Master=${Server}
       else
-        if [ "`${MONGO_CMD} --host ${Server} \
+
+        if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
                             -u ${property_root_username} \
                             -p ${property_root_password} \
-                            --authenticationDatabase admin ${MONGO_CMD_PARAM} \
+                            --authenticationDatabase admin \
                             --eval 'db.isMaster().ismaster' \
                             2>/dev/null`" == "true" ]
         then
@@ -151,7 +153,7 @@ remove_unwanted_nodes()
     do
       if [ `echo ${wanted_servers}| grep ${defined_server}|wc -l` -eq 0 ]
       then
-        ${MONGO_CMD} --host ${property_replica_set_name}/${Master} ${MONGO_CMD_PARAM} \
+        ${MONGO_CMD} mongodb://${property_replica_set_name}/${Master} ${MONGO_CMD_PARAM} \
                      --eval 'rs.remove("'${defined_server}':'${property_mongod_listen_port}'")'
       fi
     done
@@ -165,8 +167,8 @@ create_admin_users()
     created=""
     while [ "${created}" == "" ]
     do
-      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host ${deployment_current_ip}:${property_mongod_listen_port} \
-                                               --eval 'db.getUser("'${property_admin_username}'")' admin \
+      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}:${property_mongod_listen_port}/admin \
+                                               --eval 'db.getUser("'${property_admin_username}'")' \
                                                2>/dev/null||echo 1`
       if [ $(echo "${created}"|grep "Error: not master and slaveOk=false"|wc -l) -gt 0 ]
       then 
@@ -174,14 +176,14 @@ create_admin_users()
       fi   
       if [ "${created}" != "" -a "${created}" != "null" ]
       then
-        created=`${MONGO_CMD} ${MONGO_CMD_PARAM} --host ${deployment_current_ip} \
-          --eval 'db.getUser("'${property_admin_username'")' admin||echo 1`        
+        created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}/admin \
+          --eval 'db.getUser("'${property_admin_username'")' ||echo 1`        
       fi      
     done
     # Create admin users if not already created
     if [ "${created}" == "null" ]
     then
-       ${MONGO_CMD} ${MONGO_CMD_PARAM} --host ${deployment_current_ip}:${property_mongod_listen_port} \
+       ${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}:${property_mongod_listen_port} \
                                        --eval "job_dir=\"${JOB_DIR}\""  \
                                        --shell < ${JOBS_COMMON_DIR}/js/create_admin_user.js
     fi
@@ -194,13 +196,13 @@ init_primary()
     CR=1
     while [ ${CR} -ne 0 ]
     do
-      ${MONGO_CMD} --host ${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+      ${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
                    --eval "job_dir=\"${JOB_DIR}\""  \
                    --shell < ${JOBS_COMMON_DIR}/js/initiate_rs.js
       CR=$?
     done
     # wait until rs is fully active
-    while [ `${MONGO_CMD} --host ${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+    while [ `${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
                           --eval 'rs.status().ok' \
                           ||echo 0` -ne 1 ]
     do
@@ -216,7 +218,7 @@ run_replicaset()
     if [ "${Master}" == "" -o "${Master}" == "${deployment_current_ip}:${property_mongod_listen_port}" ]
     then
       # check if rs is already initialized
-      if [ "$(${MONGO_CMD} --host ${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+      if [ "$(${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
                            --eval 'rs.status().codeName' \
                          || echo 'Err')" == "NotYetInitialized" ]
       then
@@ -235,6 +237,7 @@ add_secondary()
   # on secondary nodes, mongod HAVE TO be started with authentication
   start_mongod_with_auth          # Start mongod with authentication
 
+  Master=$( check_master )
 
   # At this point primary should be started with authentication too
   MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
@@ -244,14 +247,14 @@ add_secondary()
   root_initialized=""
   while [ "$root_initialized" == "" ]
   do
-    root_initialized=`${MONGO_CMD} --host ${Master} \
+    root_initialized=`${MONGO_CMD} mongodb://${Master} \
       ${MONGO_CMD_PARAM} --eval 'db.getUser("'${property_root_username}'")' admin||echo "null"`
     
     [ "$root_initialized" == "null" ] && sleep 2
   done
 
    # Adding current node to rs
-  ${MONGO_CMD} --host ${Master} \
+  ${MONGO_CMD} mongodb://${Master} \
     ${MONGO_CMD_PARAM} --eval 'rs.add("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
 
   [ $? -ne 0 ] && exit 1
@@ -260,7 +263,7 @@ add_secondary()
   add_ok="false"
   while [ "${add_ok}" == "false" ]
   do
-    add_ok=`${MONGO_CMD} --host ${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+    add_ok=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
       --eval 'rs.isMaster().secondary'||echo "false"`
     if [ "${add_ok}" != "true" ]
     then
