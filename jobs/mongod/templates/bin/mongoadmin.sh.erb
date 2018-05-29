@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 source `dirname $(readlink -f $0)`/setenv
 
@@ -17,9 +17,9 @@ export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo-ssl.sh"
    mongo_rsconfig = _mongo_rsconfig[0..-2]
 end -%>
 
-export DB=$1
+DB=$1
 shift
-export PARAM="$@"
+PARAM="$@"
 
 pushd /var/vcap/packages/mongodb/bin >/dev/null
 <%- if p("node_role") == "sa" -%>
