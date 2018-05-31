@@ -21,6 +21,11 @@ if lnk.p("node_role") == "sa"
 else
   mongo_replicasetname = lnk.p("replication.replica_set_name")
 end
+if lnk.p('require_ssl') == 1
+  ca_cert = "/var/vcap/jobs/mongodb-acceptance-tests/ssl/CA.crt"
+else
+  ca_cert = ""
+end
 -%>
 {
   "timeout_scale":                    <%= p('timeout_scale') %>,
@@ -29,5 +34,7 @@ end
   "mongo_root_username":              "<%= lnk.p('root_username') %>",
   "mongo_root_password":              "<%= lnk.p('root_password') %>",
   "mongo_replica_set_name":           "<%= mongo_replicasetname %>",
-  "mongo_replica_set_enable":         <%= lnk.p('replication.enable') %>
+  "mongo_replica_set_enable":         <%= lnk.p('replication.enable') %>,
+  "mongo_require_ssl":                <%= lnk.p('require_ssl') %>,
+  "mongo_cert":                       "<%= ca_cert %>"
 }
