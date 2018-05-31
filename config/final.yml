@@ -1,6 +1,7 @@
 ---
-final_name: mongodb-services
+final_name: mongodb-acc-tests
 blobstore:
   provider: s3
   options:
-    bucket_name: orange-mongodb-cf-service-boshrelease
+    bucket_name: mongodb-bucket
+    host: https://10.171.41.20
