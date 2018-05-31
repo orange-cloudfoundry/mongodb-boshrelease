@@ -12,6 +12,7 @@ packages:
 templates:
   config.json.erb: config.json
   errand.sh.erb: bin/run
+  ssl/CA.crt.erb: ssl/CA.crt
 
 properties:
   mongo_test_suite:
