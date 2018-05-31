@@ -4,3 +4,4 @@
 [submodule "src/github.com/orange-cloudfoundry/mongodb-acceptance-tests"]
 	path = src/github.com/orange-cloudfoundry/mongodb-acceptance-tests
 	url = https://github.com/orange-cloudfoundry/mongodb-acceptance-tests.git
+	branch = replicaset-tests
