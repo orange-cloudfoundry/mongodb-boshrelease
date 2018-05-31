@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 JOBS_COMMON_DIR=/var/vcap/packages/mongodb-jobs-common
 JOB_NAME=$1
