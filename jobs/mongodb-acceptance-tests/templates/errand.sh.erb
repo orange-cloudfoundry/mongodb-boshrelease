@@ -1,5 +1,8 @@
 #!/bin/bash
-
+<%
+lnk = link('server')
+mongo_test_suites = p('mongo_test_suite')
+-%>
 set -e
 
 pushd /var/vcap/packages/mongodb-acceptance-tests || exit 115
@@ -18,5 +21,5 @@ pushd ${MATS_PKG_DIR}
     # stemcells, so we use this as temporary directory instead.
     export TMPDIR=/var/vcap/data/tmp
 
-    ./bin/test <%= p('mongo_test_suite').join(' ') %>
+    ./bin/test <%= mongo_test_suites.join(' ') %>
 popd
