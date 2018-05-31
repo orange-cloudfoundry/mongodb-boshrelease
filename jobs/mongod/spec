@@ -19,6 +19,9 @@ provides:
     - cfg_port
     - replication.enable
     - replication.replica_set_name
+    - require_ssl
+    - server_certificate.private_key
+    - server_certificate.certificate
 
 templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
