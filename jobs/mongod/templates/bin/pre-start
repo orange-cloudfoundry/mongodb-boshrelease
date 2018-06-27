@@ -30,6 +30,9 @@ else
     run_replicaset
 fi
 
+# backup root password to allowpassword modification through manifest
+backup_root_password
+
 kill_and_wait ${PIDFILE}
 
 exit 0

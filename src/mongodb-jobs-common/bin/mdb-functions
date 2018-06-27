@@ -331,3 +331,28 @@ add_shard()
   fi
 }
 ################################################################################################
+# this function perform a crypted backup of the current root password
+# allowing pasword changes in deployment manifest
+backup_root_password()
+{
+ 
+  if [ ! -f ${DATA_DIR}/mongo_private.pem ]
+  then
+    openssl genrsa -out ${DATA_DIR}/mongo_private.pem 1024
+    chmod 600 ${DATA_DIR}/mongo_private.pem
+  fi
+
+  if [ ! -f ${DATA_DIR}/mongo_public.pem ]
+  then
+    openssl rsa -in ${DATA_DIR}/mongo_private.pem -out ${DATA_DIR}/mongo_public.pem -outform PEM -pubout
+  fi
+
+  echo "${property_root_username} ${property_root_password}" > /tmp/mongo_ident.conf.tmp
+
+  cat /tmp/mongo_ident.conf.tmp | \
+    openssl rsautl -encrypt -inkey ${DATA_DIR}/mongo_public.pem -pubin \
+    > ${DATA_DIR}/mongo_ident.conf
+
+  rm -f /tmp/mongo_ident.conf.tmp
+
+}
