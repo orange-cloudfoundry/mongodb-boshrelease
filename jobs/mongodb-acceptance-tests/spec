@@ -6,7 +6,7 @@ consumes:
     type: mongod
 
 packages:
-  - golang-1.8-linux
+  - golang-1.9-linux
   - mongodb-acceptance-tests
 
 templates:
