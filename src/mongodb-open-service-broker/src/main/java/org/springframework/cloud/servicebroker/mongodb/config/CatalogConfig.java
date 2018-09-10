@@ -20,8 +20,8 @@ public class CatalogConfig {
 		return new Catalog(Collections.singletonList(
 				new ServiceDefinition(
 						getEnvOrDefault("SERVICE_ID","mongodb-service-broker"), //env variable
-						getEnvOrDefault("SERVICE_NAME","mongodb"), //env variable
-						getEnvOrDefault("SERVICE_MARKETPLACE_DESCRIPTION","A MongoDB database on demand."),
+						getEnvOrDefault("SERVICE_NAME","MongoDB 3.4.x for  Cloud Foundr"), //env variable
+						getEnvOrDefault("SERVICE_MARKETPLACE_DESCRIPTION","A MongoDB database on demand on shared cluster."),
 						true,
 						false,
 						Collections.singletonList(
@@ -43,14 +43,14 @@ public class CatalogConfig {
 		sdMetadata.put("imageUrl", "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcR9mtOVRxVp_1TgQ3b4UnawlWqUkw86oNRDvQAFz3gCuZNMrtPqYw");
 		sdMetadata.put("longDescription", "MongoDB is a free and open-source cross-platform document-oriented database program. Classified as a NoSQL database program, MongoDB uses JSON-like documents with schemas. MongoDB is developed by MongoDB Inc. and is free and open-source, published under a combination of the GNU Affero General Public License and the Apache License.");
 		sdMetadata.put("providerDisplayName", "Orange");
-		sdMetadata.put("documentationUrl", "https://github.com/spring-cloud-samples/cloudfoundry-mongodb-service-broker");
-		sdMetadata.put("supportUrl", "https://github.com/spring-cloud-samples/cloudfoundry-mongodb-service-broker");
+		sdMetadata.put("documentationUrl", "https://docs.mongodb.com/");
+		sdMetadata.put("supportUrl", "https://marketplace.my-company.org/contact-us");
 		return sdMetadata;
 	}
 	
 	private Map<String,Object> getPlanMetadata() {
 		Map<String,Object> planMetadata = new HashMap<>();
-		//planMetadata.put("costs", getCosts());
+		planMetadata.put("costs", getCosts());
 		planMetadata.put("bullets", getBullets());
 		return planMetadata;
 	}
@@ -59,7 +59,7 @@ public class CatalogConfig {
 		Map<String,Object> costsMap = new HashMap<>();
 		
 		Map<String,Object> amount = new HashMap<>();
-		amount.put("usd", 0.0);
+		amount.put("eur", 10.0);
 	
 		costsMap.put("amount", amount);
 		costsMap.put("unit", "MONTHLY");
