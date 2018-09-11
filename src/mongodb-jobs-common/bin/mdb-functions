@@ -118,22 +118,24 @@ check_master()
     Master=""
     for Server in $(echo ${deployment_rs_config}|tr -s "," " ")
     do
-
-      if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
-                        --eval 'db.isMaster().ismaster' \
-                        2>/dev/null`" == "true" ]
+      if [ "${Master}" == "" ]
       then
-        Master=${Server}
-      else
-
         if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
-                            -u ${property_root_username} \
-                            -p ${property_root_password} \
-                            --authenticationDatabase admin \
-                            --eval 'db.isMaster().ismaster' \
-                            2>/dev/null`" == "true" ]
+                          --eval 'db.isMaster().ismaster' \
+                          2>/dev/null`" == "true" ]
         then
           Master=${Server}
+        else
+
+          if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
+                              -u ${property_root_username} \
+                              -p ${property_root_password} \
+                              --authenticationDatabase admin \
+                              --eval 'db.isMaster().ismaster' \
+                              2>/dev/null`" == "true" ]
+          then
+            Master=${Server}
+          fi
         fi
       fi
     done
@@ -296,7 +298,7 @@ add_shard()
           fi
         done
       else
-        ${MONGO_CMD} mongodb://${deployment_mongos_config}:${deployment_mongos_port} ${MONGO_CMD_PARAM} \
+        ${MONGO_CMD} mongodb://${deployment_mongos_config} ${MONGO_CMD_PARAM} \
               --eval "sh.addShard(\"${property_replica_set_name}/${Master}\")"
         RC=$?
       fi
