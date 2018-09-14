@@ -116,6 +116,7 @@ check_master()
 {
     # looking for already created master node
     Master=""
+
     for Server in $(echo ${deployment_rs_config}|tr -s "," " ")
     do
       if [ "${Master}" == "" ]
@@ -150,7 +151,7 @@ create_admin_users()
     created=""
     while [ "${created}" == "" ]
     do
-      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}:${property_mongod_listen_port}/admin \
+      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_rs_config}/admin \
                                                --eval 'db.getUser("'${property_admin_username}'")' \
                                                2>/dev/null||echo 1`
       if [ $(echo "${created}"|grep "Error: not master and slaveOk=false"|wc -l) -gt 0 ]
@@ -365,34 +366,37 @@ rs_scaleIn()
 
     MONGO_CMD="$(setMongoCmd)"
 
-    MONGO_CMD_PARAM="-u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
+    MONGO_CMD_PARAM="--quiet"
 
     # stopping the instance
-    ${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port}/admin \
+    ${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${deployment_current_ip}:${property_mongod_listen_port}/admin?authSource=admin" \
           ${MONGO_CMD_PARAM} \
           --eval "db.shutdownServer()"
-    CR=$?      
 
-    if [ ${CR} -eq 0 ]      
+    if [ $? -eq 0 ]      
     then  
       # getting master uri
-      Master=$( check_master )
+      Timeout=120
+      Master=""
+      while [ "${Master}" == "" -a ${Timeout} -gt 0 ]
+      do
+        Master=$( check_master )
 
-      if [ "${Master}" != "" ]
-      then
-        ${MONGO_CMD} mongodb://${Master}/admin\?replicaSet=${property_replica_set_name} \
-              ${MONGO_CMD_PARAM} \
-              --eval "rs.remove("${deployment_current_ip}:${property_mongod_listen_port}")"
-        CR=$?
-      fi
+        if [ "${Master}" == "" ]
+        then
+          sleep 1
+          Timeout=$((Timeout-1))
+        fi
+      done
     fi
-
-  #  while [ -f /tmp/continue ]
-  #  do
-  #    sleep 60
-  #  done
-#
-    return ${CR}
+    [ ${Timeout} -le 0 ] \
+      && echo "Cannot connect find a valid master node. Timeout reached" \
+      && exit 1
+    
+    ${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${Master}/admin?replicaSet=${property_replica_set_name}&authSource=admin" \
+              ${MONGO_CMD_PARAM} \
+              --eval "rs.remove(\"${deployment_current_ip}:${property_mongod_listen_port}\")"
+    return $?
 }
 ################################################################################################
 
