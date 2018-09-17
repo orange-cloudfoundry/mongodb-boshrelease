@@ -62,7 +62,14 @@ start_mongod_with_auth()
     echo "=============> Starting with authentication"
     # Stopping eventually running instance
     if [ -f ${PIDFILE} ]
+    then
+      Master=$(check_master)|cut -d":" -f1
+      if [ "$Master" == "${deployment_current_ip}" ]
       then
+        ${MONGO_CMD} $MONGO_CMD_PARAM mongodb://${deployment_rs_config}/admin --eval "rs.stepDown()"
+      fi
+
+
       [ `ps -p $(cat ${PIDFILE})|wc -l` -gt 1 ] && kill_and_wait ${PIDFILE}
     fi
 

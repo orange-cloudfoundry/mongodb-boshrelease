@@ -18,8 +18,12 @@ system_update            # Updating system mandatories
 rights_and_directories   # Create Mongodb directories and update rights on keyfile
 
 export MONGO_CMD_PARAM="--quiet"
-
-start_mongod_noauth          # Start mongod without authentication
+if [ ! -f ${RUN_DIR}/mongodb_initialized ]
+then
+   start_mongod_noauth          # Start mongod without authentication
+else
+   start_mongod_with_auth
+fi
 
 if [ "$(get_node_role)" == "sa" ]
 then
@@ -30,6 +34,7 @@ else
     run_replicaset
 fi
 
+[ ! -f ${RUN_DIR}/mongodb_initialized ] && touch ${RUN_DIR}/mongodb_initialized
 # backup root password to allowpassword modification through manifest
 backup_root_password
 
