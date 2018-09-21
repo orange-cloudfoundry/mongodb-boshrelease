@@ -1,0 +1,67 @@
+name: mongodb-services
+version: "5"
+commit_hash: eee6665
+uncommitted_changes: false
+jobs:
+- name: broker
+  version: dbe7a93b2fcd76ff2d6d2881879ba151da201a0e
+  fingerprint: dbe7a93b2fcd76ff2d6d2881879ba151da201a0e
+  sha1: 907292082fcc32e5775a6b35e70a79b32218bf9a
+- name: broker-smoke-tests
+  version: 43ffec53d47f4e80580a6266f6938b9023dc6b42
+  fingerprint: 43ffec53d47f4e80580a6266f6938b9023dc6b42
+  sha1: 2b4a7341b57ec8fb845b593e441803633c052247
+- name: mongod
+  version: faf54d389eec1985028e63492666878c226ed1d7
+  fingerprint: faf54d389eec1985028e63492666878c226ed1d7
+  sha1: d16d44373a9564702ee7ecc7afa357a2246ec433
+- name: mongodb-acceptance-tests
+  version: 74a2faf7fdf83ba62556db3d17570afb7534fb81
+  fingerprint: 74a2faf7fdf83ba62556db3d17570afb7534fb81
+  sha1: afb495e7152198454695de9435f0300857ec2bf5
+packages:
+- name: cf-cli
+  version: 9c6b035e1b3fa935eaf7d78b69250be19b3cd996
+  fingerprint: 9c6b035e1b3fa935eaf7d78b69250be19b3cd996
+  sha1: 1409fde6d3ed762c088a07df33582740c6e032ba
+  dependencies: []
+- name: cf-mongodb-example-app
+  version: 364d731a5cb29cbd712fe35dcf2c36387ea64e4e
+  fingerprint: 364d731a5cb29cbd712fe35dcf2c36387ea64e4e
+  sha1: 75d129fe55734c0a3d540ecf692367e1753d1a59
+  dependencies: []
+- name: golang-1.9-linux
+  version: c6287e4a02a8491523d22e50dd697dc22296f0f7
+  fingerprint: c6287e4a02a8491523d22e50dd697dc22296f0f7
+  sha1: b5ac764da27f6b738c04b00a58c31f508d8c7b75
+  dependencies: []
+- name: java-common
+  version: 018744938b5a691527c626963211f4ba4b5772bf
+  fingerprint: 018744938b5a691527c626963211f4ba4b5772bf
+  sha1: e1ffcf4cc84c7157267f435bcc074c0a94077f6a
+  dependencies: []
+- name: mongodb
+  version: e669e8d43cb3f6c01d0183348851dcac10d0cd69
+  fingerprint: e669e8d43cb3f6c01d0183348851dcac10d0cd69
+  sha1: 1125d64036e84cd7440720569411df43626fb422
+  dependencies: []
+- name: mongodb-acceptance-tests
+  version: a34f99277543b62fd9faad7f59a48f0222771a14
+  fingerprint: a34f99277543b62fd9faad7f59a48f0222771a14
+  sha1: 55d3d55c49d78125403b97db82709247bc96ca05
+  dependencies:
+  - golang-1.9-linux
+- name: mongodb-broker-pkg
+  version: e25b27cc039f3a7c23ce39f7555a521ade96b5af
+  fingerprint: e25b27cc039f3a7c23ce39f7555a521ade96b5af
+  sha1: 7fe9e5afc5d8e54848dade2e58386cbf352c0a2c
+  dependencies: []
+- name: openjdk
+  version: 93c072891062f43e6a7fad1f3232064da90429af
+  fingerprint: 93c072891062f43e6a7fad1f3232064da90429af
+  sha1: da84dcdeb730e0759b4debd28ab4c1dcecfa536f
+  dependencies: []
+license:
+  version: 4d81eef78735b21bdf9a0bb2951e2dced57524da
+  fingerprint: 4d81eef78735b21bdf9a0bb2951e2dced57524da
+  sha1: 17a7e3a893988c36fdcef122fc17cbb80ebe245e
