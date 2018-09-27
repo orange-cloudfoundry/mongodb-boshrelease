@@ -270,7 +270,8 @@ add_secondary()
 ########################## Adding shard server to cluster #################################
 add_shard()
 {
-  # We only need to ad it once, on the master node
+  set -x
+  # We only need to add it once, on the replicaset master node
 
   Master=$( check_master )
   if [ "${Master}" == "" ] || [ "${Master}" == "${deployment_current_ip}:${property_mongod_listen_port}" ]
@@ -302,13 +303,20 @@ add_shard()
           then
             ${MONGO_CMD} mongodb://${mongos_ip} ${MONGO_CMD_PARAM} \
                 --eval "sh.addShard(\"${property_replica_set_name}/${Master}\")"
-            RC=$?    
+            # check if shard is effectivelly added
+            [ $(${MONGO_CMD} mongodb://${mongos_ip} ${MONGO_CMD_PARAM} \
+                --eval "db.adminCommand({listShards:1}).shards" \
+                | grep "_id"|tr -d [:space:]|cut -d":" -f2 \
+                | grep -w ${property_replica_set_name} |wc -l) -gt 0 ] && RC=0
           fi
         done
       else
         ${MONGO_CMD} mongodb://${deployment_mongos_config} ${MONGO_CMD_PARAM} \
               --eval "sh.addShard(\"${property_replica_set_name}/${Master}\")"
-        RC=$?
+        [ $(${MONGO_CMD} mongodb://${deployment_mongos_config} ${MONGO_CMD_PARAM} \
+              --eval "db.adminCommand({listShards:1}).shards" \
+              | grep "_id"|tr -d [:space:]|cut -d":" -f2 \
+              | grep -w ${property_replica_set_name} |wc -l) -gt 0 ] && RC=0
       fi
       if [ ${RC} -ne 0 ]
       then 
