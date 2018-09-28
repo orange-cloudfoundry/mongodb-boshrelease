@@ -270,7 +270,6 @@ add_secondary()
 ########################## Adding shard server to cluster #################################
 add_shard()
 {
-  set -x
   # We only need to add it once, on the replicaset master node
 
   Master=$( check_master )
