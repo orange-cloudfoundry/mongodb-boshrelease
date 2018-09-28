@@ -305,7 +305,7 @@ add_shard()
             # check if shard is effectivelly added
             [ $(${MONGO_CMD} mongodb://${mongos_ip} ${MONGO_CMD_PARAM} \
                 --eval "db.adminCommand({listShards:1}).shards" \
-                | grep "_id"|tr -d [:space:]|cut -d":" -f2 \
+                | grep "_id"|sed -e "s/[[:space:]]*//g"|cut -d":" -f2 \
                 | grep -w ${property_replica_set_name} |wc -l) -gt 0 ] && RC=0
           fi
         done
@@ -314,7 +314,7 @@ add_shard()
               --eval "sh.addShard(\"${property_replica_set_name}/${Master}\")"
         [ $(${MONGO_CMD} mongodb://${deployment_mongos_config} ${MONGO_CMD_PARAM} \
               --eval "db.adminCommand({listShards:1}).shards" \
-              | grep "_id"|tr -d [:space:]|cut -d":" -f2 \
+              | grep "_id"|sed -e "s/[[:space:]]*//g"|cut -d":" -f2 \
               | grep -w ${property_replica_set_name} |wc -l) -gt 0 ] && RC=0
       fi
       if [ ${RC} -ne 0 ]
