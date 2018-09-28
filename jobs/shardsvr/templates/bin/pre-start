@@ -54,8 +54,6 @@ fi
 
 run_replicaset
 
-add_shard
-
 [ ! -f ${RUN_DIR}/shardsvr_initialized ] && touch ${RUN_DIR}/shardsvr_initialized
 
 # backup root password to allow password modification through manifest
