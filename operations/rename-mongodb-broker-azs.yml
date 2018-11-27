@@ -1,0 +1,10 @@
+---
+- path: /instance_groups/name=mongodb-broker/azs
+  type: replace
+<<<<<<< HEAD
+#  value: [z1, z2, z3]
+  value: [z1]
+=======
+  value: [z1, z2, z3]
+#  value: [z1]
+>>>>>>> b420cf03972bb179494f95fb0a9f34552de2f2d7

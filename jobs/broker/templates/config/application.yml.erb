@@ -19,8 +19,8 @@ spring:
 mongodb:
   host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>  
   port: 27017
-  username: <%= p('mongodb_node.root_username') %>
-  password: <%= p('mongodb_node.root_password') %>
+  username: <%= link('server').p('root_username') %>
+  password: <%= link('server').p('root_password') %>
 
 server:
   port: <%= p('broker.port').to_json %>

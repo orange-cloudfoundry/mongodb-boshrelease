@@ -1,0 +1,5 @@
+---
+#adapt name
+- type: replace
+  path: /name
+  value: ((deployment_name))

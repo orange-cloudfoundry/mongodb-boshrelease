@@ -1,0 +1,239 @@
+#add shield release
+- type: replace
+  path: /releases/name=shield?
+  value:
+    name: shield
+    version: latest
+
+#add bpm
+- type: replace
+  path: /releases/-
+  value:
+    name: bpm
+    version: latest
+
+#add routing
+- type: replace
+  path: /releases/-
+  value:
+    name: routing
+    version: latest
+
+#add shield variables
+- type: replace
+  path: /variables?/-
+  value:
+    name: shield-agent-key
+    type: ssh
+
+- type: replace
+  path: /variables?/-
+  value:
+    name: shield-ca
+    type: certificate
+    options:
+      is_ca: true
+      common_name: shieldca
+
+- type: replace
+  path: /variables?/-
+  value:
+    name: shield-tls
+    type: certificate
+    options:
+      ca: shield-ca
+      common_name: shield
+      extended_key_usage:
+        - client_auth
+        - server_auth
+      alternative_names:
+        - 127.0.0.1
+        - "*.shield.default.shield.bosh"
+
+- type: replace
+  path: /variables?/-
+  value:
+    name: vault-ca
+    type: certificate
+    options:
+      is_ca: true
+      common_name: vaultca
+
+- type: replace
+  path: /variables?/-
+  value:
+    name: vault-tls
+    type: certificate
+    options:
+      ca: vault-ca
+      common_name: vault
+      extended_key_usage:
+        - client_auth
+        - server_auth
+      alternative_names:
+        - 127.0.0.1
+        - "*.vault.default.shield.bosh"
+
+
+#add bpm job for route registrar on mongodb-broker instance group
+- type: replace
+  path: /instance_groups/name=mongodb-broker/jobs/-
+  value:
+    name: bpm
+    release: bpm
+
+#add route registrar job on mongodb-broker instance group
+- type: replace
+  path: /instance_groups/name=mongodb-broker/jobs/-
+  value:
+    name: route_registrar
+    release: routing
+    properties:
+      nats:
+        machines:
+        - ((/secrets/cloudfoundry_nats_host))
+        password: ((/secrets/cloudfoundry_nats_password))
+        port: 4222
+        user: nats
+      route_registrar:
+        routes:
+        - name: broker-endpoint
+          registration_interval: 10s
+          port: 8080
+          uris:
+            - mongodb-broker-((deployment_name)).((/secrets/cloudfoundry_system_domain))
+
+#add shield instance group
+- type: replace
+  path: /instance_groups/-
+  value:
+    name: shield
+    instances: 1
+    jobs:
+    - name: bpm
+      release: bpm
+    - name: route_registrar
+      release: routing
+      properties:
+        nats:
+          machines:
+          - ops-routing-nats #this is a bosh-dns alias to master-depls/ops-routing nats server
+          password: ((/bosh-master/ops-routing/nats_password))
+          port: 4222
+          user: nats
+        route_registrar:
+          routes:
+          - name: shield-webui-coab-endpoint
+            registration_interval: 10s
+            tls_port: 443
+            server_cert_domain_san: 'shield-webui-((deployment_name)).((/secrets/cloudfoundry_ops_domain))'
+            uris:
+              - shield-webui-((deployment_name)).((/secrets/cloudfoundry_ops_domain))
+
+    - name: core
+      release: shield
+      provides:
+        shield: {as: shield-((deployment_name))}
+      properties:
+        domain: shield-webui-((deployment_name)).((/secrets/cloudfoundry_ops_domain))
+        log-level: ((log-level))
+        agent:
+          key: ((shield-agent-key.private_key))
+        tls:
+          certificate: ((shield-tls.certificate))
+          key:         ((shield-tls.private_key))
+        vault:
+          tls:
+            ca:          ((vault-tls.ca))
+            certificate: ((vault-tls.certificate))
+            key:         ((vault-tls.private_key))
+
+    - name: shield-agent
+      release: shield
+      consumes:
+        shield: {from: shield-((deployment_name))}
+      properties:
+        core:
+          ca: ((ops-cert))
+        log-level: ((log-level))
+        require-shield-core: false
+        agent:
+          key: ((shield-agent-key.public_key))
+
+    vm_type: default
+    stemcell: trusty
+    azs: [z1]
+    networks: [{name: tf-net-coab-depls-instance}]
+
+# add shield-agent job with consume link on mongod instance groups
+- type: replace
+  path: /instance_groups/name=mongod/jobs/-
+  value:
+    name: shield-agent
+    release: shield
+    consumes:
+        shield: {from: shield-((deployment_name))}
+    properties:
+      core:
+        ca: ((ops-cert))
+      log-level: ((log-level))
+      require-shield-core: false
+      env:
+        libs:
+        - /var/vcap/packages/mongodb/lib
+
+
+# add import job on mongod instance groups
+- type: replace
+  path: /instance_groups/name=mongod/jobs/-
+  value:
+    name: import
+    release: shield
+    properties:
+      generate_token: true
+      core: sandbox
+      domain: shield-webui-((deployment_name)).((/secrets/cloudfoundry_ops_domain))
+      import:
+        core: https://shield-webui-((deployment_name)).((/secrets/cloudfoundry_ops_domain))
+        insecure_skip_verify: true
+        tenants:
+        - name: mongodb-(ip)
+
+          members:
+          - user: admin@local
+            role: admin
+
+          storage:
+          - name: minio-mongo
+            summary: |
+              Internal S3 cloud storage for all SHIELD tenants to use
+            agent:  (ip):5444
+            plugin: s3
+            config:
+              s3_host: 192.168.116.50
+              s3_port: "443"
+              access_key_id: ((minio_access_key_id))
+              secret_access_key: ((minio_secret_access_key))
+              bucket: shieldv8-mongo #pre-requisite
+              skip_ssl_validation: true
+
+          policies:
+          - name: short-term
+            days: 7
+
+          systems:
+          - name: mongo-fpc-(ip)
+            agent: (ip):5444
+            config:
+              mongo_host: (ip)
+              mongo_user: MongoRoot
+              mongo_password: ((mongo_root_password))
+              mongo_bindir: "/var/vcap/packages/mongodb/bin"
+            jobs:
+            - name: (ip)-backup-test
+              paused: true
+              policy: short-term
+              storage: minio-mongo
+              when: every 8 hours from 0:15
+            plugin: mongo
+            summary: shield v8

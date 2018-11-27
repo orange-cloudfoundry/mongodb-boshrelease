@@ -1,0 +1,22 @@
+---
+# add mongodb_broker instance group
+- type: replace
+  path: /instance_groups/name=mongodb-broker?
+  value:
+    name: mongodb-broker
+    instances: 1
+    vm_type: ((broker-vm-type))
+    stemcell: default
+    azs: [z1]
+    networks: 
+      name: ((deployments-network))
+    persistent_disk_type: default
+    jobs:
+    - name: broker
+      release: mongodb-services
+      consumes:
+        server: {from: deployment-server}
+      properties:
+        broker:
+          user: mongodb-broker
+          password: ((broker.password))

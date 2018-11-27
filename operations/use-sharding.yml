@@ -1,0 +1,116 @@
+---
+- path: /releases/name=mongodb/name
+  type: replace
+  value:
+    &mongodb_release mongodb
+ 
+- path: /stemcells/alias=ubuntu/alias
+  type: replace
+  value:
+    &stemcell ubuntu
+
+- path: /instance_groups/name=mongod/name?
+  type: replace
+  value:
+    cfgsvr
+
+- path: /instance_groups/name=cfgsvr/jobs/name=mongod/name?
+  type: replace
+  value:
+    cfgsvr
+
+- path: /instance_groups/name=cfgsvr/jobs/name=cfgsvr/properties/replication/replica_set_name?
+  type: replace
+  value:
+    cs0
+
+- path: /instance_groups/name=cfgsvr/instances?
+  type: replace
+  value:
+    ((cfgsvr-nb-nodes))
+
+- path: /instance_groups/name=cfgsvr/vm_type?
+  type: replace
+  value:
+    ((cfgsvr-vm-type))
+
+- path: /instance_groups/name=cfgsvr/stemcell
+  type: replace
+  value:
+    *stemcell
+
+- path: /instance_groups/name=cfgsvr/persistent_disk_type?
+  type: replace
+  value:
+    ((cfgsvr-persistent_disk_type))        
+
+- path: /instance_groups/name=shard-0?
+  type: replace
+  value:
+    name: shard-0
+    release: *mongodb_release
+    azs: [z1]
+    instances: ((shard-nb-nodes)) # 
+    vm_type: ((shard-vm-type))
+    env:
+      bosh:
+        swap_size: 0
+    stemcell: *stemcell
+    networks:
+    - name: ((deployments-network))
+    persistent_disk_type: ((shard-persistent-disk-type))
+    env:
+      persistent_disk_fs: xfs
+
+- path: /instance_groups/name=shard-0/jobs?/name=shardsvr
+  type: replace
+  value:
+    release: *mongodb_release
+    properties:
+      replication:
+        replica_set_name: sh0 
+      
+
+#- path: /instance_groups/name=shard-0
+#  type: replace
+#  value:    
+#    *cfgsvr
+#
+
+
+#- path: /instance_groups/name=mongod:before
+#  type: replace
+#  value: 
+#    name: cfgsvr
+#    release: *mongodb_release
+#    azs: [z1]
+#    instances: 3 # 
+#    vm_type: ((cfgsvr-vm-type))
+#    env:
+#      bosh:
+#        swap_size: 0
+#    stemcell: *stemcell
+#    networks:
+#    - name: ((deployments-network))
+#    persistent_disk_type: ((cfgsvr-persistent-disk-type))
+#    env:
+#      persistent_disk_fs: xfs
+#    jobs:
+#
+#    - name: cfgsvr
+#      release: *mongodb_release
+#      properties:
+#        require_ssl: 1
+#        replication:
+#          enable: 1
+#          key: ((mongo_keyfile_content))
+#        root_password: &root_pass ((root_password))
+#        admin_password: &admin_password ((admin_password))
+#        server_certificate: 
+#          private_key: ((((ca_name)).private_key))
+#          certificate: ((((ca_name)).certificate))
+#
+#    - name: mongos
+#      release: *mongodb_release
+# 
+

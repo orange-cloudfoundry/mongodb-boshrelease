@@ -1,0 +1,25 @@
+---
+# add route-registrar release to deployment manifest
+- type: replace
+  path: /releases/name=route-registrar?
+  value:
+    name: route-registrar
+    version: latest
+
+- type: replace
+  path: /instance_groups/name=mongodb-broker/jobs/name=broker-smoke-tests?
+  value:    
+  # this is a route to expose mongodb broker  via cf routers
+    name: route-registrar
+    release: route-registrar
+    properties:
+      route_registrar:
+        external_host: ((route_registrar.external_host))
+        port: 8080
+        message_bus_servers:
+        - host:  ((route_registrar.message_bus_servers.host)) # <-- cf nats, cant use dns cause cf is in bosh-ops powerdns, not bosh-master
+          user: nats
+          password: ((route_registrar.message_bus_servers.password))  #nats
+        health_checker:
+          interval: 10
+          name: healthchk
