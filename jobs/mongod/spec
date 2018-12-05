@@ -155,10 +155,12 @@ properties:
       description: |
         Password for the root user, in clear text.
   server_certificate:
-      default:
-        ca: "NOT INITIALIZED"
-        private_key: "NOT INITIALIZED"
-        certificate: "NOT INITIALIZED"
+      ca:
+        default: "NOT INITIALIZED"
+      private_key: 
+        default: "NOT INITIALIZED"
+      certificate: 
+        default: "NOT INITIALIZED"
       description: Mongodb certificate for ttl/ssl auth
   require_ssl:
       default: 1
