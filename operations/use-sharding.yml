@@ -1,18 +1,18 @@
 ---
-- path: /releases/name=mongodb/name
+- path: /releases/name=((release_name))/name
   type: replace
   value:
-    &mongodb_release mongodb
+    &mongodb_release ((release_name))
  
 - path: /stemcells/alias=ubuntu/alias
   type: replace
   value:
     &stemcell ubuntu
 
-- path: /instance_groups/name=mongod/name?
+- path: /instance_groups/name=mongod?
   type: replace
   value:
-    cfgsvr
+    &instance_group cfgsvr
 
 - path: /instance_groups/name=cfgsvr/jobs/name=mongod/name?
   type: replace
@@ -47,6 +47,7 @@
 - path: /instance_groups/name=shard-0?
   type: replace
   value:
+  - <<: *instance_group
     name: shard-0
     release: *mongodb_release
     azs: [z1]
