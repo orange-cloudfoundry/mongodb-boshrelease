@@ -1,0 +1,16 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: concourse/bosh-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release-patched
+  - name: mongodb-compilation-bosh-release
+  - name: bosh-director-config
+
+run:
+  path: mongodb-compilation-bosh-release/ci/deployment/deploy/scripts/deploy-rs.sh
