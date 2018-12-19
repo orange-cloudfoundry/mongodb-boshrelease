@@ -40,4 +40,7 @@ backup_root_password
 
 kill_and_wait ${PIDFILE}
 
+# linking certificates to common directory
+ln -sf /var/vcap/jobs/mongod/ssl /var/vcap/data/ssl
+
 exit 0
