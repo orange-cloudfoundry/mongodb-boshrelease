@@ -112,8 +112,8 @@ system_update()
           return 0
     fi
 
-    echo 'never' > ${thp_path}/enabled
-    echo 'never' > ${thp_path}/defrag
+    echo 'never' > ${thp_path}/enabled 2>/dev/null || echo 0
+    echo 'never' > ${thp_path}/defrag 2>/dev/null || echo 0
     unset thp_path
 }
 ################################################################################################
