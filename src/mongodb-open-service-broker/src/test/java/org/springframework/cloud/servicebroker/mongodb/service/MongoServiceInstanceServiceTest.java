@@ -74,7 +74,7 @@ public class MongoServiceInstanceServiceTest extends IntegrationTestBase {
 		CreateServiceInstanceResponse response = service.createServiceInstance(buildCreateRequest());
 		
 		assertNotNull(response);
-		assertNull(response.getDashboardUrl());
+		assertEquals(response.getDashboardUrl(), "");
 		assertFalse(response.isAsync());
 
 		verify(repository).save(isA(ServiceInstance.class));
@@ -91,7 +91,7 @@ public class MongoServiceInstanceServiceTest extends IntegrationTestBase {
 		CreateServiceInstanceResponse response = service.createServiceInstance(request);
 
 		assertNotNull(response);
-		assertNull(response.getDashboardUrl());
+		assertEquals(response.getDashboardUrl(), "");
 		assertFalse(response.isAsync());
 
 		verify(mongo).deleteDatabase(request.getServiceInstanceId());

@@ -62,7 +62,7 @@ public class MongoServiceInstanceService implements ServiceInstanceService {
 		}
 		repository.save(instance);
 
-		return new CreateServiceInstanceResponse();
+		return new CreateServiceInstanceResponse().withDashboardUrl("");
 	}
 
 	@Override
