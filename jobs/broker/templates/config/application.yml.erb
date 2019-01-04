@@ -21,3 +21,6 @@ mongodb:
   port: 27017
   username: <%= p('mongodb_node.root_username') %>
   password: <%= p('mongodb_node.root_password') %>
+
+server:
+  port: <%= p('broker.port').to_json %>

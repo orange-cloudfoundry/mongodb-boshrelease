@@ -22,6 +22,9 @@ properties:
     default: broker
   broker.password:
     description: mongodb service broker password
+  broker.port:
+    description: server http port
+    default: 8080
   mongodb_node.root_username:
     description: mongodb root username
   mongodb_node.root_password:
