@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.servicebroker.model.Catalog;
 import org.springframework.cloud.servicebroker.model.Plan;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
@@ -14,32 +15,45 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CatalogConfig {
-	
-	@Bean 
-	public Catalog catalog() {
-		return new Catalog(Collections.singletonList(
-				new ServiceDefinition(
-						getEnvOrDefault("SERVICE_ID","mongodb-service-broker"), //env variable
-						getEnvOrDefault("SERVICE_NAME","MongoDB 3.4.x for  Cloud Foundr"), //env variable
-						getEnvOrDefault("SERVICE_MARKETPLACE_DESCRIPTION","A MongoDB database on demand on shared cluster."),
-						true,
-						false,
-						Collections.singletonList(
-								new Plan(getEnvOrDefault("SERVICE_PLAN_ID","mongo-plan"),
-										"default",
-										"This is a default mongo plan.  All services are created equally.",
-										getPlanMetadata())),
-						Arrays.asList("mongodb", "document"),
-						getServiceDefinitionMetadata(),
-						null,
-						null)));
+
+	@Value("${catalog_yml}")
+	private String catalogYml;
+
+	public String getCatalog(){
+		return catalogYml;
 	}
-	
-/* Used by Pivotal CF console */
+
+	@Bean
+	public Catalog catalog() {
+		Catalog catalog;
+		if (catalogYml == null) { //hard coded catalog is returned
+			catalog = new Catalog(Collections.singletonList(
+					new ServiceDefinition(
+							"mongodb-service-broker",
+							"MongoDB 3.4.x for Cloud Foundry",
+							"A MongoDB database on demand on shared cluster.",
+							true,
+							false,
+							Collections.singletonList(
+									new Plan("mongo-plan",
+											"default",
+											"This is a default mongo plan.  All services are created equally.",
+											getPlanMetadata())),
+							Arrays.asList("mongodb", "document"),
+							getServiceDefinitionMetadata(),
+							null,
+							null)));
+		}else{
+			CatalogYmlReader catalogYmlReader = new CatalogYmlReader();
+			List<ServiceDefinition> serviceDefinitions = catalogYmlReader.getServiceDefinitions(catalogYml);
+			catalog = new Catalog (serviceDefinitions);
+		}
+		return catalog;
+	}
+
 	private Map<String, Object> getServiceDefinitionMetadata() {
 		Map<String, Object> sdMetadata = new HashMap<>();
-		sdMetadata.put("displayName", getEnvOrDefault("SERVICE_MARKETPLACE_LABEL","MongoDB"));
-		//sdMetadata.put("imageUrl", "http://info.mongodb.com/rs/mongodb/images/MongoDB_Logo_Full.png");
+		sdMetadata.put("displayName", "MongoDB");
 		sdMetadata.put("imageUrl", "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcR9mtOVRxVp_1TgQ3b4UnawlWqUkw86oNRDvQAFz3gCuZNMrtPqYw");
 		sdMetadata.put("longDescription", "MongoDB is a free and open-source cross-platform document-oriented database program. Classified as a NoSQL database program, MongoDB uses JSON-like documents with schemas. MongoDB is developed by MongoDB Inc. and is free and open-source, published under a combination of the GNU Affero General Public License and the Apache License.");
 		sdMetadata.put("providerDisplayName", "Orange");
@@ -73,15 +87,4 @@ public class CatalogConfig {
 				"40 concurrent connections (not enforced)");
 	}
 
-	private String getEnvOrDefault(final String variable, final String defaultValue){
-		String value = System.getenv(variable);
-		if(value != null){
-			return value;
-		}
-		else{
-			return defaultValue;
-		}
-	}
-
-	
 }

@@ -11,11 +11,6 @@ export JOB_FULL="$NAME/$JOB_INDEX"
 
 
 export JAVA_HOME=/var/vcap/packages/openjdk
-export SERVICE_ID=<%= p('broker.service_id') %>
-export SERVICE_NAME=<%= p('broker.service_name') %>
-export SERVICE_PLAN_ID=<%= p('broker.service_plan_id') %>
-export SERVICE_MARKETPLACE_LABEL="<%= p('broker.service_marketplace_label') %>"
-export SERVICE_MARKETPLACE_DESCRIPTION="<%= p('broker.service_marketplace_description') %>"
 <% if link('server').p('replication.enable') == 1 %>
 export MONGODB_REPLICASET_NAME=<%= link('server').p('replication.replica_set_name') %>
 <% end %>

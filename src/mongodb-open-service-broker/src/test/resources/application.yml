@@ -5,3 +5,34 @@ mongodb:
   password: abc123
   SECURITY_USER_NAME: user
   SECURITY_USER_PASSWORD: MySecurePwd
+
+catalog_yml: |
+    services:
+    - id: mongodb-service-broker
+      name: MongoDB 3.4.x for Cloud Foundry
+      description: "A MongoDB database on demand on shared cluster."
+      bindable: true
+      plans:
+        - id: mongo-plan
+          name: default
+          description: This is a default mongo plan.  All services are created equally
+          free: false
+          metadata:
+            bullets:
+            - 100 MB Storage (not enforced)
+            - 40 concurrent connections (not enforced)
+            costs:
+              amount:
+                eur: 10.0
+              unit: MONTHLY
+            displayName: Default - Shared MongoDB server
+      tags:
+        - mongodb
+        - document
+      metadata:
+        displayName: MongoDB
+        imageUrl: https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcR9mtOVRxVp_1TgQ3b4UnawlWqUkw86oNRDvQAFz3gCuZNMrtPqYw
+        longDescription: MongoDB is a free and open-source cross-platform document-oriented database program. Classified as a NoSQL database program, MongoDB uses JSON-like documents with schemas. MongoDB is developed by MongoDB Inc. and is free and open-source, published under a combination of the GNU Affero General Public License and the Apache License.
+        providerDisplayName: Orange
+        documentationUrl: https://docs.mongodb.com/
+        supportUrl: https://contact-us/

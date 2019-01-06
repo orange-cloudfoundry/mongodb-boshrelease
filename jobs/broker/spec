@@ -29,18 +29,37 @@ properties:
     description: mongodb root username
   mongodb_node.root_password:
     description: mongodb root password
-  broker.service_id:
-    description: broker service ID
-    default: mongodb-service-broker
-  broker.service_name:
-    description: broker service name
-    default: mongodb
-  broker.service_plan_id:
-    description: broker plan ID
-    default: mongo-plan
-  broker.service_marketplace_label:
-    description: service label in marketplace
-    default: "MongoDB 3.4"
-  broker.service_marketplace_description:
-    description: service description in marketplace  
-    default: "A MongoDB database on demand."
+  broker.catalog_yml:
+    description: catalog description in marketplace
+    example: |
+    services:
+    - id: mongodb-service-broker
+      name: MongoDB 3.4.x for Cloud Foundry
+      description: "A MongoDB database on demand on shared cluster."
+      bindable: true
+      plans:
+        - id: mongo-plan
+          name: default
+          description: A MongoDB database on demand on shared cluster.
+          free: false
+          metadata:
+            bullets:
+            - 100 MB Storage (not enforced)
+            - 40 concurrent connections (not enforced)
+            costs:
+              amount:
+                eur: 10.0
+              unit: MONTHLY
+            displayName: Shared MongoDB server
+      tags:
+        - mongodb
+        - document
+      metadata:
+        displayName: MongoDB
+        imageUrl: https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcR9mtOVRxVp_1TgQ3b4UnawlWqUkw86oNRDvQAFz3gCuZNMrtPqYw
+        longDescription: MongoDB is a free and open-source cross-platform document-oriented database program. Classified as a NoSQL database program, MongoDB uses JSON-like documents with schemas. MongoDB is developed by MongoDB Inc. and is free and open-source, published under a combination of the GNU Affero General Public License and the Apache License.
+        providerDisplayName: Orange
+        documentationUrl: https://docs.mongodb.com/
+        supportUrl: https://contact-us
+
+
