@@ -146,12 +146,13 @@ properties:
   root_password:
       description: |
         Password for the root user, in clear text.
-  server_certificate:
-      default:
-        ca: "NOT INITIALIZED"
-        private_key: "NOT INITIALIZED"
-        certificate: "NOT INITIALIZED"
-      description: Mongodb certificate for ttl/ssl auth
+  server_certificate.ca:
+      default: "NOT INITIALIZED"
+      description: Mongodb certificate for ttl/ssl auth - CA part
+  server_certificate.private_key: 
+      default: "NOT INITIALIZED"
+  server_certificate.certificate: 
+      default: "NOT INITIALIZED"
   require_ssl:
       default: 1
       description: |
