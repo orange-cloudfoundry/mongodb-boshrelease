@@ -106,7 +106,7 @@ security:
   <%- if link('config-server').p("require_ssl") == 1 -%>
   clusterAuthMode: x509
   <%- else -%>
-  keyFile: /var/vcap/jobs/mongod/config/keyfile
+  keyFile: /var/vcap/jobs/shardsvr/config/keyfile
   <%- end -%>
 <%- end -%>
 operationProfiling:
