@@ -17,12 +17,23 @@ spring:
     show-banner: true
 
 mongodb:
-  host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>  
+<% if_link("server") do %>
+  host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
   port: 27017
   username: <%= link('server').p('root_username') %>
   password: <%= link('server').p('root_password') %>
 
 server:
   port: <%= p('broker.port').to_json %>
-
 catalog_yml: <%= p('broker.catalog_yml').to_json %>
+<% end %>
+<% if_link("routing-server") do %>
+  host: <% nodes = link('routing-server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
+  port: 27017
+  username: <%= link('routing-server').p('root_username') %>
+  password: <%= link('routing-server').p('root_password') %>
+
+server:
+  port: <%= p('broker.port').to_json %>
+catalog_yml: <%= p('broker.catalog_yml').to_json %>  
+<% end %> 

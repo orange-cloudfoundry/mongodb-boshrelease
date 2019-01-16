@@ -14,8 +14,8 @@
     jobs:
     - name: broker
       release: ((release_name))
-      consumes:
-        server: {from: deployment-server}
+      #consumes:
+      #  server: {from: deployment-server}
       properties:
         broker:
           user: mongodb-broker
