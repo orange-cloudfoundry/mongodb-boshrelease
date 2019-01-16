@@ -17,6 +17,7 @@ provides:
     - admin_username
     - admin_password
     - port
+    - replication.key
     - replication.enable
     - replication.replica_set_name
     - require_ssl
