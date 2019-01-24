@@ -17,7 +17,6 @@ spring:
     show-banner: true
 
 mongodb:
-<% if_link("server") do %>
   host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
   port: 27017
   username: <%= link('server').p('root_username') %>
@@ -25,15 +24,5 @@ mongodb:
 
 server:
   port: <%= p('broker.port').to_json %>
-catalog_yml: <%= p('broker.catalog_yml').to_json %>
-<% end %>
-<% if_link("routing-server") do %>
-  host: <% nodes = link('routing-server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
-  port: 27017
-  username: <%= link('routing-server').p('root_username') %>
-  password: <%= link('routing-server').p('root_password') %>
 
-server:
-  port: <%= p('broker.port').to_json %>
-catalog_yml: <%= p('broker.catalog_yml').to_json %>  
-<% end %> 
+catalog_yml: <%= p('broker.catalog_yml').to_json %>
