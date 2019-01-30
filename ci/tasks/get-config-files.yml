@@ -8,14 +8,13 @@ image_resource:
     tag: latest
 
 inputs:
-  - name: mongodb-compilation-bosh-release
-  - name: versions
+  - name: mongodb-bosh-release
 
 outputs:
-  - name: mongodb-compilation-bosh-release-patched
+  - name: mongodb-bosh-release-patched
 
 run:
-  path: mongodb-compilation-bosh-release/ci/common/scripts/get-config-files.sh
+  path: mongodb-bosh-release/ci/scripts/get-config-files.sh
 
 params:
   ACCESS_KEY_ID: ""

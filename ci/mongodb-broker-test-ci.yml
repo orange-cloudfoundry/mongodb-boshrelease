@@ -32,19 +32,6 @@ resources:
       password: ((repositories.mongodb.password))
       git_user: "((repositories.mongodb.git_user)) <((repositories.mongodb.email))>"
 
-  - name: rocksdb-version
-    type: semver
-    source: 
-      initial_version: 1.0.0
-      driver: git
-      uri: https://github.com/orange-cloudfoundry/mongodb-boshrelease.git
-      branch: ((repositories.mongodb.branch))
-      file: rocksdb_version
-      username: ((repositories.mongodb.username))
-      password: ((repositories.mongodb.password))
-      git_user: "((repositories.mongodb.git_user)) <((repositories.mongodb.email))>"
-
- 
 #  - name: versions
 #    type: keyval
 
@@ -86,8 +73,6 @@ jobs:
 
       - get: mongodb-version
         trigger: true
-      - get: rocksdb-version
-        trigger: true
       - &create-bosh-config
         do:
           - task: create-bosh-config
@@ -98,3 +83,17 @@ jobs:
               ALIAS:    ((bosh-server.alias)) 
               USER:     ((bosh-server.user))
               PASSWORD: ((bosh-server.password))
+
+      - &get-config-files
+        task: get-config-files
+        file: mongodb-bosh-release/ci/tasks/get-config-files.yml
+        params: &get-config-files-params
+          ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
+          SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
+          ENDPOINT_URL:       ((blobstores.release.endpoint-url))
+          BUCKET:             ((blobstores.release.bucket))
+          SIGNATURE_VERSION:  ((blobstores.release.signature-version))
+          SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
+          SSL_CERT:           ((blobstores.release.certificate))
+          GOLANG_VERSION:     ((deployment.golang-version))
+          CONFIG_PATH:        ((blobstores.release.config_path))       

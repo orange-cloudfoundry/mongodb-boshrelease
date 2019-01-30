@@ -1,0 +1,82 @@
+#!/usr/bin/env sh 
+
+set -e
+
+ROOT_FOLDER=${PWD}
+
+mkdir -p ${ROOT_FOLDER}/mongodb-bosh-release-patched
+
+cp -rp ${ROOT_FOLDER}/mongodb-bosh-release/. ${ROOT_FOLDER}/mongodb-bosh-release-patched
+
+if [ "${CONFIG_PATH}" != "" ]
+then
+
+	mkdir -p ~/.aws
+
+	# create cert file needed for aws
+	cat > ~/.aws/credentials <<-EOF 
+	[default]
+	aws_access_key_id=$ACCESS_KEY_ID
+	aws_secret_access_key=$SECRET_ACCESS_KEY
+	EOF
+
+	if [ "${MONGODB_VERSION}" == "" ]
+	then
+	  MONGODB_VERSION=`grep "^mongodb" ${ROOT_FOLDER}/versions/keyval.properties|cut -d"=" -f2`
+	fi
+
+	aws_opt="--endpoint-url ${ENDPOINT_URL}"
+
+	if ${SKIP_SSL}
+	then
+	  aws_opt="${aws_opt} --no-verify-ssl"
+	else 
+	  if [ "${SSL_CERT}" == "" ]
+	  then
+	    echo "You Have to provide an ssl certificate"
+	    exit 666
+	  else 
+	    cat > /tmp/ca-bundle.crt <<-EOF
+		${SSL_CERT}
+		EOF
+		aws_opt="${aws_opt} --ca-bundle /tmp/ca-bundle.crt"
+	  fi  
+	fi
+
+	cd mongodb-bosh-release-patched || exit 666
+
+	#retrieve blob list
+	aws ${aws_opt} s3 \
+		cp s3://${BUCKET}/${CONFIG_PATH}/blobs-${MONGODB_VERSION}.yml config/blobs.yml \
+		||echo "no archived blobs.yml, use release default one"
+
+	#retrieve final.yml
+	aws ${aws_opt} s3 \
+		cp s3://${BUCKET}/${CONFIG_PATH}/final-${MONGODB_VERSION}.yml config/final.yml \
+		||echo "no archived final.yml, use release default one"
+
+	#retrieve private.yml
+	aws ${aws_opt} s3 \
+		cp s3://${BUCKET}/${CONFIG_PATH}/private-${MONGODB_VERSION}.yml config/private.yml  \
+		||echo "no archived private.yml, use release default one"
+
+	#get the list of availables blobs ids on blobsore
+	aws ${aws_opt} s3 ls s3://${BUCKET}/ > blobstore_ids.list
+
+	# keeping only needed version of golang package
+	if [ ! -z ${GOLANG_VERSION} ]
+	then
+		for d in $(find .final_builds/packages -type d \
+									-name 'golang*' \
+									! -name '*-'${GOLANG_VERSION}'-*')
+		do
+			[ -d ${d} ] && rm -rf ${d}
+		done
+		for d in $(find ./packages -type d \
+					  -name 'golang*' \
+					  ! -name '*-'${GOLANG_VERSION}'-*')
+		do
+			[ -d ${d} ] && rm -rf ${d}
+		done
+	fi
+fi
