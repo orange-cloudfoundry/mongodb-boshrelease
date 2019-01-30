@@ -73,10 +73,10 @@ deployment_var_init="   -v appli=${DEPLOYMENT_NAME} \
                         -v vm-type=${VM_TYPE} \
                         -v root-username=${ROOT_USERNAME}"
 
-
+deployment_ops_files_cmd=""
 for i in ${OPSFILES}
 do
-  deployment_ops_files_cmd=" -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/$i"
+  deployment_ops_files_cmd="${deployment_ops_files_cmd} -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/$i"
 done  
 
 if [ "${ENGINE}" == "rocksdb" ]
