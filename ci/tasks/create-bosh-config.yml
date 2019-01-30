@@ -14,7 +14,7 @@ outputs:
   - name: bosh-director-config
 
 run:
-  path: mongodb-bosh-release/ci/common/scripts/create-bosh-config.sh
+  path: mongodb-bosh-release/ci/scripts/create-bosh-config.sh
 
 params:
   ALIAS: ""
