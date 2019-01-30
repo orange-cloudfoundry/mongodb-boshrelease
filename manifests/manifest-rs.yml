@@ -21,7 +21,7 @@ instance_groups:
 - name: mongod
   release: *mongodb_release
   azs: [z1]
-  instances: ((nb_intances))
+  instances: ((nb_instances))
   vm_type: ((vm_type))
   env:
     bosh:
