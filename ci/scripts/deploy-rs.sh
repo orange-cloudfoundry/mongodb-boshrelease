@@ -84,10 +84,16 @@ done
 # if using broker opsfiles the setting the appropriate variables
 if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]
 then
-   deployment_var_init="${deployment_var_init} \
-                        -v broker_vm_type=${BROKER_VM_TYPE} \
-                        -v broker_persistent_disk_type=${BROKER_PERSISTENT_DISK_TYPE} \
-                        -v broker_catalog_yml=${BROKER_CATALOG_YML}"
+   echo -n "broker_vm_type: ${BROKER_VM_TYPE}
+broker_persistent_disk_type: ${BROKER_PERSISTENT_DISK_TYPE}
+broker_catalog_yml: |
+" > /tmp/broker_deployment_vars
+    # formatting catalog
+    echo "${BROKER_CATALOG_YML}" > /tmp/broker_deployment_vars_yml
+    sed -i -e "s/^/  /g" /tmp/broker_deployment_vars_yml
+    cat /tmp/broker_deployment_vars_yml >> /tmp/broker_deployment_vars
+    deployment_var_init="${deployment_var_init} \
+                        -l /tmp/broker_deployment_vars"
 fi                        
 
 if [ "${ENGINE}" == "rocksdb" ]

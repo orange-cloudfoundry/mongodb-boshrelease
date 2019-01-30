@@ -82,7 +82,7 @@ jobs:
         VM_TYPE:              ((deployment.tests.mongodb.vm-type))        
         MONGO_PORT:           ((deployment.tests.mongodb.port))
         ROOT_USERNAME:        ((deployment.tests.mongodb.root-username))
-        NB_INSTANCES:         (deployment.tests.mongodb.nb_instances))
+        NB_INSTANCES:         ((deployment.tests.mongodb.nb_instances))
         ENGINE:               "wiredtiger"
         BROKER_VM_TYPE:       ((deployment.tests.broker.vm_type))
         BROKER_PERSISTENT_DISK_TYPE: ((deployment.tests.broker.persistent_disk_type))
