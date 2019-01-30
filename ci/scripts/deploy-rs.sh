@@ -65,7 +65,7 @@ for i in $(find .final_builds -type d ! -path '*/packages' \
 do
         [ -d $i ] && rm -rf $i
 done
-deployment_var_init="   -v appli=${DEPLOYMENT_NAME} \
+deployment_var_init="   -v deployment_name=${DEPLOYMENT_NAME} \
                         -v mongodb-release=${RELEASE_NAME} \
                         -v deployments-network=${DEPLOYMENT_NETWORK} \
                         -v mongo-port=${MONGO_PORT} \
