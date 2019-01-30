@@ -78,12 +78,16 @@ jobs:
         RELEASE_NAME:         ((deployment.tests.name))
         DEPLOYMENT_NAME:      ((deployment.tests.name))
         DEPLOYMENT_NETWORK:   ((deployment.tests.network))
-        PERSISTENT_DISK_TYPE: ((deployment.tests.persistent-disk-type))
-        VM_TYPE:              ((deployment.tests.vm-type))        
-        MONGO_PORT:           ((deployment.tests.mongod.port))
-        ROOT_USERNAME:        ((deployment.tests.mongod.root-username))
+        PERSISTENT_DISK_TYPE: ((deployment.tests.mongodb.persistent-disk-type))
+        VM_TYPE:              ((deployment.tests.mongodb.vm-type))        
+        MONGO_PORT:           ((deployment.tests.mongodb.port))
+        ROOT_USERNAME:        ((deployment.tests.mongodb.root-username))
+        NB_INSTANCES:         (deployment.tests.mongodb.nb_instances))
         ENGINE:               "wiredtiger"
-        # for ssl deployment
-        REQUIRE_SSL:          ((deployment.tests.mongod.require_ssl))
-        CA_NAME:              ((deployment.tests.mongod.ca_name))      
+        BROKER_VM_TYPE:       ((deployment.tests.broker.vm_type))
+        BROKER_PERSISTENT_DISK_TYPE: ((deployment.tests.broker.persistent_disk_type))
+        BROKER_CATALOG_YML:   ((deployment.tests.broker.catalog_yml))
+        # for ssl deployment not fully implemented YET
+        #REQUIRE_SSL:          ((deployment.tests.mongodb.require_ssl))
+        #CA_NAME:              ((deployment.tests.mongodb.ca_name))      
 

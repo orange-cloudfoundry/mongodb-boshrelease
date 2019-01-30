@@ -66,18 +66,29 @@ do
         [ -d $i ] && rm -rf $i
 done
 deployment_var_init="   -v deployment_name=${DEPLOYMENT_NAME} \
-                        -v mongodb-release=${RELEASE_NAME} \
+                        -v release_name=${RELEASE_NAME} \
                         -v deployments-network=${DEPLOYMENT_NETWORK} \
                         -v mongo-port=${MONGO_PORT} \
-                        -v persistent-disk-type=${PERSISTENT_DISK_TYPE} \
-                        -v vm-type=${VM_TYPE} \
-                        -v root-username=${ROOT_USERNAME}"
+                        -v persistent_disk_type=${PERSISTENT_DISK_TYPE} \
+                        -v vm_type=${VM_TYPE} \
+                        -v root-username=${ROOT_USERNAME} \
+                        -v nb_instances=${NB_INSTANCES}"
+
 
 deployment_ops_files_cmd=""
 for i in ${OPSFILES}
 do
   deployment_ops_files_cmd="${deployment_ops_files_cmd} -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/$i"
 done  
+
+# if using broker opsfiles the setting the appropriate variables
+if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]
+then
+   deployment_var_init="${deployment_var_init} \
+                        -v broker_vm_type=${BROKER_VM_TYPE} \
+                        -v broker_persistent_disk_type=${BROKER_PERSISTENT_DISK_TYPE} \
+                        -v broker_catalog_yml=${BROKER_CATALOG_YML}"
+fi                        
 
 if [ "${ENGINE}" == "rocksdb" ]
 then
