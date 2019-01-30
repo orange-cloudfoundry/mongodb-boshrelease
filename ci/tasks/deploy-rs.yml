@@ -1,0 +1,35 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: concourse/bosh-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release-patched
+  - name: mongodb-bosh-release
+  - name: bosh-director-config
+
+run:
+  path: mongodb-bosh-release/ci/scripts/deploy-rs.sh
+
+params:
+  USER: ""
+  REQUIRE_SSL: ""
+  DEPLOYMENT_NETWORK: ""
+  MONGO_PORT: ""
+  CA_NAME: ""
+  RELEASE_NAME: ""
+  IP: ""
+  VM_TYPE: ""
+  ALIAS: ""
+  DEPLOYMENT_NAME: ""
+  PASSWORD: ""
+  PERSISTENT_DISK_TYPE: ""
+  CA_CERT: ""
+  ENGINE: ""
+  ROOT_USERNAME: ""
+  MANIFEST: ""
+  OPSFILES: ""

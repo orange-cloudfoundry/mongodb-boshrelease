@@ -1,6 +1,6 @@
 #!/usr/bin/env sh 
 
-set -ex
+set -e
 
 ROOT_FOLDER=${PWD}
 
@@ -80,4 +80,3 @@ then
 		done
 	fi
 fi
-exit 1

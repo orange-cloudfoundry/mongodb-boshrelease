@@ -27,34 +27,63 @@ resources:
 
 jobs:
 
-- &deploy-rs
-  name: deploy-rs
+- name: deploy-replicaset
   plan:
-    - get: mongodb-bosh-release
-    - aggregate:
-      - get: mongodb-version
-        trigger: true
-      - &create-bosh-config
-        task: create-bosh-config
-        file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
-        params:
-          CA_CERT:  ((bosh-server.ca))
-          IP:       ((bosh-server.ip))
-          ALIAS:    ((bosh-server.alias)) 
-          USER:     ((bosh-server.user))
-          PASSWORD: ((bosh-server.password))
+    - &prepare-release
+      do:
+      - get: mongodb-bosh-release
+      - aggregate:
+        - get: mongodb-version
+          trigger: true
+        - &create-bosh-config
+          task: create-bosh-config
+          file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
+          params:
+            CA_CERT:  ((bosh-server.ca))
+            IP:       ((bosh-server.ip))
+            ALIAS:    ((bosh-server.alias)) 
+            USER:     ((bosh-server.user))
+            PASSWORD: ((bosh-server.password))
 
-    - &get-config-files
-      task: get-config-files
-      file: mongodb-bosh-release/ci/tasks/get-config-files.yml
-      params: &get-config-files-params
-        USE_RELEASE_CONFIG: ((blobstores.release.use_release_config))
-        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
-        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
-        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
-        BUCKET:             ((blobstores.release.bucket))
-        SIGNATURE_VERSION:  ((blobstores.release.signature-version))
-        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
-        SSL_CERT:           ((blobstores.release.certificate))
-        GOLANG_VERSION:     ((deployment.golang-version))
-        CONFIG_PATH:        ((blobstores.release.config_path))       
+      - &get-config-files
+        task: get-config-files
+        file: mongodb-bosh-release/ci/tasks/get-config-files.yml
+        params: &get-config-files-params
+          USE_RELEASE_CONFIG: ((blobstores.release.use_release_config))
+          ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
+          SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
+          ENDPOINT_URL:       ((blobstores.release.endpoint-url))
+          BUCKET:             ((blobstores.release.bucket))
+          SIGNATURE_VERSION:  ((blobstores.release.signature-version))
+          SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
+          SSL_CERT:           ((blobstores.release.certificate))
+          GOLANG_VERSION:     ((deployment.golang-version))
+          CONFIG_PATH:        ((blobstores.release.config_path))
+
+    - &deployment
+      task: deploy-rs
+      file: mongodb-bosh-release/ci/tasks/deploy-rs.yml
+      attempts: 1
+      params: &deploy-parameters
+        MANIFEST:             manifest-rs.yml
+        OPSFILES:             |
+                              enable-mongodb-broker.yml 
+                              enable-mongodb-broker-route-registrar.yml 
+                              enable-mongodb-broker-smoke-tests.yml
+        CA_CERT:              ((bosh-server.ca))
+        IP:                   ((bosh-server.ip))
+        ALIAS:                ((bosh-server.alias))
+        USER:                 ((bosh-server.user))
+        PASSWORD:             ((bosh-server.password))
+        RELEASE_NAME:         ((deployment.tests.name))
+        DEPLOYMENT_NAME:      ((deployment.tests.name))
+        DEPLOYMENT_NETWORK:   ((deployment.tests.network))
+        PERSISTENT_DISK_TYPE: ((deployment.tests.persistent-disk-type))
+        VM_TYPE:              ((deployment.tests.vm-type))        
+        MONGO_PORT:           ((deployment.tests.mongod.port))
+        ROOT_USERNAME:        ((deployment.tests.mongod.root-username))
+        ENGINE:               "wiredtiger"
+        # for ssl deployment
+        REQUIRE_SSL:          ((deployment.tests.mongod.require_ssl))
+        CA_NAME:              ((deployment.tests.mongod.ca_name))      
+
