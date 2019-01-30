@@ -76,13 +76,13 @@ deployment_var_init="   -v appli=${DEPLOYMENT_NAME} \
 
 for i in ${OPSFILES}
 do
-  deployment_ops_files_cmd=" -o $i"
+  deployment_ops_files_cmd=" -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/$i"
 done  
 
 if [ "${ENGINE}" == "rocksdb" ]
 then
     deployment_ops_files_cmd="${deployment_ops_files_cmd} \
-                    -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/ci/manifests/opsfiles/rocksdb.yml"
+                    -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/use-rocksdb.yml"
 fi
 
 if [ "${REQUIRE_SSL}" == "true" ]
