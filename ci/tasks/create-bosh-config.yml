@@ -8,13 +8,13 @@ image_resource:
     tag: latest
 
 inputs:
-  - name: mongodb-compilation-bosh-release
+  - name: mongodb-bosh-release
 
 outputs:
   - name: bosh-director-config
 
 run:
-  path: mongodb-compilation-bosh-release/ci/common/scripts/create-bosh-config.sh
+  path: mongodb-bosh-release/ci/common/scripts/create-bosh-config.sh
 
 params:
   ALIAS: ""

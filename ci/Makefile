@@ -1,6 +1,6 @@
 
 TARGET?=dw
-PIPELINES_LIST?=mongodb-release-ci
+PIPELINES_LIST?=mongodb-broker-test-ci
 SETTINGS?=settings.yml
 delete-team:
 	fly -t $(TARGET) destroy-team --team-name mongo --non-interactive
