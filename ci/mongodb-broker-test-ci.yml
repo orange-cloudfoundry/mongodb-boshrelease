@@ -69,25 +69,28 @@ jobs:
         OPSFILES:             |
                               enable-mongodb-broker.yml 
                               enable-mongodb-broker-route-registrar.yml 
-                              enable-mongodb-broker-smoke-tests.yml
+#                              enable-mongodb-broker-smoke-tests.yml
         CA_CERT:              ((bosh-server.ca))
         IP:                   ((bosh-server.ip))
         ALIAS:                ((bosh-server.alias))
         USER:                 ((bosh-server.user))
         PASSWORD:             ((bosh-server.password))
-        RELEASE_NAME:         ((deployment.tests.name))
-        DEPLOYMENT_NAME:      ((deployment.tests.name))
-        DEPLOYMENT_NETWORK:   ((deployment.tests.network))
-        PERSISTENT_DISK_TYPE: ((deployment.tests.mongodb.persistent-disk-type))
-        VM_TYPE:              ((deployment.tests.mongodb.vm-type))        
-        MONGO_PORT:           ((deployment.tests.mongodb.port))
-        ROOT_USERNAME:        ((deployment.tests.mongodb.root-username))
-        NB_INSTANCES:         ((deployment.tests.mongodb.nb_instances))
+        RELEASE_NAME:         ((deployment.name))
+        DEPLOYMENT_NAME:      ((deployment.name))
+        DEPLOYMENT_NETWORK:   ((deployment.network))
+        PERSISTENT_DISK_TYPE: ((deployment.mongodb.persistent-disk-type))
+        VM_TYPE:              ((deployment.mongodb.vm-type))        
+        MONGO_PORT:           ((deployment.mongodb.port))
+        ROOT_USERNAME:        ((deployment.mongodb.root-username))
+        NB_INSTANCES:         ((deployment.mongodb.nb_instances))
         ENGINE:               "wiredtiger"
-        BROKER_VM_TYPE:       ((deployment.tests.broker.vm_type))
-        BROKER_PERSISTENT_DISK_TYPE: ((deployment.tests.broker.persistent_disk_type))
-        BROKER_CATALOG_YML:   ((deployment.tests.broker.catalog_yml))
+        BROKER_VM_TYPE:       ((deployment.broker.vm_type))
+        BROKER_PERSISTENT_DISK_TYPE: ((deployment.broker.persistent_disk_type))
+        BROKER_CATALOG_YML:   ((deployment.broker.catalog_yml))
         # for ssl deployment not fully implemented YET
-        #REQUIRE_SSL:          ((deployment.tests.mongodb.require_ssl))
-        #CA_NAME:              ((deployment.tests.mongodb.ca_name))      
-
+        #REQUIRE_SSL:          ((deployment.mongodb.require_ssl))
+        #CA_NAME:              ((deployment.mongodb.ca_name))
+        # for cloudfoundry deployment
+        CLOUDFOUNDRY_NATS_HOST: ((cloudfoundry.nats_host))
+        CLOUDFOUNDRY_NATS_PASSWORD: ((cloudfoundry.nats_password))
+        CLOUDFOUNDRY_SYSTEM_DOMAIN: ((cloudfoundry.system_domain))

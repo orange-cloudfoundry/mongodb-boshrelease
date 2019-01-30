@@ -81,7 +81,7 @@ do
   deployment_ops_files_cmd="${deployment_ops_files_cmd} -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/$i"
 done  
 
-# if using broker opsfiles the setting the appropriate variables
+# if using broker opsfiles, setting the appropriate variables
 if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]
 then
    echo -n "broker_vm_type: ${BROKER_VM_TYPE}
@@ -95,6 +95,16 @@ broker_catalog_yml: |
     deployment_var_init="${deployment_var_init} \
                         -l /tmp/broker_deployment_vars"
 fi                        
+
+# if using broker route registrar opsfiles, setting cloudfoundry variables
+if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]
+then
+    deployment_var_init="${deployment_var_init} \
+                        -v cloudfoundry_nats_host=${CLOUDFOUNDRY_NATS_HOST} \
+                        -v cloudfoundry_nats_password=${CLOUDFOUNDRY_NATS_PASSWORD} \
+                        -v cloudfoundry_system_domain=${CLOUDFOUNDRY_SYSTEM_DOMAIN}"
+fi   
+
 
 if [ "${ENGINE}" == "rocksdb" ]
 then
