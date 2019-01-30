@@ -3,7 +3,7 @@
   path: /instance_groups/name=mongodb-broker/jobs/name=broker-smoke-tests?
   value:
     name: broker-smoke-tests
-    release: mongodb-services
+    release: ((release_name))
     properties:
       cf:
         api:
