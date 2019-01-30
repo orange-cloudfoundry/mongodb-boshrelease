@@ -1,6 +1,6 @@
 #!/usr/bin/env sh 
 
-set -e
+set -ex
 
 ROOT_FOLDER=${PWD}
 
@@ -8,7 +8,7 @@ mkdir -p ${ROOT_FOLDER}/mongodb-bosh-release-patched
 
 cp -rp ${ROOT_FOLDER}/mongodb-bosh-release/. ${ROOT_FOLDER}/mongodb-bosh-release-patched
 
-if [ "${CONFIG_PATH}" != "" ]
+if [ "${USE_RELEASE_CONFIG}" != "true" ]
 then
 
 	mkdir -p ~/.aws
@@ -22,7 +22,7 @@ then
 
 	if [ "${MONGODB_VERSION}" == "" ]
 	then
-	  MONGODB_VERSION=`grep "^mongodb" ${ROOT_FOLDER}/versions/keyval.properties|cut -d"=" -f2`
+	  MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-version/version`
 	fi
 
 	aws_opt="--endpoint-url ${ENDPOINT_URL}"
@@ -80,3 +80,4 @@ then
 		done
 	fi
 fi
+exit 1

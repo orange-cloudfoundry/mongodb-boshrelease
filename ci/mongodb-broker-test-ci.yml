@@ -7,13 +7,6 @@ resource_types:
 
 resources:
 
-#  - name: daily-build
-#    type: time
-#    source:
-#      start:    22:00 
-#      stop:     23:00
-#      location: Europe/Paris
-
   - name: mongodb-bosh-release
     type: git
     source:
@@ -32,34 +25,6 @@ resources:
       password: ((repositories.mongodb.password))
       git_user: "((repositories.mongodb.git_user)) <((repositories.mongodb.email))>"
 
-#  - name: versions
-#    type: keyval
-
-#  - name: deployment-specs
-#    type: keyval
-
-#  - name: datas
-#    type: keyval
-
-#  - name: all-tests-passed
-#    type: keyval  
-#
-#  - &bosh-lock
-#    name: bosh-errand-lock
-#    type: pool
-#    source:
-#      uri: ((repositories.locks-pool.uri))
-#      branch: ((repositories.locks-pool.branch))
-#      pool: bosh
-#      username: ((repositories.locks-pool.username))
-#      password: ((repositories.locks-pool.password))
-#
-#  - <<: *bosh-lock
-#    name: deployment-spec-lock
-#
-#  - <<: *bosh-lock
-#    name: deployment-lock
-
 jobs:
 
 - &deploy-rs
@@ -67,33 +32,29 @@ jobs:
   plan:
     - get: mongodb-bosh-release
     - aggregate:
-#      - try:
-#        get: daily-build
-#        trigger: true
-
       - get: mongodb-version
         trigger: true
       - &create-bosh-config
-        do:
-          - task: create-bosh-config
-            file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
-            params:
-              CA_CERT:  ((bosh-server.ca))
-              IP:       ((bosh-server.ip))
-              ALIAS:    ((bosh-server.alias)) 
-              USER:     ((bosh-server.user))
-              PASSWORD: ((bosh-server.password))
+        task: create-bosh-config
+        file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
+        params:
+          CA_CERT:  ((bosh-server.ca))
+          IP:       ((bosh-server.ip))
+          ALIAS:    ((bosh-server.alias)) 
+          USER:     ((bosh-server.user))
+          PASSWORD: ((bosh-server.password))
 
-      - &get-config-files
-        task: get-config-files
-        file: mongodb-bosh-release/ci/tasks/get-config-files.yml
-        params: &get-config-files-params
-          ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
-          SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
-          ENDPOINT_URL:       ((blobstores.release.endpoint-url))
-          BUCKET:             ((blobstores.release.bucket))
-          SIGNATURE_VERSION:  ((blobstores.release.signature-version))
-          SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
-          SSL_CERT:           ((blobstores.release.certificate))
-          GOLANG_VERSION:     ((deployment.golang-version))
-          CONFIG_PATH:        ((blobstores.release.config_path))       
+    - &get-config-files
+      task: get-config-files
+      file: mongodb-bosh-release/ci/tasks/get-config-files.yml
+      params: &get-config-files-params
+        USE_RELEASE_CONFIG: ((blobstores.release.use_release_config))
+        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
+        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
+        BUCKET:             ((blobstores.release.bucket))
+        SIGNATURE_VERSION:  ((blobstores.release.signature-version))
+        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
+        SSL_CERT:           ((blobstores.release.certificate))
+        GOLANG_VERSION:     ((deployment.golang-version))
+        CONFIG_PATH:        ((blobstores.release.config_path))       
