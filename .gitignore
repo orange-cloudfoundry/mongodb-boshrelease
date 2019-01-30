@@ -22,9 +22,10 @@ src_alt
 releases/**/*.tgz
 .DS_Store
 blobs
-manifest*.yml
 config/final.yml
 .final_builds/**/*
 .releases/**/*
 deployment-vars*.yml
 ci/settings*.yml
+manifest-fpc.yml
+manifest-shard-*
