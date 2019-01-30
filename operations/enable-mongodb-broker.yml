@@ -20,9 +20,7 @@
         broker:
           user: mongodb-broker
           password: ((broker_password))
-        mongodb_node:
-          root_username: ((root_username))
-          root_password: ((root_password))
+          catalog_yml: ((broker_catalog_yml))
 
 - type: replace
   path: /variables/name=broker_password?

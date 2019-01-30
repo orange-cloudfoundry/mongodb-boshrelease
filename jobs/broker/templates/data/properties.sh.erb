@@ -9,8 +9,10 @@ export JOB_INDEX=<%= index %>
 # full job name, like redis/0 or webapp/3
 export JOB_FULL="$NAME/$JOB_INDEX"
 
-
 export JAVA_HOME=/var/vcap/packages/openjdk
+
+<% if_link('server') do %>
 <% if link('server').p('replication.enable') == 1 %>
 export MONGODB_REPLICASET_NAME=<%= link('server').p('replication.replica_set_name') %>
+<% end %>
 <% end %>

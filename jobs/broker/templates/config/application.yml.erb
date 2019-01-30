@@ -17,7 +17,7 @@ spring:
     show-banner: true
 
 mongodb:
-  host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>  
+  host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
   port: 27017
   username: <%= link('server').p('root_username') %>
   password: <%= link('server').p('root_password') %>
