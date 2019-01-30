@@ -20,29 +20,29 @@ resources:
       uri:    ((repositories.mongodb.uri))
       branch: ((repositories.mongodb.branch))
 
-#  - name: mongodb-version
-#    type: semver
-#    source: 
-#      initial_version: 1.0.0
-#      driver: git
-#      uri: https://github.com/orange-cloudfoundry/mongodb-compilation-boshrelease.git
-#      branch: ((repositories.mongodb-compilation.branch))
-#      file: mongodb_compiled_version
-#      username: ((repositories.mongodb-compilation.username))
-#      password: ((repositories.mongodb-compilation.password))
-#      git_user: "((repositories.mongodb-compilation.git_user)) <((repositories.mongodb-compilation.email))>"
-#
-#  - name: rocksdb-version
-#    type: semver
-#    source: 
-#      initial_version: 1.0.0
-#      driver: git
-#      uri: https://github.com/orange-cloudfoundry/mongodb-compilation-boshrelease.git
-#      branch: ((repositories.mongodb-compilation.branch))
-#      file: rocksdb_compiled_version
-#      username: ((repositories.mongodb-compilation.username))
-#      password: ((repositories.mongodb-compilation.password))
-#      git_user: "((repositories.mongodb-compilation.git_user)) <((repositories.mongodb-compilation.email))>"
+  - name: mongodb-version
+    type: semver
+    source: 
+      initial_version: 1.0.0
+      driver: git
+      uri: https://github.com/orange-cloudfoundry/mongodb-boshrelease.git
+      branch: ((repositories.mongodb.branch))
+      file: mongodb_version
+      username: ((repositories.mongodb.username))
+      password: ((repositories.mongodb.password))
+      git_user: "((repositories.mongodb.git_user)) <((repositories.mongodb.email))>"
+
+  - name: rocksdb-version
+    type: semver
+    source: 
+      initial_version: 1.0.0
+      driver: git
+      uri: https://github.com/orange-cloudfoundry/mongodb-boshrelease.git
+      branch: ((repositories.mongodb.branch))
+      file: rocksdb_version
+      username: ((repositories.mongodb.username))
+      password: ((repositories.mongodb.password))
+      git_user: "((repositories.mongodb.git_user)) <((repositories.mongodb.email))>"
 
  
 #  - name: versions
@@ -83,11 +83,11 @@ jobs:
 #      - try:
 #        get: daily-build
 #        trigger: true
-#
-#      - get: mongodb-version
-#        trigger: true
-#      - get: rocksdb-version
-#        trigger: true
+
+      - get: mongodb-version
+        trigger: true
+      - get: rocksdb-version
+        trigger: true
       - &create-bosh-config
         do:
           - task: create-bosh-config
