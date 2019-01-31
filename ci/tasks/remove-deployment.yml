@@ -13,3 +13,8 @@ inputs:
 
 run:
   path: mongodb-bosh-release/ci/scripts/remove-deployment.sh
+
+params:
+  ALIAS: ""
+  DEPLOYMENT_NAME: ""
+  RELEASE_NAME: ""  

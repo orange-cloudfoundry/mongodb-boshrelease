@@ -100,9 +100,20 @@ fi
 if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]
 then
     deployment_var_init="${deployment_var_init} \
-                        -v cloudfoundry_nats_host=${CLOUDFOUNDRY_NATS_HOST} \
-                        -v cloudfoundry_nats_password=${CLOUDFOUNDRY_NATS_PASSWORD} \
-                        -v cloudfoundry_system_domain=${CLOUDFOUNDRY_SYSTEM_DOMAIN}"
+                        -v cf.nats_host=${CF_NATS_HOST} \
+                        -v cf.nats_password=${CF_NATS_PASSWORD} \
+                        -v cf.system_domain=${CF_SYSTEM_DOMAIN}"
+fi   
+
+# if using broker smoke-tests opsfiles, setting appropriate cloudfoundry variables
+if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]
+then
+    deployment_var_init="${deployment_var_init} \
+                        -v cf.api.url=${CF_ENDPOINT} \
+                        -v cf.admin.password=${CF_ADMIN_PASSWORD} \
+                        -v cf.org=${CF_ORG} \
+                        -v cf.space=${CF_SPACE} \
+                        -v cf.mongodb.appdomain=${CF_APPDOMAIN}"
 fi   
 
 

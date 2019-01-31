@@ -14,8 +14,8 @@
         skip:
           ssl:
             validation: true
-        org: service-sandbox
-        space: mongodb-smoke-tests
+        org: ((cf.org))
+        space: ((cf.space))
         mongodb:
           appdomain: ((cf.mongodb.appdomain))
           servicename: mongodb
