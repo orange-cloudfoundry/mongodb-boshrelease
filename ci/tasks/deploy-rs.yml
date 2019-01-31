@@ -40,3 +40,6 @@ params:
   CF_NATS_HOST: ""
   CF_NATS_PASSWORD: ""
   CF_SYSTEM_DOMAIN: ""
+  CF_SPACE: ""
+  CF_ORG: ""
+  CF_ADMIN_PASSWORD: ""

@@ -15,8 +15,8 @@
     properties:
       nats:
         machines:
-        - ((cloudfoundry_nats_host))
-        password: ((cloudfoundry_nats_password))
+        - ((cf.nats_host))
+        password: ((cf.nats_password))
         port: 4222
         user: nats
       route_registrar:
@@ -25,7 +25,7 @@
           registration_interval: 10s
           port: 8080
           uris:
-            - mongodb-broker-((deployment_name)).((cloudfoundry_system_domain))
+            - mongodb-broker-((deployment_name)).((cf.system_domain))
 
 # add bpm and routing releases
 - type: replace

@@ -94,7 +94,9 @@ jobs:
         CF_NATS_HOST:         ((cf.nats_host))
         CF_NATS_PASSWORD:     ((cf.nats_password))
         CF_SYSTEM_DOMAIN:     ((cf.system_domain))
-        CF_
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        CF_ORG:               ((cf.org))
+        CF_SPACE:             ((cf.space))
 
 - &remove_deployment
   name: remove-deployment
