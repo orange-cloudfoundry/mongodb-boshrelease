@@ -109,11 +109,11 @@ fi
 if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]
 then
     deployment_var_init="${deployment_var_init} \
-                        -v cf.api.url=${CF_ENDPOINT} \
+                        -v cf.api.url=https://api.${CF_SYSTEM_DOMAIN} \
                         -v cf.admin.password=${CF_ADMIN_PASSWORD} \
                         -v cf.org=${CF_ORG} \
                         -v cf.space=${CF_SPACE} \
-                        -v cf.mongodb.appdomain=${CF_APPDOMAIN}"
+                        -v cf.mongodb.appdomain=${CF_SYSTEM_DOMAIN}"
 fi   
 
 
