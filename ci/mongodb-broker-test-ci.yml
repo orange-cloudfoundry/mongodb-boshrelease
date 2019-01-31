@@ -63,7 +63,7 @@ jobs:
     - &deployment
       task: deploy-rs
       file: mongodb-bosh-release/ci/tasks/deploy-rs.yml
-      attempts: 1
+      attempts: 3
       params: &deploy-parameters
         MANIFEST:             manifest-rs.yml
         OPSFILES:             |
@@ -94,3 +94,16 @@ jobs:
         CLOUDFOUNDRY_NATS_HOST: ((cloudfoundry.nats_host))
         CLOUDFOUNDRY_NATS_PASSWORD: ((cloudfoundry.nats_password))
         CLOUDFOUNDRY_SYSTEM_DOMAIN: ((cloudfoundry.system_domain))
+
+- &remove_deployment
+  name: remove_deployment
+  plan:
+    - get: mongodb-bosh-release
+    - <<: *create-bosh-config
+    - task: remove-deployment-rs
+      attempts: 3
+      file: mongodb-bosh-release/ci/tasks/remove-deployment.yml      
+      params: &remove-deployment-params
+        ALIAS:                ((bosh-server.alias))
+        RELEASE_NAME:         ((deployment.tests.name))
+        DEPLOYMENT_NAME:      ((deployment.tests.name))
