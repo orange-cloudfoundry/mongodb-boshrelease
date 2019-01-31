@@ -107,6 +107,10 @@ jobs:
     - task: create-service-broker
       file: mongodb-bosh-release/ci/tasks/create-service-broker.yml
       params:
+        CF_API_URL:           https://api.((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        SKIP_SSL:             ((cf.skip_ssl_validation))
+
 
 
 - &remove_deployment
