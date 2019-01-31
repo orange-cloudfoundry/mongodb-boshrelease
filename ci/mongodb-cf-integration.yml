@@ -98,6 +98,17 @@ jobs:
         CF_ORG:               ((cf.org))
         CF_SPACE:             ((cf.space))
 
+- &create-service-broker
+  name: create-service-broker
+  plan: 
+    - get: mongodb-bosh-release
+#      passed: [deploy-replicaset]
+#      trigger: true
+    - task: create-service-broker
+      file: mongodb-bosh-release/ci/tasks/create-service-broker.yml
+      params:
+
+
 - &remove_deployment
   name: remove-deployment
   plan:

@@ -106,7 +106,7 @@ then
 fi   
 
 # if using broker smoke-tests opsfiles, setting appropriate cloudfoundry variables
-if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]
+if [[ ${OPSFILES} == *"enable-mongodb-broker-smoke-tests.yml"* ]]
 then
     deployment_var_init="${deployment_var_init} \
                         -v cf.api.url=https://api.${CF_SYSTEM_DOMAIN} \
