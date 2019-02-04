@@ -113,9 +113,9 @@ jobs:
         PORT:             ((credhub.port))
         USER:             ((credhub.username))
         PASSWORD:         ((credhub.password))
-        VAR:              mongo_root_password
         DEPLOYMENT_NAME:  ((deployment.name))
-
+        UAA_CA:           ((uaa.ca))
+        CREDHUB_CA:       ((credhub.ca))
 
     - task: create-service-broker
       file: mongodb-bosh-release/ci/tasks/create-service-broker.yml

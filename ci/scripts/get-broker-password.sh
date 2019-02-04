@@ -1,12 +1,14 @@
 #!/usr/bin/env sh 
 
-set -e
+set -ex
 
 ROOT_FOLDER=${PWD}
 
-credhub api ${IP}:${PORT} --skip-tls-validation
-( echo ${USER} ; echo ${PASSWORD} ) \
-    | credhub login
+echo "${CREDHUB_CA}" >/tmp/credhub_ca
+echo "${UAA_CA}" >/tmp/uaa_ca
+
+credhub api ${IP}:${PORT} --ca-cert /tmp/credhub_ca --ca-cert /tmp/uaa_ca
+credhub login -u ${USER} -p ${PASSWORD}
 
 mkdir -p broker-password
 cd broker-password || exit 666
