@@ -25,6 +25,9 @@ resources:
       password: ((repositories.mongodb.password))
       git_user: "((repositories.mongodb.git_user)) <((repositories.mongodb.email))>"
 
+  - name: OK
+    type: keyval    
+
 jobs:
 
 - name: deploy-replicaset
@@ -70,11 +73,7 @@ jobs:
                               enable-mongodb-broker.yml 
                               enable-mongodb-broker-route-registrar.yml 
                               enable-mongodb-broker-smoke-tests.yml
-        CA_CERT:              ((bosh-server.ca))
-        IP:                   ((bosh-server.ip))
         ALIAS:                ((bosh-server.alias))
-        USER:                 ((bosh-server.user))
-        PASSWORD:             ((bosh-server.password))
         RELEASE_NAME:         ((deployment.name))
         DEPLOYMENT_NAME:      ((deployment.name))
         DEPLOYMENT_NETWORK:   ((deployment.network))
@@ -124,7 +123,22 @@ jobs:
         CF_ADMIN_PASSWORD:    ((cf.admin_password))
         SKIP_SSL:             ((cf.skip_ssl_validation))
 
+    - put: OK
+      params: {file: OK/keyval.properties}
 
+- &run-smoke-tests
+  name: run-smoke-tests
+  plan:
+    - get: mongodb-bosh-release
+    - get: OK
+      passed: [ create-service-broker ]
+      trigger: true
+    - <<: *create-bosh-config
+    - task: run-smoke-tests
+      file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
+      params:
+        ALIAS:                ((bosh-server.alias))
+        DEPLOYMENT_NAME:      ((deployment.name))
 
 - &remove_deployment
   name: remove-deployment
@@ -137,7 +151,7 @@ jobs:
         CF_API_URL:           https://api.((cf.system_domain))
         CF_ADMIN_PASSWORD:    ((cf.admin_password))
         SKIP_SSL:             ((cf.skip_ssl_validation))
-        
+
     - task: remove-deployment-rs
       attempts: 3
       file: mongodb-bosh-release/ci/tasks/remove-deployment.yml      

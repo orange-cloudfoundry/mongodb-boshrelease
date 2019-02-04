@@ -10,9 +10,9 @@ fi
 cf api ${CF_API_URL} ${opts}
 cf login -u admin -p ${CF_ADMIN_PASSWORD}
 
-#cf unbind-service mongodb-example-app mongodb-instance
+cf unbind-service mongodb-example-app mongodb-instance
 
-#cf delete-service -f mongodb-instance
+cf delete-service -f mongodb-instance
 
 cf delete -f mongodb-example-app
 
