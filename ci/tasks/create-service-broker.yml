@@ -8,7 +8,13 @@ image_resource:
     tag: latest
 
 inputs:
+  - name: broker-password
   - name: mongodb-bosh-release
 
 run:
   path: mongodb-bosh-release/ci/scripts/create-service-broker.sh
+
+params:
+  CF_ADMIN_PASSWORD: ""
+  CF_API_URL: ""
+  SKIP_SSL: ""
