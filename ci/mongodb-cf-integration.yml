@@ -131,6 +131,13 @@ jobs:
   plan:
     - get: mongodb-bosh-release
     - <<: *create-bosh-config
+    - task: remove-cf-components
+      file: mongodb-bosh-release/ci/tasks/remove-cf-components.yml
+      params:
+        CF_API_URL:           https://api.((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        SKIP_SSL:             ((cf.skip_ssl_validation))
+        
     - task: remove-deployment-rs
       attempts: 3
       file: mongodb-bosh-release/ci/tasks/remove-deployment.yml      
