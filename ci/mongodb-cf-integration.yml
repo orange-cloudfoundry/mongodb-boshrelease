@@ -26,12 +26,26 @@ resources:
       git_user: "((repositories.mongodb.git_user)) <((repositories.mongodb.email))>"
 
   - name: OK
-    type: keyval    
+    type: keyval
+
+  - &cf-broker-smoke-tests-lock
+    name: cf-broker-smoke-tests-lock
+    type: pool
+    source:
+      uri: ((repositories.locks-pool.uri))
+      branch: ((repositories.locks-pool.branch))
+      pool: bosh
+      username: ((repositories.locks-pool.username))
+      password: ((repositories.locks-pool.password))     
 
 jobs:
 
 - name: deploy-replicaset
   plan:
+    - &deployment-lock
+      put: cf-broker-smoke-tests-lock
+      params: {claim: cf-broker-smoke-tests}
+
     - &prepare-release
       do:
       - get: mongodb-bosh-release
@@ -182,5 +196,7 @@ jobs:
         CREDHUB_CA:       ((credhub.ca))
         DEPLOYMENT_NAME:  ((deployment.name))
 
-
+    - &deployment-unlock
+      put: cf-broker-smoke-tests-lock
+      params: {release: cf-broker-smoke-tests}
 
