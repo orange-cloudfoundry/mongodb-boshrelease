@@ -10,11 +10,15 @@ fi
 cf api ${CF_API_URL} ${opts}
 cf login -u admin -p ${CF_ADMIN_PASSWORD}
 
-cf unbind-service mongodb-example-app mongodb-instance
 
-cf delete-service -f mongodb-instance
+if cf app mongodb-example-app 1>/dev/null; then
 
-cf delete -f mongodb-example-app
+	cf unbind-service mongodb-example-app mongodb-instance
+
+	cf delete-service -f mongodb-instance
+
+	cf delete -f mongodb-example-app
+fi
 
 cf delete-service-broker -f mongodb
 
