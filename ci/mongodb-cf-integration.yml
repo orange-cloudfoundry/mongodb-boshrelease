@@ -198,5 +198,5 @@ jobs:
 
     - &deployment-unlock
       put: cf-broker-smoke-tests-lock
-      params: {release: cf-broker-smoke-tests}
+      params: {release: cf-broker-smoke-tests-lock}
 
