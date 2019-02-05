@@ -11,9 +11,6 @@ inputs:
   - name: broker-password
   - name: mongodb-bosh-release
 
-outputs:
-  - name: OK  
-
 run:
   path: mongodb-bosh-release/ci/scripts/create-service-broker.sh
 

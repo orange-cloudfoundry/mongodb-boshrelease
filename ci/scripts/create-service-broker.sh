@@ -14,5 +14,3 @@ cf create-service-broker mongodb \
             mongodb-broker $(cat broker-password/password.txt) \
             http://mongodb-broker-mongodb-ci-deployment.cf.dbsp.dw --space-scoped
 
-mkdir -p OK
-echo "OK=$(date +%d%m%Y-%H24:%M)">OK/keyval.properties

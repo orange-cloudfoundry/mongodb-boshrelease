@@ -35,6 +35,7 @@ jobs:
     - &prepare-release
       do:
       - get: mongodb-bosh-release
+        trigger: true
       - aggregate:
         - get: mongodb-version
           trigger: true
@@ -47,6 +48,13 @@ jobs:
             ALIAS:    ((bosh-server.alias)) 
             USER:     ((bosh-server.user))
             PASSWORD: ((bosh-server.password))
+
+      - &init-keyval-ressource
+        task: init-keyval-ressource
+        file: mongodb-bosh-release/ci/tasks/init-keyval-resource.yml
+
+      - put: OK
+        params: {file: output/keyval.properties}        
 
       - &get-config-files
         task: get-config-files
@@ -97,12 +105,15 @@ jobs:
         CF_ORG:               ((cf.org))
         CF_SPACE:             ((cf.space))
 
+
 - &create-service-broker
   name: create-service-broker
   plan: 
+    - get: OK
+      passed: [ deploy-replicaset ]
+      trigger: true
+
     - get: mongodb-bosh-release
-#      passed: [deploy-replicaset]
-#      trigger: true
 
     - task: get-broker-password
       file: mongodb-bosh-release/ci/tasks/get-broker-password.yml
@@ -123,16 +134,13 @@ jobs:
         CF_ADMIN_PASSWORD:    ((cf.admin_password))
         SKIP_SSL:             ((cf.skip_ssl_validation))
 
-    - put: OK
-      params: {file: OK/keyval.properties}
-
 - &run-smoke-tests
   name: run-smoke-tests
   plan:
-    - get: mongodb-bosh-release
     - get: OK
       passed: [ create-service-broker ]
       trigger: true
+    - get: mongodb-bosh-release      
     - <<: *create-bosh-config
     - task: run-smoke-tests
       file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
@@ -143,6 +151,9 @@ jobs:
 - &remove_deployment
   name: remove-deployment
   plan:
+    - get: OK
+      passed: [ run-smoke-tests ]
+      trigger: true
     - get: mongodb-bosh-release
     - <<: *create-bosh-config
     - task: remove-cf-components
