@@ -1,0 +1,22 @@
+---
+# add prometheus release to deployment manifest
+- type: replace
+  path: /releases/name=prometheus?
+  value:
+    name: prometheus
+    version: latest
+
+# add mongod exporter properties
+- type: replace
+  path: /instance_groups/name=mongod/jobs/name=mongodb_exporter?
+  value:
+    name: mongodb_exporter
+    release: prometheus
+    properties:
+      mongodb_exporter:
+        mongodb:
+          uri: mongodb://((root_username)):((root_password))@localhost:27017?authSource=admin
+        web:
+          port: 9001  
+        collect_oplog: true
+        collect_replset: true

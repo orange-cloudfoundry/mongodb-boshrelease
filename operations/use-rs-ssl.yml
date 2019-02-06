@@ -1,0 +1,19 @@
+---
+- path: /instance_groups/name=mongod/jobs/name=mongod/properties/require_ssl?
+  type: replace
+  value: 1
+
+- path: /instance_groups/name=mongod/jobs/name=mongod/properties/server_certificate?
+  type: replace
+  value:
+    private_key: ((((ca_name)).private_key))
+    certificate: ((((ca_name)).certificate))
+
+- path: /variables/name=((ca_name))?
+  type: replace
+  value:
+    name: ((ca_name))
+    type: certificate
+    options:
+      is_ca: true
+      common_name: internalCA

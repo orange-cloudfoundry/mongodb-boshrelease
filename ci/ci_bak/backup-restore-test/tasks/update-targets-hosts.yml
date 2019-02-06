@@ -1,0 +1,15 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/shield-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-compilation-bosh-release
+  - name: deployment-specs
+   
+run:
+  path: mongodb-compilation-bosh-release/ci/deployment/backup-restore-test/scripts/update-targets-hosts.sh

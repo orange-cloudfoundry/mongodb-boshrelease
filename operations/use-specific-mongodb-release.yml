@@ -1,0 +1,4 @@
+---
+- path: /releases/name=((release_name))/version
+  type: replace
+  value: ((mongodb-release-version))

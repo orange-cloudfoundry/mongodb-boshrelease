@@ -1,0 +1,58 @@
+---
+name: ((deployment_name))
+
+releases:
+  - name: &mongodb_release ((release_name))
+    version: latest
+
+update:
+  canaries: 1
+  canary_watch_time: 30000-240000
+  update_watch_time:  30000-240000
+  max_in_flight: 1 #<-- important to limit max in flight
+  serial: false
+
+stemcells:
+- alias: &stemcell ubuntu
+  os: ubuntu-xenial
+  version: latest
+
+instance_groups:
+- name: mongod
+  release: *mongodb_release
+  azs: [z1]
+  instances: ((nb_instances))
+  vm_type: ((vm_type))
+  env:
+    bosh:
+      swap_size: 0
+    persistent_disk_fs: xfs
+  stemcell: *stemcell
+  networks: 
+    - name: ((deployments-network))
+  persistent_disk_type: ((persistent_disk_type))
+  jobs:
+  - name: mongod
+    release: *mongodb_release
+    consumes:
+      server: {from: deployment-server}
+    provides:
+      server: {as: deployment-server}
+    properties: 
+      admin_password: ((admin_password))
+      root_password:  ((root_password))
+      require_ssl:  0
+      replication:
+        enable: 1
+        key: ((keyfile_content))
+
+variables:
+- name: admin_password
+  type: password
+- name: root_password
+  type: password
+- name: keyfile_content
+  type: password
+  options: 
+    length: 200  
+

@@ -1,0 +1,23 @@
+# enable mongodb broker smoke tests
+- type: replace
+  path: /instance_groups/name=mongodb-broker/jobs/name=broker-smoke-tests?
+  value:
+    name: broker-smoke-tests
+    release: ((release_name))
+    properties:
+      cf:
+        api:
+          url: ((cf.api.url))
+        admin:
+          username: admin
+          password: ((cf.admin.password))
+        skip:
+          ssl:
+            validation: true
+        org: ((cf.org))
+        space: ((cf.space))
+        mongodb:
+          appdomain: ((cf.mongodb.appdomain))
+          servicename: mongodb
+          serviceplan: default
+          serviceinstancename: mongodb-instance
