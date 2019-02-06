@@ -213,5 +213,8 @@ jobs:
       params:
         <<: *deploy-parameters
         MANIFEST:             manifest-shard.yml
-      
-
+        OPSFILES:             |
+                              enable-mongodb-broker.yml 
+                              use-broker-shard-links.yml  
+                              enable-mongodb-broker-route-registrar.yml 
+                              enable-mongodb-broker-smoke-tests.yml
