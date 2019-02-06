@@ -134,8 +134,8 @@ bosh -e ${ALIAS} cr --force
 bosh -e ${ALIAS} ur 
 
 bosh -e ${ALIAS} deploy -n -d ${DEPLOYMENT_NAME} \
-        ${deployment_var_init} \
         ${ROOT_FOLDER}/mongodb-bosh-release-patched/manifests/${MANIFEST} \
-        ${deployment_ops_files_cmd}
+        ${deployment_ops_files_cmd} \
+        ${deployment_var_init} 
 
 popd
