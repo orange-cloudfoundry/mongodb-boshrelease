@@ -19,6 +19,9 @@ provides:
     - cfg_port
     - replication.enable
     - replication.replica_set_name
+    - require_ssl
+    - server_certificate.private_key
+    - server_certificate.certificate
 
 templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
@@ -35,9 +38,8 @@ templates:
   data/properties.sh.erb: data/properties.sh
   config/mongod.conf.erb: config/mongod.conf
   config/keyfile.erb: config/keyfile
-  ssl/mongodb.key.erb: ssl/mongodb.key
-  ssl/mongodb.crt.erb: ssl/mongodb.crt
-  ssl/mongodb.ca.erb: ssl/mongodb.ca
+  ssl/CA.key.erb: ssl/CA.key
+  ssl/CA.crt.erb: ssl/CA.crt
   js/create_admin_user.js.erb: js/create_admin_user.js
   js/initiate_rs.js.erb: js/initiate_rs.js
 

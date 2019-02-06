@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 source `dirname $(readlink -f $0)`/setenv
 
@@ -17,17 +17,17 @@ export MONGO_CMD="/var/vcap/jobs/${JOB_NAME}/bin/mongo-ssl.sh"
    mongo_rsconfig = _mongo_rsconfig[0..-2]
 end -%>
 
-export PARAM="$@"
+DB=$1
+shift
+PARAM="$@"
 
 pushd /var/vcap/packages/mongodb/bin >/dev/null
 <%- if p("node_role") == "sa" -%>
-${MONGO_CMD} --host <%= mongo_rsconfig %> \
- -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin \
- $PARAM
+${MONGO_CMD} mongodb://<%= mongo_rsconfig %>/${DB} \
+ -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin ${PARAM}
 <%- else -%>
-${MONGO_CMD} --host <%= p("replication.replica_set_name") %>/<%= mongo_rsconfig %> \
- -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin \
- $PARAM
+${MONGO_CMD} mongodb://<%= mongo_rsconfig %>/${DB}?replicaSet=<%= p("replication.replica_set_name") %> \
+ -u <%= p("root_username") %> -p <%= p("root_password") %> --authenticationDatabase admin ${PARAM}
 <%- end -%> 
 popd >/dev/null
 exit 0
