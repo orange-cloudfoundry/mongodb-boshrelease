@@ -20,7 +20,7 @@ instance_groups:
 - name: cfgsvr
   release: *mongodb_release
   azs: [z1]
-  instances: ((nb_intances)) # 
+  instances: ((nb_instances)) # 
   vm_type: ((vm_type))
   env:
     bosh:
@@ -53,7 +53,7 @@ instance_groups:
 - name: shard-0
   release: *mongodb_release
   azs: [z1]
-  instances: ((nb_intances)) # 
+  instances: ((nb_instances)) # 
   vm_type: ((vm_type))
   env:
     bosh:
@@ -86,9 +86,4 @@ variables:
   - name: keyfile_content
     type: password
     options: 
-      length: 200  
-  - name: ((ca_name))
-    type: certificate
-    options:
-      is_ca: true
-      common_name: internalCA
+      length: 200

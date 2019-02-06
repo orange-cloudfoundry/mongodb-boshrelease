@@ -89,7 +89,7 @@ jobs:
     - &deployment
       task: deploy-rs
       file: mongodb-bosh-release/ci/tasks/deploy-rs.yml
-      attempts: 3
+      attempts: 1
       params: &deploy-parameters
         MANIFEST:             manifest-rs.yml
         OPSFILES:             |
