@@ -40,7 +40,8 @@ resources:
 
 jobs:
 
-- name: deploy-replicaset
+- &deploy-replicaset
+  name: deploy-replicaset
   plan:
     - &deployment-lock
       put: cf-broker-smoke-tests-lock
@@ -49,7 +50,7 @@ jobs:
     - &prepare-release
       do:
       - get: mongodb-bosh-release
-        trigger: true
+      #  trigger: true
       - aggregate:
         - get: mongodb-version
           trigger: true
@@ -118,6 +119,9 @@ jobs:
         CF_ADMIN_PASSWORD:    ((cf.admin_password))
         CF_ORG:               ((cf.org))
         CF_SPACE:             ((cf.space))
+      on_failure: &deployment-unlock
+        put: cf-broker-smoke-tests-lock
+        params: {release: cf-broker-smoke-tests-lock} 
 
 
 - &create-service-broker
@@ -197,7 +201,17 @@ jobs:
         CREDHUB_CA:       ((credhub.ca))
         DEPLOYMENT_NAME:  ((deployment.name))
 
-    - &deployment-unlock
-      put: cf-broker-smoke-tests-lock
-      params: {release: cf-broker-smoke-tests-lock}
+    - <<: *deployment-unlock
+
+- <<: *deploy-replicaset
+  name: deploy-shard
+  plan:
+    - <<: *deployment-lock
+    - <<: *prepare-release
+    - <<: *deployment
+      task: deploy-shard
+      params:
+        <<: *deploy-parameters
+        MANIFEST:             manifest-shard.yml
+      
 
