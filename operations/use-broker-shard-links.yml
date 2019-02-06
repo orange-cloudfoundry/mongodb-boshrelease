@@ -1,0 +1,7 @@
+---
+
+# modify mongodb_broker instance group with shard links
+- type: replace
+  path: /instance_groups/name=mongodb-broker/jobs/name=broker/consumes
+  value:
+    config-server: {from: deployment-server}

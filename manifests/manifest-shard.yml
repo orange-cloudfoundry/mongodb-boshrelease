@@ -35,9 +35,9 @@ instance_groups:
   - name: cfgsvr
     release: *mongodb_release
     consumes:
-      server: {from: config-server}
+      config-server: {from: deployment-server}
     provides:
-      config-server: {as: deployment-server}    
+      config-server: {as: deployment-server}
     properties:
       require_ssl: 0
       replication:

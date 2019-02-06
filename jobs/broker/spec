@@ -8,10 +8,9 @@ consumes:
 - name: server
   type: mongod
   optional: true
-
-- name: routing-server
+- name: config-server
   type: cfgsvr
-  optional: true  
+  optional: true
 
 templates:
   bin/ctl: bin/ctl
