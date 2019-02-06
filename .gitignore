@@ -24,3 +24,5 @@ releases/**/*.tgz
 blobs
 manifest*.yml
 config/final.yml
+.final_builds/**/*
+.releases/**/*

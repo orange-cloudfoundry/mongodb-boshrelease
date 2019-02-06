@@ -62,7 +62,14 @@ start_mongod_with_auth()
     echo "=============> Starting with authentication"
     # Stopping eventually running instance
     if [ -f ${PIDFILE} ]
+    then
+      Master=$(check_master)|cut -d":" -f1
+      if [ "$Master" == "${deployment_current_ip}" ]
       then
+        ${MONGO_CMD} $MONGO_CMD_PARAM mongodb://${deployment_rs_config}/admin --eval "rs.stepDown()"
+      fi
+
+
       [ `ps -p $(cat ${PIDFILE})|wc -l` -gt 1 ] && kill_and_wait ${PIDFILE}
     fi
 
@@ -116,47 +123,31 @@ check_master()
 {
     # looking for already created master node
     Master=""
+
     for Server in $(echo ${deployment_rs_config}|tr -s "," " ")
     do
-
-
-      if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
-                          --eval 'db.isMaster().ismaster' \
-                        2>/dev/null`" == "true" ]
+      if [ "${Master}" == "" ]
       then
-        Master=${Server}
-      else
-
         if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
-                            -u ${property_root_username} \
-                            -p ${property_root_password} \
-                            --authenticationDatabase admin \
-                            --eval 'db.isMaster().ismaster' \
-                            2>/dev/null`" == "true" ]
+                          --eval 'db.isMaster().ismaster' \
+                          2>/dev/null`" == "true" ]
         then
           Master=${Server}
+        else
+
+          if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
+                              -u ${property_root_username} \
+                              -p ${property_root_password} \
+                              --authenticationDatabase admin \
+                              --eval 'db.isMaster().ismaster' \
+                              2>/dev/null`" == "true" ]
+          then
+            Master=${Server}
+          fi
         fi
       fi
     done
     echo ${Master}
-}
-################################################################################################
-
-######################### Removing nodes that are not in cluster (scale out) ###################
-remove_unwanted_nodes()
-{
-    MONGO_CMD_PARAM="${MONGO_CMD_PARAM} \
-      -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
-
-    wanted_servers=$(echo ${deployment_rs_config}|tr -s "," " ")
-    for defined_server in $( get_actual_members )
-    do
-      if [ `echo ${wanted_servers}| grep ${defined_server}|wc -l` -eq 0 ]
-      then
-        ${MONGO_CMD} mongodb://${property_replica_set_name}/${Master} ${MONGO_CMD_PARAM} \
-                     --eval 'rs.remove("'${defined_server}':'${property_mongod_listen_port}'")'
-      fi
-    done
 }
 ################################################################################################
 
@@ -167,7 +158,7 @@ create_admin_users()
     created=""
     while [ "${created}" == "" ]
     do
-      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}:${property_mongod_listen_port}/admin \
+      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_rs_config}/admin \
                                                --eval 'db.getUser("'${property_admin_username}'")' \
                                                2>/dev/null||echo 1`
       if [ $(echo "${created}"|grep "Error: not master and slaveOk=false"|wc -l) -gt 0 ]
@@ -279,7 +270,7 @@ add_secondary()
 ########################## Adding shard server to cluster #################################
 add_shard()
 {
-  # We only need to ad it once, on the master node
+  # We only need to add it once, on the replicaset master node
 
   Master=$( check_master )
   if [ "${Master}" == "" ] || [ "${Master}" == "${deployment_current_ip}:${property_mongod_listen_port}" ]
@@ -311,13 +302,20 @@ add_shard()
           then
             ${MONGO_CMD} mongodb://${mongos_ip} ${MONGO_CMD_PARAM} \
                 --eval "sh.addShard(\"${property_replica_set_name}/${Master}\")"
-            RC=$?    
+            # check if shard is effectivelly added
+            [ $(${MONGO_CMD} mongodb://${mongos_ip} ${MONGO_CMD_PARAM} \
+                --eval "db.adminCommand({listShards:1}).shards" \
+                | grep "_id"|sed -e "s/[[:space:]]*//g"|cut -d":" -f2 \
+                | grep -w ${property_replica_set_name} |wc -l) -gt 0 ] && RC=0
           fi
         done
       else
-        ${MONGO_CMD} mongodb://${deployment_mongos_config}:${deployment_mongos_port} ${MONGO_CMD_PARAM} \
+        ${MONGO_CMD} mongodb://${deployment_mongos_config} ${MONGO_CMD_PARAM} \
               --eval "sh.addShard(\"${property_replica_set_name}/${Master}\")"
-        RC=$?
+        [ $(${MONGO_CMD} mongodb://${deployment_mongos_config} ${MONGO_CMD_PARAM} \
+              --eval "db.adminCommand({listShards:1}).shards" \
+              | grep "_id"|sed -e "s/[[:space:]]*//g"|cut -d":" -f2 \
+              | grep -w ${property_replica_set_name} |wc -l) -gt 0 ] && RC=0
       fi
       if [ ${RC} -ne 0 ]
       then 
@@ -331,6 +329,7 @@ add_shard()
   fi
 }
 ################################################################################################
+
 # this function perform a crypted backup of the current root password
 # allowing pasword changes in deployment manifest
 backup_root_password()
@@ -356,3 +355,62 @@ backup_root_password()
   rm -f /tmp/mongo_ident.conf.tmp
 
 }
+################################################################################################
+
+############# setting mongo connection script depending if we are on ssl mode or not ###########
+setMongoCmd()
+{
+    if [ $(check_ssl) -eq 0 ]
+    then
+      MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo.sh"
+    else
+      # Generate the certificates
+      ${JOBS_COMMON_DIR}/bin/generate_ssl_cert.sh
+      MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo-ssl.sh"
+    fi
+    echo $MONGO_CMD
+}
+################################################################################################
+
+############# Removing node from replicaset when reducing number of instances ##################
+rs_scaleIn()
+{
+    set -x
+#    touch /tmp/continue
+
+    MONGO_CMD="$(setMongoCmd)"
+
+    MONGO_CMD_PARAM="--quiet"
+
+    # stopping the instance
+    ${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${deployment_current_ip}:${property_mongod_listen_port}/admin?authSource=admin" \
+          ${MONGO_CMD_PARAM} \
+          --eval "db.shutdownServer()"
+
+    if [ $? -eq 0 ]      
+    then  
+      # getting master uri
+      Timeout=120
+      Master=""
+      while [ "${Master}" == "" -a ${Timeout} -gt 0 ]
+      do
+        Master=$( check_master )
+
+        if [ "${Master}" == "" ]
+        then
+          sleep 1
+          Timeout=$((Timeout-1))
+        fi
+      done
+    fi
+    [ ${Timeout} -le 0 ] \
+      && echo "Cannot connect find a valid master node. Timeout reached" \
+      && exit 1
+    
+    ${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${Master}/admin?replicaSet=${property_replica_set_name}&authSource=admin" \
+              ${MONGO_CMD_PARAM} \
+              --eval "rs.remove(\"${deployment_current_ip}:${property_mongod_listen_port}\")"
+    return $?
+}
+################################################################################################
+

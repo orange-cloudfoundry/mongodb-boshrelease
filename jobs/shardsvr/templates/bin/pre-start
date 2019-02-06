@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -eu
 
+set -x
+
 export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
 source ${JOBS_COMMON_DIR}/bin/setenv shardsvr
 source ${JOBS_COMMON_DIR}/bin/mdb-functions
@@ -44,11 +46,19 @@ rights_and_directories   # Create Mongodb directories and update rights on keyfi
 
 export MONGO_CMD_PARAM="--quiet"
 
-start_mongod_noauth          # Start mongod without authentication
+if [ ! -f ${RUN_DIR}/shardsvr_initialized ]
+then
+   start_mongod_noauth          # Start mongod without authentication
+else
+   start_mongod_with_auth
+fi
 
 run_replicaset
 
-add_shard
+[ ! -f ${RUN_DIR}/shardsvr_initialized ] && touch ${RUN_DIR}/shardsvr_initialized
+
+# backup root password to allow password modification through manifest
+backup_root_password
 
 kill_and_wait ${PIDFILE}
 
