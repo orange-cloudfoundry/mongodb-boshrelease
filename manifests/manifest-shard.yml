@@ -43,7 +43,7 @@ instance_groups:
       replication:
         enable: 1
         key: ((keyfile_content))
-      root_username: &root_user ((root-username))
+      root_username: &root_user ((root_username))
       root_password: &root_pass ((root_password))
       admin_password: ((admin_password))
 

@@ -71,7 +71,7 @@ deployment_var_init="   -v deployment_name=${DEPLOYMENT_NAME} \
                         -v mongo-port=${MONGO_PORT} \
                         -v persistent_disk_type=${PERSISTENT_DISK_TYPE} \
                         -v vm_type=${VM_TYPE} \
-                        -v root-username=${ROOT_USERNAME} \
+                        -v root_username=${ROOT_USERNAME} \
                         -v nb_instances=${NB_INSTANCES}"
 
 
