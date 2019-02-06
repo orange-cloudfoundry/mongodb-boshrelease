@@ -168,6 +168,7 @@ jobs:
     - get: OK
       passed: [ run-smoke-tests ]
       trigger: true
+    - get: cf-broker-smoke-tests-lock
     - get: mongodb-bosh-release
     - <<: *create-bosh-config
     - task: remove-cf-components
