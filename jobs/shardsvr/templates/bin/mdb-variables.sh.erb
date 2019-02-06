@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+<%-
+  require "shellwords"
+
+  def esc(x)
+    Shellwords.shellescape(x)
+  end
+
+  mongo_DbTypeport = p("port")
+  _mongo_rsconfig = ''
+  link('shard-server').instances.each do |instance|
+    _mongo_rsconfig = "#{_mongo_rsconfig}#{instance.address}:#{mongo_DbTypeport},"
+  end
+  # remove last ,
+  mongo_rsconfig = _mongo_rsconfig[0..-2]
+  mongo_current_ip = spec.ip
+
+  mongos_port = link('routing-service').p("port")
+  _mongos_config = ''
+  link('routing-service').instances.each do |instance|
+    _mongos_config = "#{_mongos_config}#{instance.address}:#{mongos_port},"
+  end
+  # remove last ,
+  mongos_config = _mongos_config[0..-2]
+  mongo_current_ip = spec.ip
+
+%>
+property_require_ssl=<%= esc(link('config-server').p("require_ssl")) %>
+property_mongod_listen_port=<%= esc(mongo_DbTypeport) %>
+property_root_username=<%= esc(link('config-server').p("root_username")) %>
+property_root_password=<%= esc(link('config-server').p("root_password")) %>
+property_admin_username=<%= esc(link('config-server').p("admin_username")) %>
+property_admin_password=<%= esc(link('config-server').p("admin_password")) %>
+property_replica_set_name=<%= esc(p("replication.replica_set_name")) %>
+property_deployment_timeout=<%= esc(p("deployment_timeout")) %>
+
+deployment_current_ip=<%= esc(mongo_current_ip) %>
+deployment_rs_config=<%= esc(mongo_rsconfig) %>
+deployment_mongos_port=<%= link('routing-service').p("port") %>
+deployment_mongos_config=<%= esc(mongos_config) %>
+

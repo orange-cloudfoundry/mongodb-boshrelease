@@ -1,0 +1,3 @@
+<%- if link('config-server').p("require_ssl") == 1 -%>
+<%= link('config-server').p("server_certificate.certificate") -%>
+<%- end -%>

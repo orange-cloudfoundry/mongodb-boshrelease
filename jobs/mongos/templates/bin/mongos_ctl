@@ -4,7 +4,7 @@ set -e # exit immediately if a simple command exits with a non-zero status.
 set -u # report the usage of uninitialized variables.
 
 export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
-source ${JOBS_COMMON_DIR}/bin/setenv mongod
+source ${JOBS_COMMON_DIR}/bin/setenv mongos
 
 case $1 in
 
@@ -23,7 +23,7 @@ case $1 in
     then
       pid_guard $PIDFILE $JOB_NAME
 
-      exec chpst -u vcap:vcap $MONGODB_BIN/mongod --config $MONGODB_CONF/${JOB_NAME}.conf \
+      exec chpst -u vcap:vcap $MONGODB_BIN/mongos --config $MONGODB_CONF/${JOB_NAME}.conf \
         --pidfilepath $PIDFILE  >>$LOG_DIR/${JOB_NAME}.stdout.log 2>>$LOG_DIR/${JOB_NAME}.stderr.log
     fi
     ;;
@@ -32,7 +32,7 @@ case $1 in
 
     ;;
   *)
-    echo "Usage: mongod_ctl {start|stop}"
+    echo "Usage: mongos_ctl {start|stop}"
 
     ;;
 

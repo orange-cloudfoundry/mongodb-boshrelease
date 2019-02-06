@@ -1,10 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -e # exit immediately if a simple command exits with a non-zero status.
 set -u # report the usage of uninitialized variables.
 
 export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
-source ${JOBS_COMMON_DIR}/bin/setenv mongod
+source ${JOBS_COMMON_DIR}/bin/setenv cfgsvr
 
 case $1 in
 

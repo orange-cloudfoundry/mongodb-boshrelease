@@ -1,48 +1,39 @@
 ---
-name: mongod
+name: shardsvr
 packages:
   - mongodb
   - mongodb-jobs-common
 
 consumes:
-  - name: server
-    type: mongod
+  - name: shard-server
+    type: shardsvr
 
+  - name: config-server
+    type: cfgsvr
+
+  - name: routing-service
+    type: mongos  
 
 provides:
-  - name: server
-    type: mongod
+  - name: shard-server
+    type: shardsvr
     properties:
-    - root_username
-    - root_password
-    - node_role
     - port
-    - replication.enable
     - replication.replica_set_name
-    - require_ssl
-    - server_certificate.private_key
-    - server_certificate.certificate
+    - enable_role_based_access_control
 
 templates:
   bin/mdb-variables.sh.erb: bin/mdb-variables.sh
   bin/pre-start: bin/pre-start
-  bin/mongod_ctl : bin/mongod_ctl
-  config/mongod.conf.erb: config/mongod.conf
+  bin/shardsvr_ctl : bin/shardsvr_ctl
+  config/shardsvr.conf.erb: config/shardsvr.conf
   config/keyfile.erb: config/keyfile
   ssl/CA.key.erb: ssl/CA.key
   ssl/CA.crt.erb: ssl/CA.crt
 
 properties:
-  node_role:
-      default: rs
-      description: |
-
-        Role for the mongod server in the Mongodb cluster: 'rs' for replica set, 'sa' for stand alone server
-        In the future, 'cfg' (for config server), 'sh' (for shard server) will
-        also be supported.
-
   port:
-      default: 27017
+      default: 27018
       description: Default mongodb port for replicasets AND standalone server
 
   storage_engine:
@@ -90,12 +81,7 @@ properties:
         'system.profile' collection.
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#operationProfiling.slowOpThresholdMs
-  replication.enable:
-      default: 1
-      description: |
-        When set to 1, this settings activates replication.
   replication.replica_set_name:
-      default: rs0
       description: |
         The name of the replica set that the mongod is part of. All hosts in the
         replica set must have the same set name.
@@ -116,16 +102,6 @@ properties:
         size of the oplog.
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.oplogSizeMB
-  replication.key:
-      description: |
-        Specify key which will be used in keyfile. Mandatory for replication
-        without ssl With keyfile authentication, each mongod instances in the
-        replica set uses the contents of the keyfile as the shared password
-        for authenticating other members in the deployment. Only mongod
-        instances with the correct keyfile can join the replica set.
-
-        The content of the keyfile must be between 6 and 1024 characters long
-        and must be the same for all members of the replica set.
   enable_role_based_access_control:
       default: 1
       description: |
@@ -139,41 +115,6 @@ properties:
         only. Never disable this option in production.
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#security.authorization
-  admin_username:
-      default: MongoAdmin
-      description: |
-        Username of the default admin user.
-  admin_password:
-      description: |
-        Password for the admin user, in clear text.
-  root_username:
-      default: MongoRoot
-      description: |
-        Username of the default root user.
-  root_password:
-      description: |
-        Password for the root user, in clear text.
-  server_certificate:
-      default:
-        ca: "NOT INITIALIZED"
-        private_key: "NOT INITIALIZED"
-        certificate: "NOT INITIALIZED"
-      description: Mongodb certificate for ttl/ssl auth
-  require_ssl:
-      default: 1
-      description: |
-        Enforce TLS/SSL for connecting to the server.
-
-        When this options is set to '1', all connections to mongod must be
-        encrypted with TLS/SSL, and un-encrypted connections will be refused.
-        For example, when using the 'mongo' client, the '--ssl' argument will be
-        mandatory.
-
-        When this options is set to '0', then all connections to mongod must not
-        be encrypted, and SSL/TLS will not be possible. For example, when using
-        the 'mongo' client, the '--ssl' argument will not be possible. This
-        should be reserved to development environments and be avoided in
-        production.
   arbiter_only:
       default: no
       example: yes
@@ -183,3 +124,6 @@ properties:
 
         This option overrides any value set to 'mongodb.mmap_v1_small_files' and
         'mongodb.replication.operation_log_max_size_mb'.
+  deployment_timeout:
+      default: 120
+      description: The maximum time to wait for mongos availability before exiting with error

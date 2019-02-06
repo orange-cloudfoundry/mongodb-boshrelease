@@ -2,7 +2,7 @@
 set -eu
 
 export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
-source ${JOBS_COMMON_DIR}/bin/setenv mongod
+source ${JOBS_COMMON_DIR}/bin/setenv cfgsvr
 source ${JOBS_COMMON_DIR}/bin/mdb-functions
 
 if [ $(check_ssl) -eq 0 ]
@@ -21,18 +21,10 @@ export MONGO_CMD_PARAM="--quiet"
 
 start_mongod_noauth          # Start mongod without authentication
 
-if [ "$(get_node_role)" == "sa" ]
-then
-    # In standalone mode
-    create_admin_users    # Create the admin and root users
-else
-    # In replicaset mode  
-    run_replicaset
-fi
-
-# backup root password to allowpassword modification through manifest
-backup_root_password
+run_replicaset
 
 kill_and_wait ${PIDFILE}
+
+${JOB_DIR}/bin/cfgsvr_ctl start 
 
 exit 0

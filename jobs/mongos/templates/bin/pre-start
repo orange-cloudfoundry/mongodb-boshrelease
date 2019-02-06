@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -eu
+
+export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
+source ${JOBS_COMMON_DIR}/bin/setenv mongos
+source ${JOBS_COMMON_DIR}/bin/mdb-functions
+
+if [ $(check_ssl) -eq 0 ]
+then
+  export MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo.sh"
+else
+  # Generate the certificates
+  ${JOBS_COMMON_DIR}/bin/generate_ssl_cert.sh
+  export MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo-ssl.sh"
+fi
+
+# waiting for cfgsvr availability
+_timeout=${property_deployment_timeout}
+reached=0
+while [ ${_timeout} -gt 0 ] && [ ${reached} -ne 1 ]
+do
+
+	for cfgsvr in $(echo ${deployment_cfgsvr_config}|tr -s "," " ")
+	do
+		cfgsvr_ip=$(echo ${cfgsvr}|cut -d":" -f1)
+		cfgsvr_port=$(echo ${cfgsvr}|cut -d":" -f2)
+		if  nc -z "${cfgsvr_ip}" "${cfgsvr_port}"
+		then
+			[ ${reached} -eq 0 ] && reached=1
+		fi
+	done
+	if [ ${reached} -eq 0 ]
+	then
+		sleep 1
+		_timeout=$(($_timeout-1))
+	fi
+done
+[ ${_timeout} -le 0 ] \
+			&& echo "Cannot connect to config servers. Timeout reached" \
+			&& exit 1
+
+system_update            # Updating system mandatories
+rights_and_directories   # Create Mongodb directories and update rights on keyfile
+
+export MONGO_CMD_PARAM="--quiet"
+
+${JOB_DIR}/bin/mongos_ctl start 
+
+exit 0
