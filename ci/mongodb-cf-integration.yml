@@ -28,24 +28,28 @@ resources:
   - name: OK
     type: keyval
 
-  - &cf-broker-smoke-tests-lock
-    name: cf-broker-smoke-tests-lock
+  - &cf-integration-lock
+    name: cf-integration-lock
     type: pool
     source:
       uri: ((repositories.locks-pool.uri))
       branch: ((repositories.locks-pool.branch))
       pool: bosh
       username: ((repositories.locks-pool.username))
-      password: ((repositories.locks-pool.password))     
+      password: ((repositories.locks-pool.password))
+
+  - &cf-broker-smoke-tests-lock
+    <<: *cf-integration-lock
+    name: cf-broker-smoke-tests-lock    
 
 jobs:
-
-- &deploy-replicaset
-  name: deploy-replicaset
+- &create_release
+  name: create-release
   plan:
-    - &deployment-lock
-      put: cf-broker-smoke-tests-lock
-      params: {claim: cf-broker-smoke-tests}
+
+    - &release-lock
+      put: cf-integration-lock
+      params: {claim: cf-integration}
 
     - &prepare-release
       do:
@@ -53,7 +57,7 @@ jobs:
       #  trigger: true
       - aggregate:
         - get: mongodb-version
-          trigger: true
+    #      trigger: true
         - &create-bosh-config
           task: create-bosh-config
           file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
@@ -86,9 +90,41 @@ jobs:
           GOLANG_VERSION:     ((deployment.golang-version))
           CONFIG_PATH:        ((blobstores.release.config_path))
 
+      - task: create-release
+        file: mongodb-bosh-release/ci/tasks/create-release.yml
+        attempts: 1
+        params: &deploy-parameters
+          ALIAS:                ((bosh-server.alias))
+          RELEASE_NAME:         ((deployment.name))
+          DEPLOYMENT_NAME:      ((deployment.name))
+          DEPLOYMENT_NETWORK:   ((deployment.network))
+          PERSISTENT_DISK_TYPE: ((deployment.mongodb.persistent-disk-type))
+        on_failure: &cf-integration-unlock
+          put: cf-integration-lock
+          params: {release: cf-integration} 
+
+
+- &deploy-replicaset
+  name: deploy-replicaset
+  plan:
+    - get: OK
+      passed: [ create-release ]
+      trigger: true
+
+    - &deployment-lock
+      put: cf-broker-smoke-tests-lock
+      params: {claim: cf-broker-smoke-tests}
+
+    - &deployment-config
+      do:
+        - get: mongodb-bosh-release
+        - aggregate: 
+          - get: mongodb-version
+          - <<: *create-bosh-config
+      
     - &deployment
-      task: deploy-rs
-      file: mongodb-bosh-release/ci/tasks/deploy-rs.yml
+      task: deploy-replicaset
+      file: mongodb-bosh-release/ci/tasks/deployment.yml
       attempts: 1
       params: &deploy-parameters
         MANIFEST:             manifest-rs.yml
@@ -212,8 +248,11 @@ jobs:
 - <<: *deploy-replicaset
   name: deploy-shard
   plan:
+    - get: OK
+      passed: [ create-release ]
+      trigger: true    
     - <<: *deployment-lock
-    - <<: *prepare-release
+    - <<: *deployment-config
     - <<: *deployment
       task: deploy-shard
       params:
@@ -248,3 +287,19 @@ jobs:
       trigger: true
     - <<: *remove-deployment-plan
 
+
+- name: remove-release
+  plan:
+    - get: OK
+      passed: [ remove-deployment-shard,remove-deployment ]
+      trigger: true
+    - get: cf-integration-lock
+    - get: mongodb-bosh-release
+    - <<: *create-bosh-config
+    - task: delte-release
+      file: mongodb-bosh-release/ci/tasks/delete-release.yml      
+      params: 
+        ALIAS:                ((bosh-server.alias))
+        RELEASE_NAME:         ((deployment.name))
+    - <<: *cf-integration-unlock    
+ 
