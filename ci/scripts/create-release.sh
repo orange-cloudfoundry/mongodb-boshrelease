@@ -69,3 +69,5 @@ done
 bosh -e ${ALIAS} cr --force
 
 bosh -e ${ALIAS} ur 
+
+popd

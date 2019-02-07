@@ -1,8 +1,10 @@
 #!/usr/bin/env bash 
 
-set -ex
+set -e
 
 export ROOT_FOLDER=${PWD}
+
+export BOSH_CONFIG=$PWD/bosh-director-config/bosh_config.yml
 
 deployment_var_init="   -v deployment_name=${DEPLOYMENT_NAME} \
                         -v release_name=${RELEASE_NAME} \
@@ -71,6 +73,4 @@ fi
 bosh -e ${ALIAS} deploy -n -d ${DEPLOYMENT_NAME} \
         ${ROOT_FOLDER}/mongodb-bosh-release/manifests/${MANIFEST} \
         ${deployment_ops_files_cmd} \
-        ${deployment_var_init} 
-
-popd
+        ${deployment_var_init}
