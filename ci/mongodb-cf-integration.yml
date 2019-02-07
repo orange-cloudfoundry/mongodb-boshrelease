@@ -229,7 +229,6 @@ jobs:
           file: mongodb-bosh-release/ci/tasks/remove-deployment.yml      
           params: &remove-deployment-params
             ALIAS:                ((bosh-server.alias))
-            RELEASE_NAME:         ((deployment.name))
             DEPLOYMENT_NAME:      ((deployment.name))
         - task: credhub-cleanup
           file: mongodb-bosh-release/ci/tasks/credhub-cleanup.yml    
@@ -296,7 +295,7 @@ jobs:
     - get: cf-integration-lock
     - get: mongodb-bosh-release
     - <<: *create-bosh-config
-    - task: delte-release
+    - task: delete-release
       file: mongodb-bosh-release/ci/tasks/delete-release.yml      
       params: 
         ALIAS:                ((bosh-server.alias))

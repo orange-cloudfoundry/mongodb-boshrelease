@@ -12,8 +12,8 @@ inputs:
   - name: bosh-director-config
 
 run:
-  path: mongodb-bosh-release/ci/scripts/remove-deployment.sh
+  path: mongodb-bosh-release/ci/scripts/delete-release.sh
 
 params:
   ALIAS: ""
-  DEPLOYMENT_NAME: ""
+  RELEASE_NAME: ""  

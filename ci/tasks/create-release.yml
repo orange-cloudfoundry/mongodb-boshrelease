@@ -16,3 +16,8 @@ run:
   path: mongodb-bosh-release/ci/scripts/create-release.sh
 
 params:
+  DEPLOYMENT_NAME: ""
+  DEPLOYMENT_NETWORK: ""
+  PERSISTENT_DISK_TYPE: ""
+  RELEASE_NAME: ""
+  ALIAS: ""
