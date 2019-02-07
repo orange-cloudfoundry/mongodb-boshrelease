@@ -1,3 +1,5 @@
+#!/usr/bin/env bash 
+
 set -ex
 
 export ROOT_FOLDER=${PWD}
