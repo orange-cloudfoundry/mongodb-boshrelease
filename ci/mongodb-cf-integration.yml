@@ -46,9 +46,6 @@ resources:
       username: ((repositories.locks-pool.username))
       password: ((repositories.locks-pool.password))
 
-  - &cf-broker-smoke-tests-lock
-    <<: *cf-integration-lock
-    name: cf-broker-smoke-tests-lock    
 
 jobs:
 - &create_release
@@ -308,5 +305,5 @@ jobs:
       params: 
         ALIAS:                ((bosh-server.alias))
         RELEASE_NAME:         ((deployment.name))
-    - <<: *cf-integration-unlock    
+    - <<: *release-unlock    
  
