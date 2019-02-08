@@ -28,13 +28,21 @@ resources:
   - name: OK
     type: keyval
 
-  - &cf-integration-lock
-    name: cf-integration-lock
+  - name: concourse-deployment-lock
     type: pool
     source:
       uri: ((repositories.locks-pool.uri))
       branch: ((repositories.locks-pool.branch))
-      pool: bosh
+      pool: concourse-deployment-lock
+      username: ((repositories.locks-pool.username))
+      password: ((repositories.locks-pool.password))
+
+  - name: concourse-release-lock
+    type: pool
+    source:
+      uri: ((repositories.locks-pool.uri))
+      branch: ((repositories.locks-pool.branch))
+      pool: concourse-release-lock
       username: ((repositories.locks-pool.username))
       password: ((repositories.locks-pool.password))
 
@@ -48,8 +56,8 @@ jobs:
   plan:
 
     - &release-lock
-      put: cf-integration-lock
-      params: {claim: cf-integration}
+      put: concourse-release-lock
+      params: {claim: release-lock}
 
     - &prepare-release
       do:
@@ -99,9 +107,10 @@ jobs:
           DEPLOYMENT_NAME:      ((deployment.name))
           DEPLOYMENT_NETWORK:   ((deployment.network))
           PERSISTENT_DISK_TYPE: ((deployment.mongodb.persistent-disk-type))
-        on_failure: &cf-integration-unlock
-          put: cf-integration-lock
-          params: {release: cf-integration} 
+        on_failure: &release-unlock
+          put: concourse-release-lock
+          params: {release: concourse-release-lock} 
+
 
 
 - &deploy-replicaset
@@ -112,8 +121,8 @@ jobs:
       trigger: true
 
     - &deployment-lock
-      put: cf-broker-smoke-tests-lock
-      params: {claim: cf-broker-smoke-tests}
+      put: concourse-deployment-lock
+      params: {claim: deployment-lock}
 
     - &deployment-config
       do:
@@ -156,9 +165,8 @@ jobs:
         CF_ORG:               ((cf.org))
         CF_SPACE:             ((cf.space))
       on_failure: &deployment-unlock
-        put: cf-broker-smoke-tests-lock
-        params: {release: cf-broker-smoke-tests-lock} 
-
+        put: concourse-deployment-lock
+        params: {release: concourse-deployment-lock} 
 
 - &create-service-broker
   name: create-service-broker
@@ -214,7 +222,7 @@ jobs:
       trigger: true
     - &remove-deployment-plan
       do:  
-        - get: cf-broker-smoke-tests-lock
+        - get: concourse-deployment-lock
         - get: mongodb-bosh-release
         - <<: *create-bosh-config
         - task: remove-cf-components
@@ -292,7 +300,7 @@ jobs:
     - get: OK
       passed: [ remove-deployment-shard,remove-deployment ]
       trigger: true
-    - get: cf-integration-lock
+    - get: concourse-release-lock
     - get: mongodb-bosh-release
     - <<: *create-bosh-config
     - task: delete-release
