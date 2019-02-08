@@ -28,31 +28,36 @@ resources:
   - name: OK
     type: keyval
 
-  - &cf-broker-smoke-tests-lock
-    name: cf-broker-smoke-tests-lock
+  - &cf-integration-lock
+    name: cf-integration-lock
     type: pool
     source:
       uri: ((repositories.locks-pool.uri))
       branch: ((repositories.locks-pool.branch))
       pool: bosh
       username: ((repositories.locks-pool.username))
-      password: ((repositories.locks-pool.password))     
+      password: ((repositories.locks-pool.password))
+
+  - &cf-broker-smoke-tests-lock
+    <<: *cf-integration-lock
+    name: cf-broker-smoke-tests-lock    
 
 jobs:
-
-- name: deploy-replicaset
+- &create_release
+  name: create-release
   plan:
-    - &deployment-lock
-      put: cf-broker-smoke-tests-lock
-      params: {claim: cf-broker-smoke-tests}
+
+    - &release-lock
+      put: cf-integration-lock
+      params: {claim: cf-integration}
 
     - &prepare-release
       do:
       - get: mongodb-bosh-release
-        trigger: true
+      #  trigger: true
       - aggregate:
         - get: mongodb-version
-          trigger: true
+    #      trigger: true
         - &create-bosh-config
           task: create-bosh-config
           file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
@@ -85,10 +90,42 @@ jobs:
           GOLANG_VERSION:     ((deployment.golang-version))
           CONFIG_PATH:        ((blobstores.release.config_path))
 
+      - task: create-release
+        file: mongodb-bosh-release/ci/tasks/create-release.yml
+        attempts: 1
+        params: &deploy-parameters
+          ALIAS:                ((bosh-server.alias))
+          RELEASE_NAME:         ((deployment.name))
+          DEPLOYMENT_NAME:      ((deployment.name))
+          DEPLOYMENT_NETWORK:   ((deployment.network))
+          PERSISTENT_DISK_TYPE: ((deployment.mongodb.persistent-disk-type))
+        on_failure: &cf-integration-unlock
+          put: cf-integration-lock
+          params: {release: cf-integration} 
+
+
+- &deploy-replicaset
+  name: deploy-replicaset
+  plan:
+    - get: OK
+      passed: [ create-release ]
+      trigger: true
+
+    - &deployment-lock
+      put: cf-broker-smoke-tests-lock
+      params: {claim: cf-broker-smoke-tests}
+
+    - &deployment-config
+      do:
+        - get: mongodb-bosh-release
+        - aggregate: 
+          - get: mongodb-version
+          - <<: *create-bosh-config
+      
     - &deployment
-      task: deploy-rs
-      file: mongodb-bosh-release/ci/tasks/deploy-rs.yml
-      attempts: 3
+      task: deploy-replicaset
+      file: mongodb-bosh-release/ci/tasks/deployment.yml
+      attempts: 1
       params: &deploy-parameters
         MANIFEST:             manifest-rs.yml
         OPSFILES:             |
@@ -118,35 +155,40 @@ jobs:
         CF_ADMIN_PASSWORD:    ((cf.admin_password))
         CF_ORG:               ((cf.org))
         CF_SPACE:             ((cf.space))
+      on_failure: &deployment-unlock
+        put: cf-broker-smoke-tests-lock
+        params: {release: cf-broker-smoke-tests-lock} 
 
 
 - &create-service-broker
   name: create-service-broker
-  plan: 
+  plan:
     - get: OK
       passed: [ deploy-replicaset ]
       trigger: true
 
-    - get: mongodb-bosh-release
+    - &create-service-broker-plan
+      do:
+        - get: mongodb-bosh-release
 
-    - task: get-broker-password
-      file: mongodb-bosh-release/ci/tasks/get-broker-password.yml
-      params:
-        BOSH_ALIAS:       ((bosh-server.alias))
-        IP:               ((credhub.ip))
-        PORT:             ((credhub.port))
-        USER:             ((credhub.username))
-        PASSWORD:         ((credhub.password))
-        DEPLOYMENT_NAME:  ((deployment.name))
-        UAA_CA:           ((uaa.ca))
-        CREDHUB_CA:       ((credhub.ca))
+        - task: get-broker-password
+          file: mongodb-bosh-release/ci/tasks/get-broker-password.yml
+          params:
+            BOSH_ALIAS:       ((bosh-server.alias))
+            IP:               ((credhub.ip))
+            PORT:             ((credhub.port))
+            USER:             ((credhub.username))
+            PASSWORD:         ((credhub.password))
+            DEPLOYMENT_NAME:  ((deployment.name))
+            UAA_CA:           ((uaa.ca))
+            CREDHUB_CA:       ((credhub.ca))
 
-    - task: create-service-broker
-      file: mongodb-bosh-release/ci/tasks/create-service-broker.yml
-      params:
-        CF_API_URL:           https://api.((cf.system_domain))
-        CF_ADMIN_PASSWORD:    ((cf.admin_password))
-        SKIP_SSL:             ((cf.skip_ssl_validation))
+        - task: create-service-broker
+          file: mongodb-bosh-release/ci/tasks/create-service-broker.yml
+          params:
+            CF_API_URL:           https://api.((cf.system_domain))
+            CF_ADMIN_PASSWORD:    ((cf.admin_password))
+            SKIP_SSL:             ((cf.skip_ssl_validation))
 
 - &run-smoke-tests
   name: run-smoke-tests
@@ -154,49 +196,109 @@ jobs:
     - get: OK
       passed: [ create-service-broker ]
       trigger: true
-    - get: mongodb-bosh-release      
-    - <<: *create-bosh-config
-    - task: run-smoke-tests
-      file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
-      params:
-        ALIAS:                ((bosh-server.alias))
-        DEPLOYMENT_NAME:      ((deployment.name))
+    - &run-smoke-tests-plan
+      do:  
+        - get: mongodb-bosh-release      
+        - <<: *create-bosh-config
+        - task: run-smoke-tests
+          file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
+          params:
+            ALIAS:                ((bosh-server.alias))
+            DEPLOYMENT_NAME:      ((deployment.name))
 
-- &remove_deployment
+- &remove-deployment
   name: remove-deployment
   plan:
     - get: OK
       passed: [ run-smoke-tests ]
       trigger: true
+    - &remove-deployment-plan
+      do:  
+        - get: cf-broker-smoke-tests-lock
+        - get: mongodb-bosh-release
+        - <<: *create-bosh-config
+        - task: remove-cf-components
+          file: mongodb-bosh-release/ci/tasks/remove-cf-components.yml
+          params:
+            CF_API_URL:           https://api.((cf.system_domain))
+            CF_ADMIN_PASSWORD:    ((cf.admin_password))
+            SKIP_SSL:             ((cf.skip_ssl_validation))
+
+        - task: remove-deployment-rs
+          attempts: 3
+          file: mongodb-bosh-release/ci/tasks/remove-deployment.yml      
+          params: &remove-deployment-params
+            ALIAS:                ((bosh-server.alias))
+            DEPLOYMENT_NAME:      ((deployment.name))
+        - task: credhub-cleanup
+          file: mongodb-bosh-release/ci/tasks/credhub-cleanup.yml    
+          params: 
+            BOSH_ALIAS:       ((bosh-server.alias))
+            IP:               ((credhub.ip))
+            PORT:             ((credhub.port))
+            USER:             ((credhub.username))
+            PASSWORD:         ((credhub.password))
+            UAA_CA:           ((uaa.ca))
+            CREDHUB_CA:       ((credhub.ca))
+            DEPLOYMENT_NAME:  ((deployment.name))
+
+        - <<: *deployment-unlock
+
+- <<: *deploy-replicaset
+  name: deploy-shard
+  plan:
+    - get: OK
+      passed: [ create-release ]
+      trigger: true    
+    - <<: *deployment-lock
+    - <<: *deployment-config
+    - <<: *deployment
+      task: deploy-shard
+      params:
+        <<: *deploy-parameters
+        MANIFEST:             manifest-shard.yml
+        OPSFILES:             |
+                              enable-mongodb-broker.yml 
+                              use-broker-shard-links.yml  
+                              enable-mongodb-broker-route-registrar.yml 
+                              enable-mongodb-broker-smoke-tests.yml
+- <<: *create-service-broker
+  name: create-service-broker-shard
+  plan:
+    - get: OK
+      passed: [ deploy-shard ]
+      trigger: true
+    - <<: *create-service-broker-plan  
+
+- <<: *run-smoke-tests
+  name: run-smoke-tests-shard
+  plan:
+    - get: OK
+      passed: [ create-service-broker-shard ]
+      trigger: true
+    - <<: *run-smoke-tests-plan
+
+- <<: *remove-deployment
+  name: remove-deployment-shard
+  plan:
+    - get: OK
+      passed: [ run-smoke-tests-shard ]
+      trigger: true
+    - <<: *remove-deployment-plan
+
+
+- name: remove-release
+  plan:
+    - get: OK
+      passed: [ remove-deployment-shard,remove-deployment ]
+      trigger: true
+    - get: cf-integration-lock
     - get: mongodb-bosh-release
     - <<: *create-bosh-config
-    - task: remove-cf-components
-      file: mongodb-bosh-release/ci/tasks/remove-cf-components.yml
-      params:
-        CF_API_URL:           https://api.((cf.system_domain))
-        CF_ADMIN_PASSWORD:    ((cf.admin_password))
-        SKIP_SSL:             ((cf.skip_ssl_validation))
-
-    - task: remove-deployment-rs
-      attempts: 3
-      file: mongodb-bosh-release/ci/tasks/remove-deployment.yml      
-      params: &remove-deployment-params
+    - task: delete-release
+      file: mongodb-bosh-release/ci/tasks/delete-release.yml      
+      params: 
         ALIAS:                ((bosh-server.alias))
         RELEASE_NAME:         ((deployment.name))
-        DEPLOYMENT_NAME:      ((deployment.name))
-    - task: credhub-cleanup
-      file: mongodb-bosh-release/ci/tasks/credhub-cleanup.yml    
-      params: 
-        BOSH_ALIAS:       ((bosh-server.alias))
-        IP:               ((credhub.ip))
-        PORT:             ((credhub.port))
-        USER:             ((credhub.username))
-        PASSWORD:         ((credhub.password))
-        UAA_CA:           ((uaa.ca))
-        CREDHUB_CA:       ((credhub.ca))
-        DEPLOYMENT_NAME:  ((deployment.name))
-
-    - &deployment-unlock
-      put: cf-broker-smoke-tests-lock
-      params: {release: cf-broker-smoke-tests-lock}
-
+    - <<: *cf-integration-unlock    
+ 

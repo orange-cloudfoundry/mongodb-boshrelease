@@ -17,10 +17,17 @@ spring:
     show-banner: true
 
 mongodb:
+  <% if_link("server") do %>
   host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
-  port: 27017
   username: <%= link('server').p('root_username') %>
   password: <%= link('server').p('root_password') %>
+  <% end %>
+  <% if_link("config-server") do %>
+  host: <% nodes = link('config-server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
+  username: <%= link('config-server').p('root_username') %>
+  password: <%= link('config-server').p('root_password') %>
+  <% end %>
+  port: 27017
 
 server:
   port: <%= p('broker.port').to_json %>
