@@ -1,0 +1,40 @@
+---
+# add prometheus addons release to deployment manifest
+- type: replace
+  path: /releases/name=prometheus-addons?
+  value:
+    name: prometheus-addons
+    version: latest
+
+# add cfgsvr exporter properties
+- type: replace
+  path: /instance_groups/name=cfgsvr/jobs/name=mongodb_exporter?
+  value: &exporter_value
+    name: mongodb_exporter
+    release: prometheus-addons
+    properties:
+      mongodb:
+        uri: mongodb://((clustermonitor-username)):((mongo_clustermonitor_password))@127.0.0.1:((mongo-port))/?authSource=admin
+        tls: true
+        tls_ca: /var/vcap/jobs/mongos/ssl/CA.crt
+        tls_private_key: /var/vcap/jobs/mongos/ssl/CA.key
+        clustermonitor:
+          username: ((clustermonitor-username))
+          password: ((mongo_clustermonitor_password))
+        root:
+          username: ((root-username))
+          password: ((root-password))
+      web:
+        port: 9001
+
+# add shard-0 exporter properties
+- type: replace
+  path: /instance_groups/name=shard-0/jobs/name=mongodb_exporter?
+  value:
+    <<: *exporter_value
+
+# add shard-1 exporter properties
+- type: replace
+  path: /instance_groups/name=shard-1/jobs/name=mongodb_exporter?
+  value:
+    <<: *exporter_value
