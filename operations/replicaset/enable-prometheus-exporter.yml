@@ -1,9 +1,9 @@
 ---
 # add prometheus release to deployment manifest
 - type: replace
-  path: /releases/name=prometheus?
+  path: /releases/name=prometheus-addons?
   value:
-    name: prometheus
+    name: prometheus-addons
     version: latest
 
 # add mongod exporter properties
@@ -11,12 +11,16 @@
   path: /instance_groups/name=mongod/jobs/name=mongodb_exporter?
   value:
     name: mongodb_exporter
-    release: prometheus
-    properties:
-      mongodb_exporter:
-        mongodb:
-          uri: mongodb://((root_username)):((root_password))@localhost:27017?authSource=admin
-        web:
-          port: 9001  
-        collect_oplog: true
-        collect_replset: true
+    release: prometheus-addons
+    properties: 
+      mongodb: 
+        uri: "mongodb://((clustermonitor_username)):((clustermonitor_password))@127.0.0.1:((mongo_port))/?authSource=admin"
+        tls: false
+        clustermonitor:
+          username: ((clustermonitor_username))
+          password: ((clustermonitor_password))
+        root:
+          username: ((root_username))
+          password: ((root_password))
+      web:
+        port: 9001
