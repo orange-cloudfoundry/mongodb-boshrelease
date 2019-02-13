@@ -107,8 +107,6 @@ variables:
     type: password
   - name: root_password
     type: password
-  - name: clustermonitor_password
-    type: password  
   - name: keyfile_content
     type: password
     options: 

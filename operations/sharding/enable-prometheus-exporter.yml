@@ -9,21 +9,23 @@
 # add cfgsvr exporter properties
 - type: replace
   path: /instance_groups/name=cfgsvr/jobs/name=mongodb_exporter?
-  value: &exporter_value
+  value:
+    provides: 
+      exporter: {as: exporter-mongos}
+    consumes: 
+      exporter: {from: exporter-mongos}
     name: mongodb_exporter
     release: prometheus-addons
-    properties:
-      mongodb:
-        uri: mongodb://((clustermonitor-username)):((mongo_clustermonitor_password))@127.0.0.1:((mongo-port))/?authSource=admin
-        tls: true
-        tls_ca: /var/vcap/jobs/mongos/ssl/CA.crt
-        tls_private_key: /var/vcap/jobs/mongos/ssl/CA.key
+    properties: &properties
+      mongodb: &mongodb_properties
+        uri: mongodb://((clustermonitor_username)):((clustermonitor_password))@127.0.0.1:((mongo_port))/?authSource=admin
+        tls: false
         clustermonitor:
-          username: ((clustermonitor-username))
-          password: ((mongo_clustermonitor_password))
+          username: ((clustermonitor_username))
+          password: ((clustermonitor_password))
         root:
-          username: ((root-username))
-          password: ((root-password))
+          username: ((root_username))
+          password: ((root_password))
       web:
         port: 9001
 
@@ -31,10 +33,35 @@
 - type: replace
   path: /instance_groups/name=shard-0/jobs/name=mongodb_exporter?
   value:
-    <<: *exporter_value
+    provides: 
+      exporter: {as: exporter-sh0}
+    consumes: 
+      exporter: {from: exporter-sh0}
+    name: mongodb_exporter
+    release: prometheus-addons
+    properties: &shard_properties
+      <<: *properties
+      mongodb:
+        <<: *mongodb_properties
+        uri: mongodb://((clustermonitor_username)):((clustermonitor_password))@127.0.0.1:((shard_port))/?authSource=admin
 
 # add shard-1 exporter properties
 - type: replace
   path: /instance_groups/name=shard-1/jobs/name=mongodb_exporter?
   value:
-    <<: *exporter_value
+    provides: 
+      exporter: {as: exporter-sh1}
+    consumes: 
+      exporter: {from: exporter-sh1}
+    name: mongodb_exporter
+    release: prometheus-addons
+    properties:
+      <<: *shard_properties
+
+
+# add clustermonitor user
+- type: replace
+  path: /variables/name=clustermonitor_password?
+  value:
+    name: clustermonitor_password
+    type: password      

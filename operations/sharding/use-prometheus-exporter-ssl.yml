@@ -1,0 +1,19 @@
+---
+- type: replace
+  path: /instance_groups/name=cfgsvr/jobs/name=mongodb_exporter/properties/mongodb
+  value: 
+    tls: true
+    tls_ca: /var/vcap/jobs/mongos/ssl/CA.crt
+    tls_private_key: /var/vcap/jobs/mongos/ssl/CA.key
+
+- type: replace
+  path: /instance_groups/name=shard-0/jobs/name=mongodb_exporter/properties/mongodb
+  value: &ssl_shard_params
+    tls: true
+    tls_ca: /var/vcap/jobs/shardsvr/ssl/CA.crt
+    tls_private_key: /var/vcap/jobs/shardsvr/ssl/CA.key
+
+- type: replace
+  path: /instance_groups/name=shard-1/jobs/name=mongodb_exporter/properties/mongodb
+  value:
+    <<: *ssl_shard_params
