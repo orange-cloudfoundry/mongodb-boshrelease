@@ -18,7 +18,7 @@
     release: prometheus-addons
     properties: &properties
       mongodb: &mongodb_properties
-        uri: mongodb://((clustermonitor_username)):((clustermonitor_password))@127.0.0.1:((mongo_port))/?authSource=admin
+        uri: "mongodb://((clustermonitor_username)):((clustermonitor_password))@127.0.0.1:((mongo_port))/?authSource=admin"
         tls: false
         clustermonitor:
           username: ((clustermonitor_username))
@@ -43,7 +43,7 @@
       <<: *properties
       mongodb:
         <<: *mongodb_properties
-        uri: mongodb://((clustermonitor_username)):((clustermonitor_password))@127.0.0.1:((shard_port))/?authSource=admin
+        uri: "mongodb://((clustermonitor_username)):((clustermonitor_password))@127.0.0.1:((shard_port))/?authSource=admin"
 
 # add shard-1 exporter properties
 - type: replace
