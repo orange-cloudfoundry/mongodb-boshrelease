@@ -59,7 +59,7 @@
       <<: *shard_properties
 
 
-# add clustermonitor user
+# add clustermonitor password
 - type: replace
   path: /variables/name=clustermonitor_password?
   value:

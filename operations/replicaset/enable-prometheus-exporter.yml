@@ -24,3 +24,11 @@
           password: ((root_password))
       web:
         port: 9001
+
+
+# add clustermonitor password
+- type: replace
+  path: /variables/name=clustermonitor_password?
+  value:
+    name: clustermonitor_password
+    type: password              
