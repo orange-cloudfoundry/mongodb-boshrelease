@@ -48,10 +48,10 @@ storage:
   <%- if p("storage_engine") == "mmapv1" -%>
   mmapv1:
     smallFiles: <%= storage_mmap_v1_small_files %>
-    <% if_p("Conf_mmapv1_preallocDataFiles") do -%>
+    <%- if_p("Conf_mmapv1_preallocDataFiles") do -%>
     preallocDataFiles: <%= Conf_mmapv1_preallocDataFiles %>
     <%- end -%>
-    <% if_p("Conf_mmapv1_nsSize") do -%>
+    <%- if_p("Conf_mmapv1_nsSize") do -%>
     nsSize: <%= Conf_mmapv1_nsSize %>
     <%- end -%>
     <%- if_p("Conf_mmapv1_quota_enforced","Conf_mmapv1_quota_maxFilesPerDB") do -%>
