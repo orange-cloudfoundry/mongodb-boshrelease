@@ -1,0 +1,13 @@
+---
+- type: replace
+  path: /instance_groups/name=shard-0/jobs/name=shardsvr/properties/storage_engine?
+  value: mmapv1
+- type: replace
+  path: /instance_groups/name=shard-0/jobs/name=shardsvr/properties/mmap_v1_small_files?
+  value: true
+- type: replace
+  path: /instance_groups/name=shard-1/jobs/name=shardsvr/properties/storage_engine?
+  value: mmapv1
+- type: replace
+  path: /instance_groups/name=shard-1/jobs/name=shardsvr/properties/mmap_v1_small_files?
+  value: true

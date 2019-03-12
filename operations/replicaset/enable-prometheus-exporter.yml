@@ -1,0 +1,34 @@
+---
+# add prometheus release to deployment manifest
+- type: replace
+  path: /releases/name=prometheus-addons?
+  value:
+    name: prometheus-addons
+    version: latest
+
+# add mongod exporter properties
+- type: replace
+  path: /instance_groups/name=mongod/jobs/name=mongodb_exporter?
+  value:
+    name: mongodb_exporter
+    release: prometheus-addons
+    properties: 
+      mongodb: 
+        uri: "mongodb://((clustermonitor_username)):((clustermonitor_password))@127.0.0.1:((mongo_port))/?authSource=admin"
+        tls: false
+        clustermonitor:
+          username: ((clustermonitor_username))
+          password: ((clustermonitor_password))
+        root:
+          username: ((root_username))
+          password: ((root_password))
+      web:
+        port: 9001
+
+
+# add clustermonitor password
+- type: replace
+  path: /variables/name=clustermonitor_password?
+  value:
+    name: clustermonitor_password
+    type: password              
