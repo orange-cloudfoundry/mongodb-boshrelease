@@ -1,4 +1,10 @@
-<%- lnk = link('server') -%>
-<%- if lnk.p("require_ssl") == 1 -%>
-<%= lnk.p("server_certificate.certificate") -%>
+<%- if_link('config-server') do -%>
+<%-    if link('config-server').p("require_ssl") == 1 -%>
+<%=       link('config-server').p("server_certificate.certificate") -%>
+<%-    end -%>
+<%- end -%>
+<%- if_link('server') do -%>
+<%-    if link('server').p("require_ssl") == 1 -%>
+<%=       link('server').p("server_certificate.certificate") -%>
+<%-    end -%>
 <%- end -%>

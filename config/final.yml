@@ -1,6 +1,7 @@
 ---
-final_name: mongodb-services
+final_name: mongo-364
 blobstore:
   provider: s3
   options:
-    bucket_name: orange-mongodb-cf-service-boshrelease
+    bucket_name: mongodb-bucket
+    host: https://minio.dbsp.dw

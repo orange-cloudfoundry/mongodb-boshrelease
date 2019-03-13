@@ -1,25 +1,32 @@
 <%-
-lnk = link('server')
-mongo_port = lnk.p("rs_port")
-if lnk.p("node_role") == "sh"
-  mongo_port = lnk.p("sh_port")
+lnk=""
+lnk2=""
+lnk3=""
+if_link("server") do 
+   lnk = link("server")
+   lnk2 = link("server")
 end
-if lnk.p("node_role") == "cfg"
-  mongo_port = lnk.p("cfg_port")
+if_link("shard-server") do          
+   lnk2 = link("shard-server")
 end
-if lnk.p("node_role") == "mongos"
-  mongo_port = lnk.p("mongos_port")
+if_link("config-server") do          
+   lnk = link("config-server")
 end
+
+mongo_port = lnk2.p("port")
 mongo_hosts = []
 mongo_ports = []
-lnk.instances.each do |instance|
+mongo_name = []
+mongo_index = []
+lnk2.instances.each do |instance|
   mongo_hosts << "#{instance.address}"
   mongo_ports << "#{mongo_port}"
 end
-if lnk.p("node_role") == "sa"
+
+if lnk.p('replication.enable') == 0 
   mongo_replicasetname = ""
 else
-  mongo_replicasetname = lnk.p("replication.replica_set_name")
+  mongo_replicasetname = lnk2.p("replication.replica_set_name")
 end
 if lnk.p('require_ssl') == 1
   ca_cert = "/var/vcap/jobs/mongodb-acceptance-tests/ssl/CA.crt"

@@ -4,7 +4,13 @@ name: mongodb-acceptance-tests
 consumes:
   - name: server
     type: mongod
-
+    optional: true
+  - name: shard-server
+    type: shardsvr
+    optional: true
+  - name: config-server
+    type: cfgsvr
+    optional: true
 packages:
   - golang-1.9-linux
   - mongodb-acceptance-tests
