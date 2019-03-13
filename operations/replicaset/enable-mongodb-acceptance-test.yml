@@ -1,0 +1,18 @@
+# enable mongodb acceptance test
+- type: replace
+  path: /instance_groups/name=mongodb-acceptance-tests-vm?
+  value:
+    name: mongodb-acceptance-tests-vm
+    release: ((release_name))
+    lifecycle: errand
+    azs: [z1]
+    instances: 1
+    jobs:
+      - name: mongodb-acceptance-tests
+        release: ((release_name))
+        properties:
+          mongo_test_suite: [ readwrite, replicaset ]
+    vm_type: ((accept_vm_type))
+    stemcell: ubuntu
+    networks:
+    - name: ((deployments-network))
