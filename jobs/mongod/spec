@@ -15,7 +15,6 @@ provides:
     properties:
     - root_username
     - root_password
-    - node_role
     - port
     - replication.enable
     - replication.replica_set_name
@@ -34,14 +33,6 @@ templates:
   ssl/CA.crt.erb: ssl/CA.crt
 
 properties:
-  node_role:
-      default: rs
-      description: |
-
-        Role for the mongod server in the Mongodb cluster: 'rs' for replica set, 'sa' for stand alone server
-        In the future, 'cfg' (for config server), 'sh' (for shard server) will
-        also be supported.
-
   port:
       default: 27017
       description: Default mongodb port for replicasets AND standalone server

@@ -107,14 +107,14 @@ security:
   <%- if p("require_ssl") == 1 -%>
   clusterAuthMode: x509
   <%- else -%>
-    <%- if p("node_role") != "sa" -%>
+    <%- if p("replication.enable") == 1 -%>
   keyFile: /var/vcap/jobs/mongod/config/keyfile
     <%- end -%>
   <%- end -%>
 <%- end -%>
 operationProfiling:
   slowOpThresholdMs: <%= p("slow_query_threshold_ms") %>
-<%- if p("replication.enable") == 1 && p("node_role") != "sa" -%>
+<%- if p("replication.enable") == 1 -%>
 replication:
   replSetName: <%= p("replication.replica_set_name") %>
   oplogSizeMB: <%= replication_oplog_size_mb %>

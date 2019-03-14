@@ -25,7 +25,7 @@ else
    start_mongod_with_auth
 fi
 
-if [ "$(get_node_role)" == "sa" ]
+if [ ${property_replication_enable} -eq 0  ]
 then
     # In standalone mode
     create_admin_users    # Create the admin and root users

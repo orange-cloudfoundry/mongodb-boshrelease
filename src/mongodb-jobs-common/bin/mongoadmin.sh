@@ -24,7 +24,7 @@ pushd /var/vcap/packages/mongodb/bin >/dev/null
 if [ "${JOB_NAME}" != "mongos" ]
 then
 # for mongos cfgsvr and shardsvr
-	if [ "${property_node_role}" == "sa" ]
+	if [ "${property_replication_enable}" -eq 0 ]
 	then
 	# only in mongod case
 		connect_string="mongodb://${deployment_rs_config}/${DB}"
