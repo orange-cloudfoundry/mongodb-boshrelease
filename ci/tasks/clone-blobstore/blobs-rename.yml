@@ -1,0 +1,22 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/aws-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release-patched
+
+run:
+  path: mongodb-bosh-release-patched/ci/scripts/clone-blobstore/blobs-rename.sh
+
+params:
+  SECRET_ACCESS_KEY: ""
+  SIGNATURE_VERSION: ""
+  ACCESS_KEY_ID: ""
+  BUCKET: ""
+  ENDPOINT_URL: ""  
+

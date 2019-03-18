@@ -18,6 +18,7 @@ run:
   path: mongodb-bosh-release/ci/scripts/get-config-files.sh
 
 params:
+  CURRENT: ""
   ACCESS_KEY_ID: ""
   BUCKET: ""
   ENDPOINT_URL: ""

@@ -1,0 +1,46 @@
+---
+# This pipeline allow to clone the blobstore referenced in the git repository to another one
+# It s not a mandatory for permanent pipeline but is needed by the pre-final release pipelines
+
+resources:
+
+  - name: mongodb-bosh-release
+    type: git
+    source:
+      uri: https://github.com/orange-cloudfoundry/mongodb-boshrelease.git
+      branch: ((repositories.mongodb.branch))
+
+jobs:
+- name: clone-blobstore
+  serial: true
+  plan:
+    - get: mongodb-bosh-release
+
+    - task: create-bosh-config
+      file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
+      params:
+        CA_CERT:  ((bosh-server.ca))
+        IP:       ((bosh-server.ip))
+        ALIAS:    ((bosh-server.alias)) 
+        USER:     ((bosh-server.user))
+        PASSWORD: ((bosh-server.password))
+
+    - task: get-release-blobs
+      file: mongodb-bosh-release/ci/tasks/clone-blobstore/get-release-blobs.yml
+      params:
+        ALIAS:              ((bosh-server.alias))
+        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
+        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
+        BUCKET:             ((blobstores.release.bucket))     
+        SIGNATURE_VERSION:  ((blobstores.release.signature-version))
+        GOLANG_VERSION:     ((deployment.golang-version))
+
+    - task: blobs-rename
+      file: mongodb-bosh-release/ci/tasks/clone-blobstore/blobs-rename.yml
+      params:
+        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
+        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
+        BUCKET:             ((blobstores.release.bucket))
+        SIGNATURE_VERSION:  ((blobstores.release.signature-version))

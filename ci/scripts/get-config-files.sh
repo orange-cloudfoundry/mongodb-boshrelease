@@ -1,6 +1,6 @@
 #!/usr/bin/env sh 
 
-set -e
+set -xe
 
 ROOT_FOLDER=${PWD}
 
@@ -20,9 +20,12 @@ then
 	aws_secret_access_key=$SECRET_ACCESS_KEY
 	EOF
 
-	if [ "${MONGODB_VERSION}" == "" ]
+	if [ "${MONGODB_VERSION}" == "" -a "${CURRENT}" != "true" ]
 	then
-	  MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-version/version`
+	  if [ -d ${ROOT_FOLDER}/mongodb-version ]
+	  then	
+	  	MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-version/version`
+	  fi
 	fi
 
 	aws_opt="--endpoint-url ${ENDPOINT_URL}"
@@ -45,19 +48,22 @@ then
 
 	cd mongodb-bosh-release-patched || exit 666
 
+	SUFFIX=""
+	[ "$MONGODB_VERSION" != "" ] && $SUFFIX="-${MONGODB_VERSION}"
+
 	#retrieve blob list
 	aws ${aws_opt} s3 \
-		cp s3://${BUCKET}/${CONFIG_PATH}/blobs-${MONGODB_VERSION}.yml config/blobs.yml \
+		cp s3://${BUCKET}/${CONFIG_PATH}/blobs${SUFFIX}.yml config/blobs.yml \
 		||echo "no archived blobs.yml, use release default one"
 
 	#retrieve final.yml
 	aws ${aws_opt} s3 \
-		cp s3://${BUCKET}/${CONFIG_PATH}/final-${MONGODB_VERSION}.yml config/final.yml \
+		cp s3://${BUCKET}/${CONFIG_PATH}/final${SUFFIX}.yml config/final.yml \
 		||echo "no archived final.yml, use release default one"
 
 	#retrieve private.yml
 	aws ${aws_opt} s3 \
-		cp s3://${BUCKET}/${CONFIG_PATH}/private-${MONGODB_VERSION}.yml config/private.yml  \
+		cp s3://${BUCKET}/${CONFIG_PATH}/private${SUFFIX}.yml config/private.yml  \
 		||echo "no archived private.yml, use release default one"
 
 	#get the list of availables blobs ids on blobsore

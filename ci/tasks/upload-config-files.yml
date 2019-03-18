@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/aws-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-new-version  
+  - name: to-upload
+  - name: mongodb-bosh-release
+
+run:
+  path: mongodb-bosh-release/ci/scripts/upload-config-files.sh
+
+params:
+  ACCESS_KEY_ID: ""
+  SECRET_ACCESS_KEY: ""
+  ENDPOINT_URL: ""
+  BUCKET: ""
+  SKIP_SSL: ""
+  SSL_CERT: ""
