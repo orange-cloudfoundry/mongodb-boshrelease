@@ -58,12 +58,6 @@ then
 fi   
 
 
-if [ "${ENGINE}" == "rocksdb" ]
-then
-    deployment_ops_files_cmd="${deployment_ops_files_cmd} \
-                    -o ${ROOT_FOLDER}/mongodb-bosh-release/operations/use-rocksdb.yml"
-fi
-
 if [ "${REQUIRE_SSL}" == "true" ]
 then
     deployment_var_init="${deployment_var_init} \

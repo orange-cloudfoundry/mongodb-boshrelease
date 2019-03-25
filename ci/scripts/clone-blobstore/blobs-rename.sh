@@ -24,6 +24,7 @@ do
 		aws --endpoint-url ${ENDPOINT_URL} \
 		--no-verify-ssl s3 mv s3://${BUCKET}/${src} s3://${BUCKET}/${dst} \
 		2>/dev/null
+		sed -i -e "s/${src}/${dst}/" config/blobs.yml
 	fi
 done
 
@@ -33,7 +34,7 @@ done
 # retrievieng config files
 for i in $(ls config)
 do
-	aws --endpoint-url ${ENDPOINT_URL} --no-verify-ssl s3 cp config/$i s3://${BUCKET}/config/$i 2>/dev/null
+	aws --endpoint-url ${ENDPOINT_URL} --no-verify-ssl s3 cp config/$i s3://${BUCKET}/${CONFIG_PATH}/$i 2>/dev/null
 done
 
 
