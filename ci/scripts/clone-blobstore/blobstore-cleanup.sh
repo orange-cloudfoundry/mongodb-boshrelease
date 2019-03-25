@@ -66,6 +66,6 @@ do
 #	then
 #		echo "Blob $i is not in use anywhere and will be remove"
 		aws ${aws_opt} s3 rm s3://${BUCKET}/$i
-		aws ${aws_opt} s3 rm s3://${BUCKET}/ci
+		aws ${aws_opt} s3 rm s3://${BUCKET}/config --recursive
 #	fi	
 done

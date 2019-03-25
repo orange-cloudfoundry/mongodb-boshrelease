@@ -37,8 +37,8 @@ fi
 
 cd to-upload || exit 666
 #upload blob list
-aws ${aws_opt} s3 cp config/blobs.yml s3://${BUCKET}/ci/blobs-${version}.yml
+aws ${aws_opt} s3 cp config/blobs.yml s3://${BUCKET}/${CONFIG_PATH}/blobs-${version}.yml
 #upload final.yml
-aws ${aws_opt} s3 cp config/final.yml s3://${BUCKET}/ci/final-${version}.yml
+aws ${aws_opt} s3 cp config/final.yml s3://${BUCKET}/${CONFIG_PATH}/final-${version}.yml
 #upload private.yml
-aws ${aws_opt} s3 cp config/private.yml s3://${BUCKET}/ci/private-${version}.yml
+aws ${aws_opt} s3 cp config/private.yml s3://${BUCKET}/${CONFIG_PATH}/private-${version}.yml

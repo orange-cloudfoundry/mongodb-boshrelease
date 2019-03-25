@@ -22,3 +22,4 @@ params:
   BUCKET: ""
   SKIP_SSL: ""
   SSL_CERT: ""
+  CONFIG_PATH: ""

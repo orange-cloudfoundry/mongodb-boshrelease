@@ -136,8 +136,6 @@ jobs:
         SIGNATURE_VERSION:        ((blobstores.release.signature-version))
         SKIP_SSL:                 ((blobstores.release.skip-ssl-validation))
         SSL_CERT:                 ((blobstores.release.certificate))
-        COMPIL_SKIP_SSL:          ((blobstores.release.skip-ssl-validation))
-        COMPIL_SSL_CERT:          ((blobstores.release.certificate))
 
     - &upload-config-files
       task: upload-config-files
@@ -149,5 +147,5 @@ jobs:
         BUCKET:             ((blobstores.release.bucket))
         SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
         SSL_CERT:           ((blobstores.release.certificate))
-
+        CONFIG_PATH:        ((blobstores.release.config_path))
         

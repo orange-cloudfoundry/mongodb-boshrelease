@@ -18,3 +18,12 @@ run:
   path: mongodb-bosh-release-patched/ci/scripts/upload-new-blobs.sh
 
 params:
+  ENDPOINT_URL: ""
+  SIGNATURE_VERSION: ""
+  BUCKET: ""
+  SECRET_ACCESS_KEY: ""
+  COMPIL_SSL_CERT: ""
+  SKIP_SSL: ""
+  SSL_CERT: ""
+  ACCESS_KEY_ID: ""
+  COMPIL_SKIP_SSL: ""
