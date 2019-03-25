@@ -35,6 +35,17 @@ resources:
     source:
       branch: "3.6"
 
+  - &deployment-lock
+    name: deployment-lock
+    type: pool
+    source:
+      uri: ((repositories.locks-pool.uri))
+      branch: ((repositories.locks-pool.branch))
+      pool: concourse-deployment-lock
+      username: ((repositories.locks-pool.username))
+      password: ((repositories.locks-pool.password))
+  
+
 jobs:
 
 # clone current "main" blobstore to dev one
@@ -54,7 +65,7 @@ jobs:
         IP:       ((bosh-server.ip))
         ALIAS:    ((bosh-server.alias)) 
         USER:     ((bosh-server.user))
-        PASSWORD: ((bosh-server.password))      
+        PASSWORD: ((bosh-server.password))
 
     - task: blobstore-cleanup
       file: mongodb-bosh-release/ci/tasks/clone-blobstore/blobstore-cleanup.yml
@@ -158,11 +169,11 @@ jobs:
 
     - &deployment-lock
       put: deployment-lock
-      params: {claim: deploy}
+      params: {claim: deployment-lock}
 
     - &get-config-files
       task: get-config-files
-      file: mongodb-compilation-bosh-release/ci/common/tasks/get-config-files-mainrelease.yml
+      file: mongodb-bosh-release/ci/tasks/get-config-files.yml
       params:
         ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
         SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
@@ -173,10 +184,16 @@ jobs:
         SSL_CERT:           ((blobstores.release.certificate))
         GOLANG_VERSION:     ((deployment.golang-version))
         CURRENT:            true
+      on_failure: &deployment-unlock
+        put: deployment-lock
+        params: {release: deployment-lock}
+      on_abort:
+        *deployment-unlock    
+          
         
-    - &deploy
-      task: deploy-rs
-      file: mongodb-compilation-bosh-release/ci/deployment/deploy/tasks/deploy-rs.yml
+    - &deploy-replicaset
+      task: deploy-replicaset
+      file: mongodb-bosh-release/ci/tasks/deployment/deployment.yml
       attempts: 3
       params: &deploy-params
         CA_CERT:              ((bosh-server.ca))
@@ -184,22 +201,24 @@ jobs:
         ALIAS:                ((bosh-server.alias))
         USER:                 ((bosh-server.user))
         PASSWORD:             ((bosh-server.password))
-        RELEASE_NAME:         ((deployment.tests.name))
-        DEPLOYMENT_NAME:      ((deployment.tests.name))
-        DEPLOYMENT_NETWORK:   ((deployment.tests.network))
-        SHIELD_URL:           ((deployment.tests.shield.core))
-        SHIELD_TOKEN:         ((deployment.tests.shield.token))
-        SHIELD_TENANT:        ((deployment.tests.shield.tenant))
-        SHIELD_STORAGE:       ((deployment.tests.shield.storage))
-        MONGO_PORT:           ((deployment.tests.mongod.port))
-        PERSISTENT_DISK_TYPE: ((deployment.tests.mongod.persistent-disk-type))
-        VM_TYPE:              ((deployment.tests.mongod.vm-type))
-        ROOT_USERNAME:        ((deployment.tests.mongod.root-username))
-        STEMCELL:             ((deployment.current-version.stemcell.version))
-        STEMCELL_OS:          ((deployment.current-version.stemcell.os))
-        STEMCELL_ALIAS:       ((deployment.current-version.stemcell.type))
-        STEMCELL_TYPE:        ""
+        RELEASE_NAME:         ((deployment.name))
+        DEPLOYMENT_NAME:      ((deployment.name))
+        DEPLOYMENT_NETWORK:   ((deployment.network))
+        SHIELD_URL:           ((deployment.shield.core))
+        SHIELD_TOKEN:         ((deployment.shield.token))
+        SHIELD_TENANT:        ((deployment.shield.tenant))
+        SHIELD_STORAGE:       ((deployment.shield.storage))
+        MONGO_PORT:           ((deployment.mongodb.port))
+        PERSISTENT_DISK_TYPE: ((deployment.mongodb.persistent-disk-type))
+        VM_TYPE:              ((deployment.mongodb.vm-type))
+        ROOT_USERNAME:        ((deployment.mongodb.root-username))
         ENGINE:               "wiredtiger"
         # for ssl deployment
-        REQUIRE_SSL:          ((deployment.tests.mongod.require_ssl))
-        CA_NAME:              ((deployment.tests.mongod.ca_name))
+        REQUIRE_SSL:          ((deployment.mongodb.require_ssl))
+        CA_NAME:              ((deployment.mongodb.ca_name))
+      on_failure:
+        *deployment-unlock
+      on_abort:
+        *deployment-unlock            
+
+    - <<: *deployment-unlock   
