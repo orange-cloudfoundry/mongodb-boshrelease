@@ -38,7 +38,7 @@ rm -f config/*.yml
 # generating new final.yml
 cat > config/final.yml <<-EOF
 	---
-	final_name: bidon
+	final_name: dummy
 	blobstore:
 	  provider: s3
 	  options:
