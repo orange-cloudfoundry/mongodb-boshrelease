@@ -46,6 +46,16 @@ jobs:
     - get: mongodb-new-version
       trigger: true    
 
+    - &create-bosh-config
+      task: create-bosh-config
+      file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
+      params:
+        CA_CERT:  ((bosh-server.ca))
+        IP:       ((bosh-server.ip))
+        ALIAS:    ((bosh-server.alias)) 
+        USER:     ((bosh-server.user))
+        PASSWORD: ((bosh-server.password))      
+
     - task: blobstore-cleanup
       file: mongodb-bosh-release/ci/tasks/clone-blobstore/blobstore-cleanup.yml
       params:
@@ -56,15 +66,6 @@ jobs:
         SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
         SSL_CERT:           ((blobstores.release.certificate))
 
-
-    - task: create-bosh-config
-      file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
-      params:
-        CA_CERT:  ((bosh-server.ca))
-        IP:       ((bosh-server.ip))
-        ALIAS:    ((bosh-server.alias)) 
-        USER:     ((bosh-server.user))
-        PASSWORD: ((bosh-server.password))
 
     - task: get-release-blobs
       file: mongodb-bosh-release/ci/tasks/clone-blobstore/get-release-blobs.yml
@@ -87,6 +88,7 @@ jobs:
         SIGNATURE_VERSION:  ((blobstores.release.signature-version))  
 
 - name: prepare-blobstore
+  serial: true
   plan:
 
     - get: mongodb-bosh-release
@@ -99,17 +101,8 @@ jobs:
 
       - get: mongodb-version
 
-      - &create-bosh-config
-        do:
-          - task: create-bosh-config
-            file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
-            params:
-              CA_CERT:  ((bosh-server.ca))
-              IP:       ((bosh-server.ip))
-              ALIAS:    ((bosh-server.alias)) 
-              USER:     ((bosh-server.user))
-              PASSWORD: ((bosh-server.password))
-
+      - *create-bosh-config
+        
     - &get-config-files
       task: get-config-files
       file: mongodb-bosh-release/ci/tasks/get-config-files.yml
@@ -127,7 +120,7 @@ jobs:
 
     - &upload-new-blobs
       task: upload-new-blobs
-      file: mongodb-bosh-release/ci/tasks/upload-new-blobs.yml
+      file: mongodb-bosh-release/ci/tasks/prepare-blobstore/upload-new-blobs.yml
       params:
         ACCESS_KEY_ID:            ((blobstores.release.access_key_id))
         SECRET_ACCESS_KEY:        ((blobstores.release.secret_access_key))
@@ -139,7 +132,7 @@ jobs:
 
     - &upload-config-files
       task: upload-config-files
-      file: mongodb-bosh-release/ci/tasks/upload-config-files.yml
+      file: mongodb-bosh-release/ci/tasks/prepare-blobstore/upload-config-files.yml
       params: &upload-config-files-params
         ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
         SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
@@ -148,4 +141,65 @@ jobs:
         SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
         SSL_CERT:           ((blobstores.release.certificate))
         CONFIG_PATH:        ((blobstores.release.config_path))
+
+- &deploy-current-version
+  name: deploy-current-version
+  serial: true
+  plan:
+    - &init-current-version
+      do:
+        - get: mongodb-bosh-release
+
+        - aggregate: 
+          - get: mongodb-version
+            trigger: true
+
+          - *create-bosh-config
+
+    - &deployment-lock
+      put: deployment-lock
+      params: {claim: deploy}
+
+    - &get-config-files
+      task: get-config-files
+      file: mongodb-compilation-bosh-release/ci/common/tasks/get-config-files-mainrelease.yml
+      params:
+        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
+        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
+        BUCKET:             ((blobstores.release.bucket))
+        SIGNATURE_VERSION:  ((blobstores.release.signature-version))
+        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
+        SSL_CERT:           ((blobstores.release.certificate))
+        GOLANG_VERSION:     ((deployment.golang-version))
+        CURRENT:            true
         
+    - &deploy
+      task: deploy-rs
+      file: mongodb-compilation-bosh-release/ci/deployment/deploy/tasks/deploy-rs.yml
+      attempts: 3
+      params: &deploy-params
+        CA_CERT:              ((bosh-server.ca))
+        IP:                   ((bosh-server.ip))
+        ALIAS:                ((bosh-server.alias))
+        USER:                 ((bosh-server.user))
+        PASSWORD:             ((bosh-server.password))
+        RELEASE_NAME:         ((deployment.tests.name))
+        DEPLOYMENT_NAME:      ((deployment.tests.name))
+        DEPLOYMENT_NETWORK:   ((deployment.tests.network))
+        SHIELD_URL:           ((deployment.tests.shield.core))
+        SHIELD_TOKEN:         ((deployment.tests.shield.token))
+        SHIELD_TENANT:        ((deployment.tests.shield.tenant))
+        SHIELD_STORAGE:       ((deployment.tests.shield.storage))
+        MONGO_PORT:           ((deployment.tests.mongod.port))
+        PERSISTENT_DISK_TYPE: ((deployment.tests.mongod.persistent-disk-type))
+        VM_TYPE:              ((deployment.tests.mongod.vm-type))
+        ROOT_USERNAME:        ((deployment.tests.mongod.root-username))
+        STEMCELL:             ((deployment.current-version.stemcell.version))
+        STEMCELL_OS:          ((deployment.current-version.stemcell.os))
+        STEMCELL_ALIAS:       ((deployment.current-version.stemcell.type))
+        STEMCELL_TYPE:        ""
+        ENGINE:               "wiredtiger"
+        # for ssl deployment
+        REQUIRE_SSL:          ((deployment.tests.mongod.require_ssl))
+        CA_NAME:              ((deployment.tests.mongod.ca_name))
