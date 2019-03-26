@@ -1,6 +1,6 @@
 #!/usr/bin/env sh 
 
-set -e
+set -ex
 
 ROOT_FOLDER=${PWD}
 
@@ -34,12 +34,8 @@ done
 # retrievieng config files
 for i in $(ls config)
 do
-	aws --endpoint-url ${ENDPOINT_URL} --no-verify-ssl s3 cp config/$i s3://${BUCKET}/${CONFIG_PATH}/$i 2>/dev/null
+	aws --endpoint-url ${ENDPOINT_URL} --no-verify-ssl s3 cp config/$i s3://${BUCKET}/${CONFIG_PATH}/$i 2>/dev/null \
+
 done
 
-
-#retrieve final.yml
-#aws --endpoint-url ${ENDPOINT_URL} --no-verify-ssl s3 cp config/final.yml s3://${BUCKET}/config/final.yml 2>/dev/null \
-
-#retrieve private.yml
-#aws --endpoint-url ${ENDPOINT_URL} --no-verify-ssl s3 cp config/private.yml s3://${BUCKET}/config/private.yml 2>/dev/null \
+exit 0
