@@ -29,3 +29,5 @@ deployment-vars*.yml
 ci/settings*.yml
 manifest-fpc.yml
 manifest-shard-*
+.final-builds/
+releases/

@@ -12,8 +12,10 @@
         release: ((release_name))
         consumes:
           shard-server: {from: sh-svr0}
+          config-server: {from: deployment-server}
+          mongos-server: {from: }
         properties:
-          mongo_test_suite: [ readwrite, replicaset ]
+          mongo_test_suite: [ readwrite, replicaset, sharding ]
     vm_type: ((accept_vm_type))
     stemcell: ubuntu
     networks:
