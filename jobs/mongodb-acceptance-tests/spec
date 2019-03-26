@@ -11,6 +11,9 @@ consumes:
   - name: config-server
     type: cfgsvr
     optional: true
+  - name: mongos
+    type: mongos
+    optional: true 
 packages:
   - golang-1.9-linux
   - mongodb-acceptance-tests
