@@ -248,6 +248,8 @@ jobs:
       passed: [ create-releases ]
       trigger: true
 
+    - get: deployment-lock   
+
     - aggregate: 
       - get: mongodb-version
 
