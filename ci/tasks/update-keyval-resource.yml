@@ -11,7 +11,7 @@ inputs:
   - name: mongodb-bosh-release
 
 run:
-  path: mongodb-bosh-release/ci/scripts/udate-keyval-resource.sh
+  path: mongodb-bosh-release/ci/scripts/update-keyval-resource.sh
 
 params:
   KEY  : ""
