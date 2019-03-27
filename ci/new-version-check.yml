@@ -193,43 +193,51 @@ jobs:
       put: deployment-lock
       params: {claim: deployment-lock}
 
-    - &task-get-config-files
-      task: "get-config-files -> current-main-version"
-      file: mongodb-bosh-release/ci/tasks/get-config-files.yml
-      params: &task-get-config-files-params
-        ACCESS_KEY_ID:      ((blobstore.access_key_id))
-        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
-        ENDPOINT_URL:       ((blobstore.endpoint-url))
-        BUCKET:             ((blobstore.bucket))
-        SIGNATURE_VERSION:  ((blobstore.signature-version))
-        SKIP_SSL:           ((blobstore.skip-ssl-validation))
-        SSL_CERT:           ((blobstore.certificate))
-        CONFIG_PATH:        ((blobstore.config_path))          
-        GOLANG_VERSION:     ((deployment.golang-version))
-        CURRENT:            true
+    - do:  
 
-    - &task-create-release
-      task: "create-release -> current-main-version"
-      file: mongodb-bosh-release/ci/tasks/deployment/create-release.yml
-      params: &task-create-release-params
-        ALIAS:            ((bosh-server.alias))
-        UUID:             ((bosh-server.uuid))
-        BOSH_RELEASE:     ((deployment.name))
-        DEPLOYMENT_NAME:  ((deployment.name))
-        NETWORK:          ((deployment.network))
-        CURRENT:          true
+      - &task-get-config-files
+        task: "get-config-files -> current-main-version"
+        file: mongodb-bosh-release/ci/tasks/get-config-files.yml
+        params: &task-get-config-files-params
+          ACCESS_KEY_ID:      ((blobstore.access_key_id))
+          SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+          ENDPOINT_URL:       ((blobstore.endpoint-url))
+          BUCKET:             ((blobstore.bucket))
+          SIGNATURE_VERSION:  ((blobstore.signature-version))
+          SKIP_SSL:           ((blobstore.skip-ssl-validation))
+          SSL_CERT:           ((blobstore.certificate))
+          CONFIG_PATH:        ((blobstore.config_path))          
+          GOLANG_VERSION:     ((deployment.golang-version))
+          CURRENT:            true
 
-    - <<: *task-get-config-files
-      task: "get-config-files -> new-mongodb-version"  
-      params:
-        <<: *task-get-config-files-params
-        CURRENT:          false  
+      - &task-create-release
+        task: "create-release -> current-main-version"
+        file: mongodb-bosh-release/ci/tasks/deployment/create-release.yml
+        params: &task-create-release-params
+          ALIAS:            ((bosh-server.alias))
+          UUID:             ((bosh-server.uuid))
+          BOSH_RELEASE:     ((deployment.name))
+          DEPLOYMENT_NAME:  ((deployment.name))
+          NETWORK:          ((deployment.network))
+          CURRENT:          true
 
-    - <<: *task-create-release
-      task: "create-release -> new-mongodb-version"
-      params:
-        <<: *task-create-release-params
-        CURRENT:          false
+      - <<: *task-get-config-files
+        task: "get-config-files -> new-mongodb-version"  
+        params:
+          <<: *task-get-config-files-params
+          CURRENT:          false  
+
+      - <<: *task-create-release
+        task: "create-release -> new-mongodb-version"
+        params:
+          <<: *task-create-release-params
+          CURRENT:          false
+
+      on_failure: &deployment-unlock
+        put: deployment-lock
+        params: {release: deployment-lock}
+      on_abort:
+        *deployment-unlock         
 
 - &deploy-current-version
   name: deploy-current-version
@@ -264,7 +272,7 @@ jobs:
           CURRENT:            true
           
       - &deploy-replicaset
-        task: "deploy-replicaset current-main-version"
+        task: "deploy-replicaset -> current-main-version"
         file: mongodb-bosh-release/ci/tasks/deployment/deployment.yml
         attempts: 3
         params: &deploy-parameters
@@ -273,6 +281,7 @@ jobs:
                                 enable-mongodb-broker.yml 
                                 enable-mongodb-broker-route-registrar.yml 
                                 enable-mongodb-broker-smoke-tests.yml
+                                enable-shield.yml
           ALIAS:                ((bosh-server.alias))
           RELEASE_NAME:         ((deployment.name))
           DEPLOYMENT_NAME:      ((deployment.name))
@@ -300,6 +309,7 @@ jobs:
           SHIELD_TOKEN:         ((deployment.shield.token))
           SHIELD_TENANT:        ((deployment.shield.tenant))
           SHIELD_STORAGE:       ((deployment.shield.storage))
+          CURRENT:              true #use current "in production" mongodb version
 
       on_failure: &deployment-unlock
         put: deployment-lock

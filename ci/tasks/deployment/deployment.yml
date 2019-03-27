@@ -10,6 +10,8 @@ image_resource:
 inputs:
   - name: mongodb-bosh-release
   - name: bosh-director-config
+  - name: mongodb-version
+  - name: mongodb-new-version
 
 run:
   path: mongodb-bosh-release/ci/scripts/deployment/deployment.sh
@@ -36,3 +38,7 @@ params:
   CF_SPACE: ""
   BROKER_VM_TYPE: ""
   DEPLOYMENT_NAME: ""
+  SHIELD_TENANT: ""
+  SHIELD_URL: ""
+  SHIELD_TOKEN: ""
+  SHIELD_STORAGE: ""

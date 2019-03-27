@@ -2,6 +2,8 @@
 
 set -e
 
+apt-get install -qqy jq
+
 export ROOT_FOLDER=${PWD}
 
 export BOSH_CONFIG=$PWD/bosh-director-config/bosh_config.yml
@@ -56,6 +58,19 @@ then
                         -v cf.space=${CF_SPACE} \
                         -v cf.mongodb.appdomain=${CF_SYSTEM_DOMAIN}"
 fi   
+
+
+deployment_ops_files_cmd="${deployment_ops_files_cmd} \
+-o ${ROOT_FOLDER}/mongodb-bosh-release/operations/use-specific-mongodb-release.yml"
+
+if [ "${CURRENT}" == "true" ]
+then
+   MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-version/version`
+else
+   MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-new-version/metadata|jq -r '.version.ref'`
+fi
+deployment_var_init="${deployment_var_init} \
+                     -v mongodb-release-version=${MONGODB_VERSION}"
 
 
 if [ "${REQUIRE_SSL}" == "true" ]
