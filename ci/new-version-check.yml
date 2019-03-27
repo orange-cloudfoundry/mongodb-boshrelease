@@ -74,33 +74,34 @@ jobs:
     - task: blobstore-cleanup
       file: mongodb-bosh-release/ci/tasks/clone-blobstore/blobstore-cleanup.yml
       params:
-        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
-        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
-        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
-        BUCKET:             ((blobstores.release.bucket))
-        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
-        SSL_CERT:           ((blobstores.release.certificate))
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))
+        SKIP_SSL:           ((blobstore.skip-ssl-validation))
+        SSL_CERT:           ((blobstore.certificate))
 
 
     - task: get-release-blobs
       file: mongodb-bosh-release/ci/tasks/clone-blobstore/get-release-blobs.yml
       params:
         ALIAS:              ((bosh-server.alias))
-        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
-        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
-        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
-        BUCKET:             ((blobstores.release.bucket))     
-        SIGNATURE_VERSION:  ((blobstores.release.signature-version))
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))     
+        SIGNATURE_VERSION:  ((blobstore.signature-version))
         GOLANG_VERSION:     ((deployment.golang-version))
 
     - task: blobs-rename
       file: mongodb-bosh-release/ci/tasks/clone-blobstore/blobs-rename.yml
       params:
-        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
-        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
-        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
-        BUCKET:             ((blobstores.release.bucket))
-        SIGNATURE_VERSION:  ((blobstores.release.signature-version))  
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))
+        SIGNATURE_VERSION:  ((blobstore.signature-version))
+        CONFIG_PATH:        ((blobstore.config_path))         
 
 - name: prepare-blobstore
   serial: true
@@ -123,39 +124,39 @@ jobs:
       file: mongodb-bosh-release/ci/tasks/get-config-files.yml
       params: &get-config-files-params
         CURRENT: true # fetch current main release config
-        CONFIG_PATH:        ((blobstores.release.config_path))
-        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
-        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
-        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
-        BUCKET:             ((blobstores.release.bucket))
-        SIGNATURE_VERSION:  ((blobstores.release.signature-version))
-        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
-        SSL_CERT:           ((blobstores.release.certificate))
+        CONFIG_PATH:        ((blobstore.config_path))
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))
+        SIGNATURE_VERSION:  ((blobstore.signature-version))
+        SKIP_SSL:           ((blobstore.skip-ssl-validation))
+        SSL_CERT:           ((blobstore.certificate))
         GOLANG_VERSION:     ((deployment.golang-version))
 
     - &upload-new-blobs
       task: upload-new-blobs
       file: mongodb-bosh-release/ci/tasks/prepare-blobstore/upload-new-blobs.yml
       params:
-        ACCESS_KEY_ID:            ((blobstores.release.access_key_id))
-        SECRET_ACCESS_KEY:        ((blobstores.release.secret_access_key))
-        ENDPOINT_URL:             ((blobstores.release.endpoint-url))
-        BUCKET:                   ((blobstores.release.bucket))
-        SIGNATURE_VERSION:        ((blobstores.release.signature-version))
-        SKIP_SSL:                 ((blobstores.release.skip-ssl-validation))
-        SSL_CERT:                 ((blobstores.release.certificate))
+        ACCESS_KEY_ID:            ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:        ((blobstore.secret_access_key))
+        ENDPOINT_URL:             ((blobstore.endpoint-url))
+        BUCKET:                   ((blobstore.bucket))
+        SIGNATURE_VERSION:        ((blobstore.signature-version))
+        SKIP_SSL:                 ((blobstore.skip-ssl-validation))
+        SSL_CERT:                 ((blobstore.certificate))
 
     - &upload-config-files
       task: upload-config-files
       file: mongodb-bosh-release/ci/tasks/prepare-blobstore/upload-config-files.yml
       params: &upload-config-files-params
-        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))ll
-        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
-        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
-        BUCKET:             ((blobstores.release.bucket))
-        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
-        SSL_CERT:           ((blobstores.release.certificate))
-        CONFIG_PATH:        ((blobstores.release.config_path))
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))ll
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))
+        SKIP_SSL:           ((blobstore.skip-ssl-validation))
+        SSL_CERT:           ((blobstore.certificate))
+        CONFIG_PATH:        ((blobstore.config_path))
 
     - &update-keyval-resource
       do:
@@ -196,14 +197,14 @@ jobs:
       task: get-config-files
       file: mongodb-bosh-release/ci/tasks/get-config-files.yml
       params:
-        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
-        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
-        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
-        BUCKET:             ((blobstores.release.bucket))
-        SIGNATURE_VERSION:  ((blobstores.release.signature-version))
-        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
-        SSL_CERT:           ((blobstores.release.certificate))
-        CONFIG_PATH:        ((blobstores.release.config_path))          
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))
+        SIGNATURE_VERSION:  ((blobstore.signature-version))
+        SKIP_SSL:           ((blobstore.skip-ssl-validation))
+        SSL_CERT:           ((blobstore.certificate))
+        CONFIG_PATH:        ((blobstore.config_path))          
         GOLANG_VERSION:     ((deployment.golang-version))
         CURRENT:            true
 
@@ -245,14 +246,14 @@ jobs:
         task: get-config-files 
         file: mongodb-bosh-release/ci/tasks/get-config-files.yml
         params:
-          ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
-          SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
-          ENDPOINT_URL:       ((blobstores.release.endpoint-url))
-          BUCKET:             ((blobstores.release.bucket))
-          SIGNATURE_VERSION:  ((blobstores.release.signature-version))
-          SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
-          SSL_CERT:           ((blobstores.release.certificate))
-          CONFIG_PATH:        ((blobstores.release.config_path))          
+          ACCESS_KEY_ID:      ((blobstore.access_key_id))
+          SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+          ENDPOINT_URL:       ((blobstore.endpoint-url))
+          BUCKET:             ((blobstore.bucket))
+          SIGNATURE_VERSION:  ((blobstore.signature-version))
+          SKIP_SSL:           ((blobstore.skip-ssl-validation))
+          SSL_CERT:           ((blobstore.certificate))
+          CONFIG_PATH:        ((blobstore.config_path))          
           GOLANG_VERSION:     ((deployment.golang-version))
           CURRENT:            true
           
