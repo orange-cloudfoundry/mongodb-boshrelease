@@ -194,9 +194,9 @@ jobs:
       params: {claim: deployment-lock}
 
     - &task-get-config-files
-      task: get-config-files
+      task: "get-config-files -> current-main-version"
       file: mongodb-bosh-release/ci/tasks/get-config-files.yml
-      params:
+      params: &task-get-config-files-params
         ACCESS_KEY_ID:      ((blobstore.access_key_id))
         SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
         ENDPOINT_URL:       ((blobstore.endpoint-url))
@@ -209,7 +209,7 @@ jobs:
         CURRENT:            true
 
     - &task-create-release
-      task: "create-release current-main-version"
+      task: "create-release -> current-main-version"
       file: mongodb-bosh-release/ci/tasks/deployment/create-release.yml
       params: &task-create-release-params
         ALIAS:            ((bosh-server.alias))
@@ -219,8 +219,14 @@ jobs:
         NETWORK:          ((deployment.network))
         CURRENT:          true
 
+    - <<: *task-get-config-files
+      task: "get-config-files -> new-mongodb-version"  
+      params:
+        <<: *task-get-config-files-params
+        CURRENT:          false  
+
     - <<: *task-create-release
-      task: "create-release new-mongodb-version"
+      task: "create-release -> new-mongodb-version"
       params:
         <<: *task-create-release-params
         CURRENT:          false
