@@ -10,6 +10,9 @@ image_resource:
 inputs:
   - name: mongodb-bosh-release
 
+outputs:
+  - name: keyvalout  
+
 run:
   path: mongodb-bosh-release/ci/scripts/update-keyval-resource.sh
 
