@@ -19,4 +19,4 @@ params:
   ACCESS_KEY_ID: ""
   BUCKET: ""
   ENDPOINT_URL: ""  
-
+  CONFIG_PATH: ""

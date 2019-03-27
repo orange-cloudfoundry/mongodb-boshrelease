@@ -1,6 +1,6 @@
 #!/usr/bin/env sh 
 
-set -ex
+set -e
 
 ROOT_FOLDER=${PWD}
 
