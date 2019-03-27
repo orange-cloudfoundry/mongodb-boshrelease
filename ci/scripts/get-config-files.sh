@@ -1,6 +1,6 @@
 #!/usr/bin/env sh 
 
-set -xe
+set -e
 
 ROOT_FOLDER=${PWD}
 
@@ -19,14 +19,6 @@ then
 	aws_access_key_id=$ACCESS_KEY_ID
 	aws_secret_access_key=$SECRET_ACCESS_KEY
 	EOF
-
-	if [ "${MONGODB_VERSION}" == "" -a "${CURRENT}" != "true" ]
-	then
-	  if [ -d ${ROOT_FOLDER}/mongodb-version ]
-	  then	
-	  	MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-version/version`
-	  fi
-	fi
 
 	aws_opt="--endpoint-url ${ENDPOINT_URL}"
 
@@ -49,7 +41,11 @@ then
 	cd mongodb-bosh-release-patched || exit 666
 
 	SUFFIX=""
-	[ "$MONGODB_VERSION" != "" ] && $SUFFIX="-${MONGODB_VERSION}"
+	if [ "$CURRENT" != "true" ]
+	then 
+		MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-new-version/metadata|jq -r '.version.ref'`
+		SUFFIX="-${MONGODB_VERSION}"
+	fi
 
 	#retrieve blob list
 	aws ${aws_opt} s3 \
