@@ -283,7 +283,7 @@ jobs:
                                 enable-mongodb-broker.yml 
                                 enable-mongodb-broker-route-registrar.yml 
                                 enable-mongodb-broker-smoke-tests.yml
-                                enable-shield.yml
+          #                      enable-shield.yml
           ALIAS:                ((bosh-server.alias))
           RELEASE_NAME:         ((deployment.name))
           DEPLOYMENT_NAME:      ((deployment.name))
@@ -313,10 +313,10 @@ jobs:
           SHIELD_STORAGE:       ((deployment.shield.storage))
           CURRENT:              true #use current "in production" mongodb version
 
-      on_failure: &deployment-unlock
-        put: deployment-lock
-        params: {release: deployment-lock}
-      on_abort:
-        *deployment-unlock           
+#      on_failure: &deployment-unlock
+#        put: deployment-lock
+#        params: {release: deployment-lock}
+#      on_abort:
+#        *deployment-unlock           
 
     - <<: *deployment-unlock   
