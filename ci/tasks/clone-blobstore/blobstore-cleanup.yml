@@ -12,3 +12,12 @@ inputs:
 run:
   path: mongodb-bosh-release/ci/scripts/clone-blobstore/blobstore-cleanup.sh
 
+params:
+  SKIP_SSL: ""
+  SSL_CERT: ""
+  ACCESS_KEY_ID: ""
+  BUCKET: ""
+  ENDPOINT_URL: ""
+  SECRET_ACCESS_KEY: ""
+
+
