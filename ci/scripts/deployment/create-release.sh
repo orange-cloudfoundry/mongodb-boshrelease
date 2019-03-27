@@ -31,6 +31,7 @@ do
 		bosh -e ${ALIAS} -n delete-release ${rel}/${ver}
 	fi
 done
+
  
 bosh -e ${ALIAS} create-release --force --version ${MONGODB_VERSION}
 

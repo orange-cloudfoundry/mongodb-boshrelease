@@ -85,4 +85,11 @@ then
 			[ -d ${d} ] && rm -rf ${d}
 		done
 	fi
+
+	# removing builds references but golang ones
+	mkdir .tmp
+	find .final_builds -type d  -name '*golang*' -print |xargs -i sh -c 'dest=$(dirname $1) && mkdir -p .tmp/$dest && mv $1 .tmp/$dest' {} {} 
+	rm -rf releases .final_builds .dev_builds
+	mv .tmp/.final_builds .
+	rm -rf .tmp
 fi
