@@ -150,7 +150,7 @@ jobs:
       task: upload-config-files
       file: mongodb-bosh-release/ci/tasks/prepare-blobstore/upload-config-files.yml
       params: &upload-config-files-params
-        ACCESS_KEY_ID:      ((blobstore.access_key_id))ll
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
         SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
         ENDPOINT_URL:       ((blobstore.endpoint-url))
         BUCKET:             ((blobstore.bucket))
