@@ -272,11 +272,18 @@ jobs:
           CONFIG_PATH:        ((blobstore.config_path))          
           GOLANG_VERSION:     ((deployment.golang-version))
           CURRENT:            true
-          
+
+      - &remove-deployment
+        task: "delete-deployment"
+        file: mongodb-bosh-release/ci/tasks/deployment/remove-deployment.yml            
+        params :
+          ALIAS:              ((bosh-server.alias))
+          DEPLOYMENT_NAME:    ((deployment.name))
+
       - &deploy-replicaset
         task: "deploy-replicaset -> current-main-version"
         file: mongodb-bosh-release/ci/tasks/deployment/deployment.yml
-        attempts: 3
+        attempts: 1
         params: &deploy-parameters
           MANIFEST:             manifest-rs.yml
           OPSFILES:             |
