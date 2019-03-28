@@ -161,7 +161,7 @@ create_admin_users()
       if [ "${created}" != "" -a "${created}" != "null" ]
       then
         created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}/admin \
-          --eval 'db.getUser("'${property_admin_username'")' ||echo 1`        
+          --eval 'db.getUser("'${property_admin_username}'")' ||echo 1`        
       fi      
     done
     # Create admin users if not already created
