@@ -161,8 +161,12 @@ create_admin_users()
       if [ "${created}" != "" -a "${created}" != "null" ]
       then
         created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}/admin \
-          --eval 'db.getUser("'${property_admin_username}'")' ||echo 1`        
-      fi      
+          --eval 'db.getUser("'${property_admin_username}'")' ||echo 1` 
+        if [ $(echo "${created}"|grep "Error: not master and slaveOk=false"|wc -l) -gt 0 ]
+        then 
+           created=""
+        fi
+      fi 
     done
     # Create admin users if not already created
     if [ "${created}" == "null" ]

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -eux
 
 export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
 source ${JOBS_COMMON_DIR}/bin/setenv mongod
