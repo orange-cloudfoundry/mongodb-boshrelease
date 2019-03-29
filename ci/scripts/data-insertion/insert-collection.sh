@@ -13,7 +13,8 @@ cat ${ROOT_FOLDER}/deployment-specs/keyval.properties \
 source ${ROOT_FOLDER}/deployment-specs/sourced.properties 
 
 CI_IP=`echo ${ips} \
-	| sed -e "s/,/:${PORT},/g" -e "s/$/:${PORT}/"`
+	 | sed -e "s/,/:${PORT},/g" -e "s/$/:${PORT}/"`
+
 
 # testing if we are using ssl
 mongo_cmd="mongo \"mongodb://${CI_IP}/?replicaSet=rs0\" -u ${USER} -p \"${password}\" --authenticationDatabase admin"
@@ -31,15 +32,20 @@ then
 	mongo_cmd="${mongo_cmd} --ssl --sslCAFile /tmp/CA.crt"
 fi
 
-# get mongodb server version
-mongo_cmd="${mongo_cmd} --eval \"db.version()\""
+# remove collection before insertion
 
-installed_version=$(eval ${mongo_cmd} |tail -1)
+mongo_query='if (db.'${COLLECTION}'.exists()){db.'${COLLECTION}'.drop()}'
+eval "${mongo_cmd}" --eval \""${mongo_query}"\"
 
-needed_version=$(cat ${ROOT_FOLDER}/deployed-version/keyval.properties | grep -v -E "^UPDATED|^UUID" |cut -d"=" -f2)
+mongo_query=$(echo 'for (var i = 1; i <= 5; i++) {
+						db.'${COLLECTION}'.insert( { x : i, y : Math.floor(Math.random() * ((1000000 + 1) - 1)) + 1 } )
+					}')
+eval "${mongo_cmd}" --eval \""${mongo_query}"\"
 
-if [ "${installed_version}" != "${needed_version}" ] 
-then
-  echo "Mongodb server version is ${installed_version} and don't match expected one (${needed_version})"
-  exit 666
-fi
+
+cd ${ROOT_FOLDER}/datas || exit 666
+
+mongo_query='db.'${COLLECTION}'.find({},{_id:0})'
+eval "${mongo_cmd}" --eval \""${mongo_query}"\"	| grep "^{" | tr -d ' ' \
+					| sed -e 's/.[^:]*:\([0-9]*\).[^:]*:\([0-9]*\).*/\1=\2/' \
+					> keyval.properties			

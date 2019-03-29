@@ -36,7 +36,16 @@ resources:
       branch: "3.6"
 
   - name: mongodb-version-update
-    type: keyval    
+    type: keyval
+
+  - name: deployment-specs
+    type: keyval
+
+  - name: deployed-version
+    type: keyval
+
+  - name: datas
+    type: keyval      
 
   - &deployment-lock
     name: deployment-lock
@@ -237,18 +246,20 @@ jobs:
         put: deployment-lock
         params: {release: deployment-lock}
       on_abort:
-        *deployment-unlock         
+        *deployment-unlock
 
-- &deploy-current-version
-  name: deploy-current-version
+#======================================================================================================================================
+# Replicaset tests
+#======================================================================================================================================             
+
+- &deploy-current-version-rs
+  name: deploy-current-version-rs
   serial: true
   plan:
 
     - get: mongodb-bosh-release
-      passed: [ create-releases ]
-      trigger: true
-
-    - get: deployment-lock   
+#      passed: [ create-releases ]
+#      trigger: true
 
     - aggregate: 
       - get: mongodb-version
@@ -314,16 +325,95 @@ jobs:
           CF_ADMIN_PASSWORD:    ((cf.admin_password))
           CF_ORG:               ((cf.org))
           CF_SPACE:             ((cf.space))
-          SHIELD_URL:           ((deployment.shield.core))
-          SHIELD_TOKEN:         ((deployment.shield.token))
-          SHIELD_TENANT:        ((deployment.shield.tenant))
-          SHIELD_STORAGE:       ((deployment.shield.storage))
+          SHIELD_URL:           ((shield.core))
+          SHIELD_TOKEN:         ((shield.token))
+          SHIELD_TENANT:        ((shield.tenant))
+          SHIELD_STORAGE:       ((shield.storage))
           CURRENT:              true #use current "in production" mongodb version
 
 #      on_failure: &deployment-unlock
 #        put: deployment-lock
 #        params: {release: deployment-lock}
 #      on_abort:
-#        *deployment-unlock           
+#        *deployment-unlock    
+      - put: deployed-version
+        params: { file: output/keyval.properties }       
+
+- &insert-datas-rs
+  name: insert-datas-rs
+  serial: true
+  plan:
+
+    - get: mongodb-bosh-release
+#      passed: [ deploy-current-version-rs ]
+#      trigger: true
+
+    - get: deployment-lock   
+
+    - aggregate: 
+
+      - get: deployed-version
+
+      - *create-bosh-config
+
+    - do:
+      - &get-mongo-pwd
+        task: get-mongo-pwd
+        file: mongodb-bosh-release/ci/tasks/data-insertion/get-root-pwd.yml
+        params: &get-mongo-pwd-params
+          BOSH_ALIAS:       ((bosh-server.alias))
+          IP:               ((credhub.ip))
+          PORT:             ((credhub.port))
+          USER:             ((credhub.username))
+          PASSWORD:         ((credhub.password))
+          CA_CERT:          ((credhub.ca))
+          UAA_CA_CERT:      ((uaa.ca))
+          DEPLOYMENT_NAME:  ((deployment.name))
+          VAR:              "root_password"
+ 
+
+      - &update-deployment-specs
+        put: deployment-specs
+        params: { file: output/keyval.properties}
+
+      - &get-deployment-ips
+        task: get-deployment-ips
+        file: mongodb-bosh-release/ci/tasks/data-insertion/get-deployment-ips.yml
+        params: &get-deployment-ips-params
+          CA_CERT:          ((bosh-server.ca))
+          IP:               ((bosh-server.ip))
+          ALIAS:            ((bosh-server.alias)) 
+          USER:             ((bosh-server.user))
+          PASSWORD:         ((bosh-server.password))
+          DEPLOYMENT_NAME:  ((deployment.name))
+
+      - *update-deployment-specs
+
+      - &check-mongo-version
+        task: check-mongo-version
+        file: mongodb-bosh-release/ci/tasks/deployment/check-mongo-version.yml
+        params:
+          USER: ((deployment.mongodb.root-username))
+          PORT: ((deployment.mongodb.port))
+          # for ssl
+          REQUIRE_SSL: ((deployment.mongodb.require_ssl))            
+          CA_CERT: ((deployment.mongodb.ca_cert))
+
+      - &insert-collection
+        task: insert-collection
+        file: mongodb-bosh-release/ci/tasks/data-insertion/insert-collection.yml
+        params: &insert-collection-params
+          USER:       ((deployment.mongodb.root-username))
+          PORT:       ((deployment.mongodb.port))
+          DB:         ((deployment.mongodb.database-name))
+          COLLECTION: ((deployment.mongodb.collection-name))
+          # for ssl
+          REQUIRE_SSL: ((deployment.mongodb.require_ssl))
+          CA_CERT: ((deployment.mongodb.ca_cert))
+
+      - &list-inserted-values
+        put: datas
+        params: { file: datas/keyval.properties }
+
 
     - <<: *deployment-unlock   

@@ -12,6 +12,9 @@ inputs:
   - name: bosh-director-config
   - name: mongodb-version
   - name: mongodb-new-version
+  
+outputs:
+  - name: output  
 
 run:
   path: mongodb-bosh-release/ci/scripts/deployment/deployment.sh

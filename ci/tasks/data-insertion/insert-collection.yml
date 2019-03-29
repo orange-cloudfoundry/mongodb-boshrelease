@@ -8,16 +8,12 @@ image_resource:
     tag: latest
 
 inputs:
+  - name: bosh-director-config
   - name: mongodb-bosh-release
-  - name: deployed-version
   - name: deployment-specs
   
-run:
-  path: mongodb-bosh-release/ci/scripts/deployment/check-mongo-version.sh
+outputs:
+  - name: datas
 
-params:
-  CA_CERT: ""
-  PORT: ""
-  REQUIRE_SSL:  ""
-  USER: ""  
-  
+run:
+  path: mongodb-bosh-release/ci/scripts/data-insertion/insert-collection.sh

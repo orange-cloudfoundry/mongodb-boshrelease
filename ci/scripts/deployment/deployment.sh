@@ -69,6 +69,7 @@ then
 else
    MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-new-version/metadata|jq -r '.version.ref'`
 fi
+
 deployment_var_init="${deployment_var_init} \
                      -v mongodb-release-version=${MONGODB_VERSION}"
 
@@ -83,3 +84,6 @@ bosh -e ${ALIAS} deploy -n -d ${DEPLOYMENT_NAME} \
         ${ROOT_FOLDER}/mongodb-bosh-release/manifests/${MANIFEST} \
         ${deployment_ops_files_cmd} \
         ${deployment_var_init}
+
+mkdir -p ${ROOT_FOLDER}/output
+echo "deployed_version=${MONGODB_VERSION}">${ROOT_FOLDER}/output/keyval.properties        
