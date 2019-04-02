@@ -392,6 +392,7 @@ jobs:
       - &check-mongo-version
         task: check-mongo-version
         file: mongodb-bosh-release/ci/tasks/deployment/check-mongo-version.yml
+        privileged: true  
         params:
           USER:           ((deployment.mongodb.root-username))
           PORT:           ((deployment.mongodb.port))
@@ -401,11 +402,12 @@ jobs:
           # if deployments are done on a bosh lite 
           USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
           BOSH_IP:        ((bosh-server.ip))
-          JUMPBOX_KEY:    ((bosh-server.private_key))
+          JUMPBOX_KEY:    ((bosh-server.jumpbox_private_key))
 
       - &insert-collection
         task: insert-collection
         file: mongodb-bosh-release/ci/tasks/data-insertion/insert-collection.yml
+        privileged: true        
         params: &insert-collection-params
           USER:       ((deployment.mongodb.root-username))
           PORT:       ((deployment.mongodb.port))
@@ -414,6 +416,11 @@ jobs:
           # for ssl
           REQUIRE_SSL: ((deployment.mongodb.require_ssl))
           CA_CERT: ((deployment.mongodb.ca_cert))
+          # if deployments are done on a bosh lite 
+          USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
+          BOSH_IP:        ((bosh-server.ip))
+          JUMPBOX_KEY:    ((bosh-server.jumpbox_private_key))
+          
 
       - &list-inserted-values
         put: datas

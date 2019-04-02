@@ -6,6 +6,17 @@ export BOSH_CONFIG=$PWD/bosh-director-config/bosh_config.yml
 
 ROOT_FOLDER=${PWD}
 
+
+# if mongodb deployment is realized on a bosh lite server, we need to open a tunnel to it in order to 
+# reach the containers ips
+
+if [ "${USE_BOSH_LITE}" == "true" ]
+then
+	echo "${JUMPBOX_KEY}" > /tmp/jumpbox.key
+	chmod 600 /tmp/jumpbox.key
+	sshuttle --daemon -r jumpbox@${BOSH_IP} -e 'ssh -i /tmp/jumpbox.key -o ServerAliveInterval=60 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no'  --dns 10.244.0.0/16 --pidfile=/var/run/sshuttle-bosh-lite.pid
+fi	
+
 cat ${ROOT_FOLDER}/deployment-specs/keyval.properties \
   | grep -v -E "^UPDATED|^UUID" \
   > ${ROOT_FOLDER}/deployment-specs/sourced.properties
@@ -17,7 +28,7 @@ CI_IP=`echo ${ips} \
 
 
 # testing if we are using ssl
-mongo_cmd="mongo \"mongodb://${CI_IP}/?replicaSet=rs0\" -u ${USER} -p \"${password}\" --authenticationDatabase admin"
+mongo_cmd="mongo \"mongodb://${USER}:${password}@${CI_IP}/?replicaSet=rs0&authSource=admin\""
 
 if [ "${REQUIRE_SSL}" == "true" ]
 then
@@ -48,4 +59,6 @@ cd ${ROOT_FOLDER}/datas || exit 666
 mongo_query='db.'${COLLECTION}'.find({},{_id:0})'
 eval "${mongo_cmd}" --eval \""${mongo_query}"\"	| grep "^{" | tr -d ' ' \
 					| sed -e 's/.[^:]*:\([0-9]*\).[^:]*:\([0-9]*\).*/\1=\2/' \
-					> keyval.properties			
+					> keyval.properties
+
+[[ -f /var/run/sshuttle-bosh-lite.pid ]] && kill $(cat /var/run/sshuttle-bosh-lite.pid)					
