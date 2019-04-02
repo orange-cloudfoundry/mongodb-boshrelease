@@ -19,5 +19,6 @@ params:
   CA_CERT: ""
   PORT: ""
   REQUIRE_SSL:  ""
-  USER: ""  
+  USER: ""
+  USE_BOSH_LITE: false
   

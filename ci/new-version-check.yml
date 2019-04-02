@@ -393,11 +393,15 @@ jobs:
         task: check-mongo-version
         file: mongodb-bosh-release/ci/tasks/deployment/check-mongo-version.yml
         params:
-          USER: ((deployment.mongodb.root-username))
-          PORT: ((deployment.mongodb.port))
+          USER:           ((deployment.mongodb.root-username))
+          PORT:           ((deployment.mongodb.port))
           # for ssl
-          REQUIRE_SSL: ((deployment.mongodb.require_ssl))            
-          CA_CERT: ((deployment.mongodb.ca_cert))
+          REQUIRE_SSL:    ((deployment.mongodb.require_ssl))            
+          CA_CERT:        ((deployment.mongodb.ca_cert))
+          # if deployments are done on a bosh lite 
+          USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
+          BOSH_IP:        ((bosh-server.ip))
+          JUMPBOX_KEY:    ((bosh-server.private_key))
 
       - &insert-collection
         task: insert-collection
