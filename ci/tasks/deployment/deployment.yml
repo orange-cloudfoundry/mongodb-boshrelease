@@ -11,7 +11,9 @@ inputs:
   - name: mongodb-bosh-release
   - name: bosh-director-config
   - name: mongodb-version
+    optional: true
   - name: mongodb-new-version
+    optional: true
   
 outputs:
   - name: output  

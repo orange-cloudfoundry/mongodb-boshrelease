@@ -14,3 +14,14 @@ inputs:
   
 run:
   path: mongodb-bosh-release/ci/scripts/data-insertion/check-datas.sh
+
+params:
+  USER: ""
+  USE_BOSH_LITE: ""
+  BOSH_IP: ""
+  REQUIRE_SSL: ""
+  CA_CERT: ""
+  COLLECTION: ""
+  PORT: ""
+  DB: ""
+  JUMPBOX_KEY: ""  
