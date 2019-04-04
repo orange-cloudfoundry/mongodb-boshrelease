@@ -21,7 +21,7 @@ deployment_var_init="   -v deployment_name=${DEPLOYMENT_NAME} \
 deployment_ops_files_cmd=""
 for i in ${OPSFILES}
 do
-  deployment_ops_files_cmd="${deployment_ops_files_cmd} -o ${ROOT_FOLDER}/mongodb-bosh-release/operations/$i"
+  deployment_ops_files_cmd="${deployment_ops_files_cmd} -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/$i"
 done  
 
 # if using broker opsfiles, setting the appropriate variables
@@ -61,7 +61,7 @@ fi
 
 
 deployment_ops_files_cmd="${deployment_ops_files_cmd} \
--o ${ROOT_FOLDER}/mongodb-bosh-release/operations/use-specific-mongodb-release.yml"
+-o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/use-specific-mongodb-release.yml"
 
 if [ "${CURRENT}" == "true" ]
 then

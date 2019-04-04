@@ -185,7 +185,7 @@ jobs:
   serial: true
   plan:
     - get: mongodb-bosh-release
-      trigger: true
+#      trigger: true
 
     - aggregate:
       - get: mongodb-version-update
