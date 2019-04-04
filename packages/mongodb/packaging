@@ -17,5 +17,6 @@ if [ -f mongodb/mongodb-${stemcell}-x86_64-*.tar.gz ]
 then
 	tar xf mongodb/mongodb-${stemcell}-x86_64-*.tar.gz -C $BOSH_INSTALL_TARGET
 else
-	tar xf mongodb/mongodb-linux-x86_64-*.tar.gz -C $BOSH_INSTALL_TARGET
+	# mongodb provide bin in a root directory, we have to omit it
+	tar xf mongodb/mongodb-linux-x86_64-*.tar.gz -C $BOSH_INSTALL_TARGET --strip 1
 fi
