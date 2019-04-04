@@ -81,7 +81,7 @@ then
 fi    
 
 bosh -e ${ALIAS} deploy -n -d ${DEPLOYMENT_NAME} \
-        ${ROOT_FOLDER}/mongodb-bosh-release/manifests/${MANIFEST} \
+        ${ROOT_FOLDER}/mongodb-bosh-release-patched/manifests/${MANIFEST} \
         ${deployment_ops_files_cmd} \
         ${deployment_var_init}
 

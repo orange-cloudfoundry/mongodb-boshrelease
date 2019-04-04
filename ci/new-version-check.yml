@@ -464,10 +464,13 @@ jobs:
       task: "get-config-files -> new-mongodb-version"
       params:
         <<: *get-config-files-params
-        CURRENT: FALSE
+        CURRENT: false
 
     - <<: *do-deploy
       task: upgrade-rs
+      params: 
+        <<: *deploy-parameters
+        CURRENT: false
 
     - *check-mongo-version
 

@@ -8,7 +8,7 @@ image_resource:
     tag: latest
 
 inputs:
-  - name: mongodb-bosh-release
+  - name: mongodb-bosh-release-patched
   - name: bosh-director-config
   - name: mongodb-version
     optional: true
@@ -19,7 +19,7 @@ outputs:
   - name: output  
 
 run:
-  path: mongodb-bosh-release/ci/scripts/deployment/deployment.sh
+  path: mongodb-bosh-release-patched/ci/scripts/deployment/deployment.sh
 
 params:
   CF_NATS_HOST: ""
