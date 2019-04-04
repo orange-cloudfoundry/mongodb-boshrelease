@@ -258,8 +258,8 @@ jobs:
   plan:
 
     - get: mongodb-bosh-release
-#      passed: [ create-releases ]
-#      trigger: true
+      passed: [ create-releases ]
+      trigger: true
 
     - aggregate: 
       - get: mongodb-version
@@ -336,7 +336,8 @@ jobs:
 #        params: {release: deployment-lock}
 #      on_abort:
 #        *deployment-unlock    
-      - put: deployed-version
+      - &update-deployed-version
+        put: deployed-version
         params: { file: output/keyval.properties }       
 
 - &insert-datas
@@ -345,8 +346,8 @@ jobs:
   plan:
 
     - get: mongodb-bosh-release
-#      passed: [ deploy-current-version-rs ]
-#      trigger: true
+      passed: [ deploy-current-version-rs ]
+      trigger: true
 
     - get: deployment-lock   
 
@@ -471,10 +472,41 @@ jobs:
       params: 
         <<: *deploy-parameters
         CURRENT: false
+    - *update-deployed-version    
 
     - *check-mongo-version
 
     - <<: *check-datas
       task: check-datas-after-version-upgrade
+
+
+- &acceptance-tests
+  name: acceptance-tests
+  serial: true
+  plan:
+    - get: mongodb-bosh-release
+      trigger: true
+      passed: [mongo-version-upgrade-rs]
+
+    - &acceptance-tests-plan
+      do:  
+
+        - *create-bosh-config
+
+        - &errand-lock
+          put: bosh-errand-lock
+          params: {claim: errand-lock}
+
+        - &run-acceptance-tests
+          task: run-acceptance-tests
+          file: mongodb-bosh-release/ci/tasks/acceptance-tests/run-acceptance-tests.yml
+          params: &run-acceptance-tests-params
+            ALIAS:    ((bosh-server.alias))
+            DEPLOYMENT_NAME:  ((deployment.name))
+          ensure:
+            &errand-unlock
+            put: bosh-errand-lock
+            params: {release: bosh-errand-lock}
+
 
     - <<: *deployment-unlock #
