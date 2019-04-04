@@ -18,11 +18,34 @@ deployment_var_init="   -v deployment_name=${DEPLOYMENT_NAME} \
                         -v nb_instances=${NB_INSTANCES}"
 
 
+if [ "${SHARDED}" == "true" ]
+then
+    MANIFEST=manifest-shard.yml
+    operations_dir="sharding"
+else
+    MANIFEST=manifest-rs.yml
+    operations_dir="replicaset"
+fi
+
 deployment_ops_files_cmd=""
 for i in ${OPSFILES}
 do
-  deployment_ops_files_cmd="${deployment_ops_files_cmd} -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/$i"
+  if [ -f ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/$i ]
+  then
+    deployment_ops_files_cmd="${deployment_ops_files_cmd} -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/$i"
+  fi
+  if [ -f ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/${operations_dir}/$i ]
+  then
+    deployment_ops_files_cmd="${deployment_ops_files_cmd} -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/${operations_dir}/$i"
+  fi
 done  
+
+# if using acceptance-tests opsfile using the same vm flavour
+if [[ ${OPSFILES} == *"enable-mongodb-acceptance-test.yml"* ]]
+then
+    deployment_var_init="${deployment_var_init} \
+                        -v accept_vm_type=${VM_TYPE}"
+fi
 
 # if using broker opsfiles, setting the appropriate variables
 if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]

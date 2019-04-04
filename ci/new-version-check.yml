@@ -57,6 +57,10 @@ resources:
       username: ((repositories.locks-pool.username))
       password: ((repositories.locks-pool.password))
   
+  # lock to avoid multiple errand running on the same deployment
+  - <<: *deployment-lock
+    name: bosh-errand-lock    
+  
 
 jobs:
 
@@ -297,10 +301,11 @@ jobs:
         attempts: 1
         params: &deploy-parameters
           MANIFEST:             manifest-rs.yml
-          #OPSFILES:             |
-          #                      enable-mongodb-broker.yml 
-          #                      enable-mongodb-broker-route-registrar.yml 
-          #                      enable-mongodb-broker-smoke-tests.yml
+          OPSFILES:             |
+                                enable-mongodb-broker.yml 
+                                enable-mongodb-broker-route-registrar.yml 
+                                enable-mongodb-broker-smoke-tests.yml
+                                enable-mongodb-acceptance-test.yml
           #                      enable-shield.yml
           ALIAS:                ((bosh-server.alias))
           RELEASE_NAME:         ((deployment.name))
@@ -330,6 +335,7 @@ jobs:
           SHIELD_TENANT:        ((shield.tenant))
           SHIELD_STORAGE:       ((shield.storage))
           CURRENT:              true #use current "in production" mongodb version
+          
 
 #      on_failure: &deployment-unlock
 #        put: deployment-lock
@@ -495,11 +501,11 @@ jobs:
 
         - &errand-lock
           put: bosh-errand-lock
-          params: {claim: errand-lock}
+          params: {claim: bosh-errand-lock}  
 
         - &run-acceptance-tests
           task: run-acceptance-tests
-          file: mongodb-bosh-release/ci/tasks/acceptance-tests/run-acceptance-tests.yml
+          file: mongodb-bosh-release/ci/tasks/run-acceptance-tests.yml
           params: &run-acceptance-tests-params
             ALIAS:    ((bosh-server.alias))
             DEPLOYMENT_NAME:  ((deployment.name))

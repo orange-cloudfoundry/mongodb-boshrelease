@@ -23,7 +23,6 @@ run:
 
 params:
   CF_NATS_HOST: ""
-  MANIFEST: ""
   PERSISTENT_DISK_TYPE: ""
   CF_ORG: ""
   DEPLOYMENT_NETWORK: ""
@@ -48,3 +47,4 @@ params:
   SHIELD_TOKEN: ""
   SHIELD_STORAGE: ""
   CURRENT: ""
+  SHARDED: false
