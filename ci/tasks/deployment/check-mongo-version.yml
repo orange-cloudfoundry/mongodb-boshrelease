@@ -21,4 +21,7 @@ params:
   REQUIRE_SSL:  ""
   USER: ""
   USE_BOSH_LITE: false
+  BOSH_IP: ""
+  JUMPBOX_KEY: ""
+
   
