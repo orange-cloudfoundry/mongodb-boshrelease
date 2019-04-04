@@ -21,7 +21,7 @@ fi
 sed -i -e "s/^\(final_name:\).*/\1 ${BOSH_RELEASE}/" config/final.yml
 
 # removing deployment
-bosh -e ${ALIAS} delete-deployment -n -d ${DEPLOYMENT_NAME}
+bosh -e ${ALIAS} delete-deployment -n -d ${DEPLOYMENT_NAME} --force
 
 # removing already existing release if exists
 bosh -e ${ALIAS} releases | cat | grep ${MONGODB_VERSION} |while read rel ver other
