@@ -47,3 +47,4 @@ params:
   SHIELD_URL: ""
   SHIELD_TOKEN: ""
   SHIELD_STORAGE: ""
+  CURRENT: ""

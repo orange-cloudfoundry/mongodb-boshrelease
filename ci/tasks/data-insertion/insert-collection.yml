@@ -17,3 +17,14 @@ outputs:
 
 run:
   path: mongodb-bosh-release/ci/scripts/data-insertion/insert-collection.sh
+
+params:
+  USE_BOSH_LITE: ""
+  CA_CERT: ""
+  BOSH_IP: ""
+  USER: ""
+  PORT: ""
+  COLLECTION: ""
+  DB: ""
+  JUMPBOX_KEY: ""
+  REQUIRE_SSL: ""  
