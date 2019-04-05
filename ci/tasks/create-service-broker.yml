@@ -4,7 +4,7 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: govau/cf-cli
+    repository: jraverdyorange/cf-cli
     tag: latest
 
 inputs:
@@ -18,3 +18,7 @@ params:
   CF_ADMIN_PASSWORD: ""
   CF_API_URL: ""
   SKIP_SSL: ""
+  BOSH_IP: ""
+  JUMPBOX_KEY: ""
+  REQUIRE_SSL: ""
+  USE_BOSH_LITE: ""

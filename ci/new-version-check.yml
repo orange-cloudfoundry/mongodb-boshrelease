@@ -537,10 +537,14 @@ jobs:
 
         - task: create-service-broker
           file: mongodb-bosh-release/ci/tasks/create-service-broker.yml
+          privileged: true
           params:
             CF_API_URL:           https://api.((cf.system_domain))
             CF_ADMIN_PASSWORD:    ((cf.admin_password))
             SKIP_SSL:             ((cf.skip_ssl_validation))
+            USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
+            BOSH_IP:              ((bosh-server.ip))
+            JUMPBOX_KEY:          ((bosh-server.jumpbox_private_key))        
 
 - &run-smoke-tests
   name: run-smoke-tests
