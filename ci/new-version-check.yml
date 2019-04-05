@@ -335,7 +335,7 @@ jobs:
           SHIELD_TENANT:        ((shield.tenant))
           SHIELD_STORAGE:       ((shield.storage))
           CURRENT:              true #use current "in production" mongodb version
-          
+
 
 #      on_failure: &deployment-unlock
 #        put: deployment-lock
@@ -491,8 +491,8 @@ jobs:
   serial: true
   plan:
     - get: mongodb-bosh-release
-      trigger: true
-      passed: [mongo-version-upgrade-rs]
+#      trigger: true
+#      passed: [mongo-version-upgrade-rs]
 
     - &acceptance-tests-plan
       do:  
@@ -514,5 +514,48 @@ jobs:
             put: bosh-errand-lock
             params: {release: bosh-errand-lock}
 
+- &create-service-broker
+  name: create-service-broker
+  plan:
 
-    - <<: *deployment-unlock #
+    - &create-service-broker-plan
+      do:
+        - get: mongodb-bosh-release
+          #passed: [ deploy-replicaset ]
+          #trigger: true
+        - task: get-broker-password
+          file: mongodb-bosh-release/ci/tasks/get-broker-password.yml
+          params:
+            BOSH_ALIAS:       ((bosh-server.alias))
+            IP:               ((credhub.ip))
+            PORT:             ((credhub.port))
+            USER:             ((credhub.username))
+            PASSWORD:         ((credhub.password))
+            DEPLOYMENT_NAME:  ((deployment.name))
+            UAA_CA:           ((uaa.ca))
+            CREDHUB_CA:       ((credhub.ca))
+
+        - task: create-service-broker
+          file: mongodb-bosh-release/ci/tasks/create-service-broker.yml
+          params:
+            CF_API_URL:           https://api.((cf.system_domain))
+            CF_ADMIN_PASSWORD:    ((cf.admin_password))
+            SKIP_SSL:             ((cf.skip_ssl_validation))
+
+- &run-smoke-tests
+  name: run-smoke-tests
+  plan:
+    - &run-smoke-tests-plan
+      do:  
+        - get: mongodb-bosh-release
+          passed: [ create-service-broker ]
+          trigger: true
+    
+        - <<: *create-bosh-config
+        - task: run-smoke-tests
+          file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
+          params:
+            ALIAS:                ((bosh-server.alias))
+            DEPLOYMENT_NAME:      ((deployment.name))
+
+#    - <<: *deployment-unlock #
