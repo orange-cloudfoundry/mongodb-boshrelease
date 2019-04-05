@@ -13,3 +13,7 @@ inputs:
 
 run:
   path: mongodb-bosh-release/ci/scripts/run-acceptance-tests.sh
+
+params:
+  ALIAS: ""
+  DEPLOYMENT_NAME: ""
