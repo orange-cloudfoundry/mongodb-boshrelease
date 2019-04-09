@@ -305,8 +305,8 @@ jobs:
                                 enable-mongodb-broker.yml 
                                 enable-mongodb-broker-route-registrar.yml 
                                 enable-mongodb-broker-smoke-tests.yml
-                                enable-mongodb-acceptance-test.yml
-          #                      enable-shield.yml
+        #     enable-mongodb-acceptance-test.yml
+        #                      enable-shield.yml
           ALIAS:                ((bosh-server.alias))
           RELEASE_NAME:         ((deployment.name))
           DEPLOYMENT_NAME:      ((deployment.name))
