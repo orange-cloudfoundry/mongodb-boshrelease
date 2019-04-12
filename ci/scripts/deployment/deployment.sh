@@ -62,10 +62,10 @@ then
    echo -n "broker_vm_type: ${BROKER_VM_TYPE}
 broker_persistent_disk_type: ${BROKER_PERSISTENT_DISK_TYPE}
 broker_catalog_yml: |
-" > /tmp/broker_deployment_vars
+" > /tmp/broker_deployment_vars.yml
     # formatting catalog
-    echo "${BROKER_CATALOG_YML}" > /tmp/broker_deployment_vars.yml
-    sed -i -e "s/^/  /g" /tmp/broker_deployment_vars.yml
+    echo "${BROKER_CATALOG_YML}" > /tmp/broker_deployment_catalog.yml
+    
 
     # generate dynamic opsfiles
     echo "---
@@ -78,15 +78,19 @@ broker_catalog_yml: |
   type: replace
   value: MongoDB ${MONGODB_VERSION} ${catalog_label}" > /tmp/broker_displayname_ops.yml
 
-    bosh interpolate /tmp/broker_deployment_vars.yml -o /tmp/broker_description_ops.yml \
+    bosh interpolate /tmp/broker_deployment_catalog.yml -o /tmp/broker_description_ops.yml \
                                                      -o /tmp/broker_displayname_ops.yml \
-                                                     > /tmp/broker_deployment_vars.yml_
+                                                     > /tmp/broker_deployment_catalog.yml_
 
-    mv /tmp/broker_deployment_vars.yml_ /tmp/broker_deployment_vars.yml                                                     
+    mv /tmp/broker_deployment_catalog.yml_ /tmp/broker_deployment_catalog.yml                                                      
+
+    sed -i -e "s/^/           /g" /tmp/broker_deployment_catalog.yml
+
+    cat /tmp/broker_deployment_catalog.yml >> /tmp/broker_deployment_vars.yml                                                     
 
     # cat /tmp/broker_deployment_vars_yml >> /tmp/broker_deployment_vars
     deployment_var_init="${deployment_var_init} \
-                        -l /tmp/broker_deployment_vars"
+                        -l /tmp/broker_deployment_vars.yml"
 fi                        
 
 # if using broker route registrar opsfiles, setting cloudfoundry variables

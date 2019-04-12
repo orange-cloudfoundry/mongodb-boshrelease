@@ -300,12 +300,6 @@ jobs:
         file: mongodb-bosh-release/ci/tasks/deployment/deployment.yml
         attempts: 1
         params: &deploy-parameters
-          OPSFILES:             |
-                                enable-mongodb-broker.yml 
-                                enable-mongodb-broker-route-registrar.yml 
-                                enable-mongodb-broker-smoke-tests.yml
-        #     enable-mongodb-acceptance-test.yml
-        #                      enable-shield.yml
           ALIAS:                ((bosh-server.alias))
           RELEASE_NAME:         ((deployment.name))
           DEPLOYMENT_NAME:      ((deployment.name))
@@ -316,9 +310,6 @@ jobs:
           ROOT_USERNAME:        ((deployment.mongodb.root-username))
           NB_INSTANCES:         ((deployment.mongodb.nb_instances))
           ENGINE:               "wiredtiger"
-          BROKER_VM_TYPE:       ((deployment.broker.vm_type))
-          BROKER_PERSISTENT_DISK_TYPE: ((deployment.broker.persistent_disk_type))
-          BROKER_CATALOG_YML:   ((deployment.broker.catalog_yml))
           # for ssl deployment not fully implemented YET
           #REQUIRE_SSL:          ((deployment.mongodb.require_ssl))
           #CA_NAME:              ((deployment.mongodb.ca_name))
@@ -477,6 +468,15 @@ jobs:
       params: 
         <<: *deploy-parameters
         CURRENT: false
+        OPSFILES: |
+                  enable-mongodb-broker.yml 
+                  enable-mongodb-broker-route-registrar.yml 
+                  enable-mongodb-broker-smoke-tests.yml
+        BROKER_VM_TYPE:       ((deployment.broker.vm_type))
+        BROKER_PERSISTENT_DISK_TYPE: ((deployment.broker.persistent_disk_type))
+        BROKER_CATALOG_YML:   ((deployment.broker.catalog_yml))                  
+        #     enable-mongodb-acceptance-test.yml
+        #                      enable-shield.yml
     - *update-deployed-version    
 
     - *check-mongo-version
