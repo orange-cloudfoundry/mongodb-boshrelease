@@ -262,8 +262,8 @@ jobs:
   plan:
 
     - get: mongodb-bosh-release
-      passed: [ create-releases ]
-      trigger: true
+#      passed: [ create-releases ]
+#      trigger: true
 
     - aggregate: 
       - get: mongodb-version
@@ -300,7 +300,6 @@ jobs:
         file: mongodb-bosh-release/ci/tasks/deployment/deployment.yml
         attempts: 1
         params: &deploy-parameters
-          MANIFEST:             manifest-rs.yml
           OPSFILES:             |
                                 enable-mongodb-broker.yml 
                                 enable-mongodb-broker-route-registrar.yml 

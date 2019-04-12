@@ -18,13 +18,22 @@ deployment_var_init="   -v deployment_name=${DEPLOYMENT_NAME} \
                         -v nb_instances=${NB_INSTANCES}"
 
 
+if [ "${CURRENT}" == "true" ]
+then
+   MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-version/version`
+else
+   MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-new-version/metadata|jq -r '.version.ref'`
+fi
+
 if [ "${SHARDED}" == "true" ]
 then
     MANIFEST=manifest-shard.yml
     operations_dir="sharding"
+    catalog_label="Sharded Cluster - Continuous Interation Tests"
 else
     MANIFEST=manifest-rs.yml
     operations_dir="replicaset"
+    catalog_label="Single Replicaset - Continuous Interation Tests"
 fi
 
 deployment_ops_files_cmd=""
@@ -55,9 +64,27 @@ broker_persistent_disk_type: ${BROKER_PERSISTENT_DISK_TYPE}
 broker_catalog_yml: |
 " > /tmp/broker_deployment_vars
     # formatting catalog
-    echo "${BROKER_CATALOG_YML}" > /tmp/broker_deployment_vars_yml
-    sed -i -e "s/^/  /g" /tmp/broker_deployment_vars_yml
-    cat /tmp/broker_deployment_vars_yml >> /tmp/broker_deployment_vars
+    echo "${BROKER_CATALOG_YML}" > /tmp/broker_deployment_vars.yml
+    sed -i -e "s/^/  /g" /tmp/broker_deployment_vars.yml
+
+    # generate dynamic opsfiles
+    echo "---
+- path: /services/id=mongodb-service-broker-ci/description
+  type: replace
+  value: MongoDB ${MONGODB_VERSION} Continous Integration tests" > /tmp/broker_description_ops.yml
+
+    echo "---
+- path: /services/id=mongodb-service-broker-ci/metadata/displayName
+  type: replace
+  value: MongoDB ${MONGODB_VERSION} ${catalog_label}" > /tmp/broker_displayname_ops.yml
+
+    bosh interpolate /tmp/broker_deployment_vars.yml -o /tmp/broker_description_ops.yml \
+                                                     -o /tmp/broker_displayname_ops.yml \
+                                                     > /tmp/broker_deployment_vars.yml_
+
+    mv /tmp/broker_deployment_vars.yml_ /tmp/broker_deployment_vars.yml                                                     
+
+    # cat /tmp/broker_deployment_vars_yml >> /tmp/broker_deployment_vars
     deployment_var_init="${deployment_var_init} \
                         -l /tmp/broker_deployment_vars"
 fi                        
@@ -86,12 +113,6 @@ fi
 deployment_ops_files_cmd="${deployment_ops_files_cmd} \
 -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/use-specific-mongodb-release.yml"
 
-if [ "${CURRENT}" == "true" ]
-then
-   MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-version/version`
-else
-   MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-new-version/metadata|jq -r '.version.ref'`
-fi
 
 deployment_var_init="${deployment_var_init} \
                      -v mongodb-release-version=${MONGODB_VERSION}"
@@ -109,4 +130,5 @@ bosh -e ${ALIAS} deploy -n -d ${DEPLOYMENT_NAME} \
         ${deployment_var_init}
 
 mkdir -p ${ROOT_FOLDER}/output
-echo "deployed_version=${MONGODB_VERSION}">${ROOT_FOLDER}/output/keyval.properties        
+echo "deployed_version=${MONGODB_VERSION}">${ROOT_FOLDER}/output/keyval.properties
+
