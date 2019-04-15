@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/cf-cli
+    tag: latest
+
+inputs:
+  - name: broker-password
+  - name: mongodb-bosh-release
+
+run:
+  path: mongodb-bosh-release/ci/scripts/create-sample-app.sh
+
+params:
+  CF_ADMIN_PASSWORD: ""
+  CF_API_URL: ""
+  SKIP_SSL: ""
+  BOSH_IP: ""
+  JUMPBOX_KEY: ""
+  REQUIRE_SSL: ""
+  USE_BOSH_LITE: ""

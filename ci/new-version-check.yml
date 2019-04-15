@@ -262,8 +262,8 @@ jobs:
   plan:
 
     - get: mongodb-bosh-release
-#      passed: [ create-releases ]
-#      trigger: true
+      passed: [ create-releases ]
+      trigger: true
 
     - aggregate: 
       - get: mongodb-version
@@ -310,6 +310,9 @@ jobs:
           ROOT_USERNAME:        ((deployment.mongodb.root-username))
           NB_INSTANCES:         ((deployment.mongodb.nb_instances))
           ENGINE:               "wiredtiger"
+          BROKER_VM_TYPE:       ((deployment.broker.vm_type))
+          BROKER_PERSISTENT_DISK_TYPE: ((deployment.broker.persistent_disk_type))
+          BROKER_CATALOG_YML:   ((deployment.broker.catalog_yml))
           # for ssl deployment not fully implemented YET
           #REQUIRE_SSL:          ((deployment.mongodb.require_ssl))
           #CA_NAME:              ((deployment.mongodb.ca_name))
@@ -472,9 +475,6 @@ jobs:
                   enable-mongodb-broker.yml 
                   enable-mongodb-broker-route-registrar.yml 
                   enable-mongodb-broker-smoke-tests.yml
-        BROKER_VM_TYPE:       ((deployment.broker.vm_type))
-        BROKER_PERSISTENT_DISK_TYPE: ((deployment.broker.persistent_disk_type))
-        BROKER_CATALOG_YML:   ((deployment.broker.catalog_yml))                  
         #     enable-mongodb-acceptance-test.yml
         #                      enable-shield.yml
     - *update-deployed-version    
@@ -555,6 +555,17 @@ jobs:
           trigger: true
     
         - <<: *create-bosh-config
+
+        - task: create-example-app
+          file: mongodb-bosh-release/ci/tasks/create-sample-app.yml
+          params:
+            CF_API_URL:           https://api.((cf.system_domain))
+            CF_ADMIN_PASSWORD:    ((cf.admin_password))
+            SKIP_SSL:             ((cf.skip_ssl_validation))
+            USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
+            BOSH_IP:              ((bosh-server.ip))
+            JUMPBOX_KEY:          ((bosh-server.jumpbox_private_key))        
+
         - task: run-smoke-tests
           file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
           params:
