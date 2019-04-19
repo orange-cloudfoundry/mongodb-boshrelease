@@ -475,7 +475,7 @@ jobs:
                   enable-mongodb-broker.yml 
                   enable-mongodb-broker-route-registrar.yml 
                   enable-mongodb-broker-smoke-tests.yml
-        #     enable-mongodb-acceptance-test.yml
+                  enable-mongodb-acceptance-test.yml
         #                      enable-shield.yml
     - *update-deployed-version    
 
