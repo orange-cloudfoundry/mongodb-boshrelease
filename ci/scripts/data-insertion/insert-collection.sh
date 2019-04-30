@@ -27,9 +27,15 @@ CI_IP=`echo ${ips} \
 	 | sed -e "s/,/:${PORT},/g" -e "s/$/:${PORT}/"`
 
 
-# testing if we are using ssl
-mongo_cmd="mongo \"mongodb://${USER}:${password}@${CI_IP}/?replicaSet=rs0&authSource=admin\""
+# Don t connect a replicaset on mongos
+if [ ${SHARDED} == "true" ]
+then
+ 	mongo_cmd="mongo \"mongodb://${USER}:${password}@${CI_IP}/?authSource=admin\""
+else  	
+	mongo_cmd="mongo \"mongodb://${USER}:${password}@${CI_IP}/?replicaSet=rs0&authSource=admin\""
+fi
 
+# testing if we are using ssl
 if [ "${REQUIRE_SSL}" == "true" ]
 then
     if [ "${CA_CERT}" != "" ] 

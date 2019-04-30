@@ -395,7 +395,7 @@ jobs:
       task: check-mongo-version
       file: mongodb-bosh-release/ci/tasks/deployment/check-mongo-version.yml
       privileged: true  
-      params:
+      params: &check-mongo-version-params
         USER:           ((deployment.mongodb.root-username))
         PORT:           ((deployment.mongodb.port))
         # for ssl
@@ -632,8 +632,14 @@ jobs:
 
     - *update-deployment-specs
 
-    - *check-mongo-version
+    - <<: *check-mongo-version
+      params:
+        <<: *check-mongo-version-params
+        SHARDED: true
 
-    - *insert-collection
+    - <<: *insert-collection
+      params:
+        <<: *insert-collection-params
+        SHARDED: true
 
     - *list-inserted-values

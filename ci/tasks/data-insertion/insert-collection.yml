@@ -27,4 +27,5 @@ params:
   COLLECTION: ""
   DB: ""
   JUMPBOX_KEY: ""
-  REQUIRE_SSL: ""  
+  REQUIRE_SSL: ""
+  SHARDED: false
