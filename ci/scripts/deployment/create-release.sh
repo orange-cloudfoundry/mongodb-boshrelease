@@ -20,8 +20,10 @@ fi
 # Updating final.yml with release name specified in settings
 sed -i -e "s/^\(final_name:\).*/\1 ${BOSH_RELEASE}/" config/final.yml
 
-# removing deployment
-bosh -e ${ALIAS} delete-deployment -n -d ${DEPLOYMENT_NAME} --force
+# removing all deployments linked to the release
+bosh -e ${ALIAS} deployments --json \
+	| jq -r '.Tables[].Rows[]|select(.release_s|contains("'${DEPLOYMENT_NAME}'/'${MONGODB_VERSION}'"))|.name' \
+	| xargs -i bosh -e ${ALIAS} delete-deployment -n -d {} --force
 
 # removing already existing release if exists
 bosh -e ${ALIAS} releases | cat | grep ${MONGODB_VERSION} |while read rel ver other
