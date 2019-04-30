@@ -600,4 +600,40 @@ jobs:
         DEPLOYMENT_NAME:      ((deployment.name))-shard
         SHARDED: true
   
-    - <<: *update-deployed-version             
+    - <<: *update-deployed-version
+- <<: *insert-datas
+  name: insert-datas-shard
+  plan:
+
+    - get: mongodb-bosh-release
+      #passed: [ deploy-current-version-sharding ]
+      #trigger: true
+
+    - get: deployment-lock   
+
+    - aggregate: 
+
+      - get: deployed-version
+
+      - *create-bosh-config
+
+
+    - <<: *get-mongo-pwd
+      params: 
+        <<: *get-mongo-pwd-params
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
+
+    - *update-deployment-specs
+
+    - <<: *get-deployment-ips
+      params: 
+        <<: *get-deployment-ips-params
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
+
+    - *update-deployment-specs
+
+    - *check-mongo-version
+
+    - *insert-collection
+
+    - *list-inserted-values
