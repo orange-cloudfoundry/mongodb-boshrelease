@@ -24,4 +24,5 @@ params:
   COLLECTION: ""
   PORT: ""
   DB: ""
-  JUMPBOX_KEY: ""  
+  JUMPBOX_KEY: ""
+  SHARDED: false

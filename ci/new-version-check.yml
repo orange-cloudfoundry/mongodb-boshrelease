@@ -449,7 +449,7 @@ jobs:
       task: check-datas-before-version-upgrade
       file: mongodb-bosh-release/ci/tasks/data-insertion/check-datas.yml
       privileged: true
-      params:
+      params: &check-datas-params
         USER: ((deployment.mongodb.root-username))
         PORT: ((deployment.mongodb.port))
         DB:   ((deployment.mongodb.database-name))
@@ -601,13 +601,14 @@ jobs:
         SHARDED: true
   
     - <<: *update-deployed-version
+
 - <<: *insert-datas
   name: insert-datas-shard
   plan:
 
     - get: mongodb-bosh-release
-      #passed: [ deploy-current-version-sharding ]
-      #trigger: true
+      passed: [ deploy-current-version-sharding ]
+      trigger: true
 
     - get: deployment-lock   
 
@@ -643,3 +644,52 @@ jobs:
         SHARDED: true
 
     - *list-inserted-values
+
+- <<: mongo-version-upgrade
+  name: mongo-version-upgrade-shard
+  plan:
+    - aggregate:
+      - get: datas
+#        trigger: true
+#        passed: [insert-datas-shard]
+
+      - get: deployment-specs
+#        passed: [insert-datas-shard]
+
+      - get: mongodb-new-version
+
+      - get: mongodb-bosh-release
+
+    - *create-bosh-config
+
+    - <<: *check-datas
+      params: 
+        <<: *check-datas-params
+        SHARDED: true      
+
+    - <<: *get-config-files
+      task: "get-config-files -> new-mongodb-version"
+      params:
+        <<: *get-config-files-params
+        CURRENT: false
+
+    - <<: *do-deploy
+      task: upgrade-shard
+      params: 
+        <<: *deploy-parameters
+        CURRENT: false
+        OPSFILES: |
+                  enable-mongodb-broker.yml 
+                  enable-mongodb-broker-route-registrar.yml 
+                  enable-mongodb-broker-smoke-tests.yml
+                  enable-mongodb-acceptance-test.yml
+        #                      enable-shield.yml
+    - *update-deployed-version    
+
+    - *check-mongo-version
+
+    - <<: *check-datas
+      task: check-datas-after-version-upgrade
+      params: 
+        <<: *check-datas-params
+        SHARDED: true
