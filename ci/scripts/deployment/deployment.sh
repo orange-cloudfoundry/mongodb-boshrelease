@@ -25,8 +25,17 @@ else
    MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-new-version/metadata|jq -r '.version.ref'`
 fi
 
+
 if [ "${SHARDED}" == "true" ]
 then
+    # sharding is not implemented for 3.4 version of mongodb release
+    # if version si not >= 3.6.X then deploy new version instead of prod version
+
+    if [ $(echo ${MONGODB_VERSION} | cut -d"." -f1) -le 3 -a $(echo ${MONGODB_VERSION} | cut -d"." -f2) -lt 6 ]
+    then
+        MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-new-version/metadata|jq -r '.version.ref'`
+    fi
+    
     MANIFEST=manifest-shard.yml
     operations_dir="sharding"
     catalog_label="Sharded Cluster - Continuous Interation Tests"

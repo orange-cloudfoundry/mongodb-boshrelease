@@ -261,18 +261,20 @@ jobs:
   serial: true
   plan:
 
-    - get: mongodb-bosh-release
-      passed: [ create-releases ]
-      trigger: true
+    - &deploy-current-version_init
+      do:
+      - get: mongodb-bosh-release
+        passed: [ create-releases ]
+        #trigger: true
 
-    - aggregate: 
-      - get: mongodb-version
+      - aggregate: 
+        - get: mongodb-version
 
-      - get: mongodb-new-version
+        - get: mongodb-new-version
 
-      - *create-bosh-config
+        - *create-bosh-config
 
-    - do:
+
       - &get-config-files
         task: "get-config-files -> current-main-version"
         file: mongodb-bosh-release/ci/tasks/get-config-files.yml
@@ -288,46 +290,46 @@ jobs:
           GOLANG_VERSION:     ((deployment.golang-version))
           CURRENT:            true
 
-      - &remove-deployment
-        task: "delete-deployment"
-        file: mongodb-bosh-release/ci/tasks/deployment/remove-deployment.yml            
-        params :
-          ALIAS:              ((bosh-server.alias))
-          DEPLOYMENT_NAME:    ((deployment.name))
+    - &remove-deployment
+      task: "delete-deployment"
+      file: mongodb-bosh-release/ci/tasks/deployment/remove-deployment.yml            
+      params :
+        ALIAS:              ((bosh-server.alias))
+        DEPLOYMENT_NAME:    ((deployment.name))
 
-      - &do-deploy
-        task: "deploy-replicaset -> current-main-version"
-        file: mongodb-bosh-release/ci/tasks/deployment/deployment.yml
-        attempts: 1
-        params: &deploy-parameters
-          ALIAS:                ((bosh-server.alias))
-          RELEASE_NAME:         ((deployment.name))
-          DEPLOYMENT_NAME:      ((deployment.name))
-          DEPLOYMENT_NETWORK:   ((deployment.network))
-          PERSISTENT_DISK_TYPE: ((deployment.mongodb.persistent-disk-type))
-          VM_TYPE:              ((deployment.mongodb.vm-type))        
-          MONGO_PORT:           ((deployment.mongodb.port))
-          ROOT_USERNAME:        ((deployment.mongodb.root-username))
-          NB_INSTANCES:         ((deployment.mongodb.nb_instances))
-          ENGINE:               "wiredtiger"
-          BROKER_VM_TYPE:       ((deployment.broker.vm_type))
-          BROKER_PERSISTENT_DISK_TYPE: ((deployment.broker.persistent_disk_type))
-          BROKER_CATALOG_YML:   ((deployment.broker.catalog_yml))
-          # for ssl deployment not fully implemented YET
-          #REQUIRE_SSL:          ((deployment.mongodb.require_ssl))
-          #CA_NAME:              ((deployment.mongodb.ca_name))
-          # for cloudfoundry deployment
-          CF_NATS_HOST:         ((cf.nats_host))
-          CF_NATS_PASSWORD:     ((cf.nats_password))
-          CF_SYSTEM_DOMAIN:     ((cf.system_domain))
-          CF_ADMIN_PASSWORD:    ((cf.admin_password))
-          CF_ORG:               ((cf.org))
-          CF_SPACE:             ((cf.space))
-          SHIELD_URL:           ((shield.core))
-          SHIELD_TOKEN:         ((shield.token))
-          SHIELD_TENANT:        ((shield.tenant))
-          SHIELD_STORAGE:       ((shield.storage))
-          CURRENT:              true #use current "in production" mongodb version
+    - &do-deploy
+      task: "deploy-replicaset -> current-main-version"
+      file: mongodb-bosh-release/ci/tasks/deployment/deployment.yml
+      attempts: 1
+      params: &deploy-parameters
+        ALIAS:                ((bosh-server.alias))
+        RELEASE_NAME:         ((deployment.name))
+        DEPLOYMENT_NAME:      ((deployment.name))
+        DEPLOYMENT_NETWORK:   ((deployment.network))
+        PERSISTENT_DISK_TYPE: ((deployment.mongodb.persistent-disk-type))
+        VM_TYPE:              ((deployment.mongodb.vm-type))        
+        MONGO_PORT:           ((deployment.mongodb.port))
+        ROOT_USERNAME:        ((deployment.mongodb.root-username))
+        NB_INSTANCES:         ((deployment.mongodb.nb_instances))
+        ENGINE:               "wiredtiger"
+        BROKER_VM_TYPE:       ((deployment.broker.vm_type))
+        BROKER_PERSISTENT_DISK_TYPE: ((deployment.broker.persistent_disk_type))
+        BROKER_CATALOG_YML:   ((deployment.broker.catalog_yml))
+        # for ssl deployment not fully implemented YET
+        #REQUIRE_SSL:          ((deployment.mongodb.require_ssl))
+        #CA_NAME:              ((deployment.mongodb.ca_name))
+        # for cloudfoundry deployment
+        CF_NATS_HOST:         ((cf.nats_host))
+        CF_NATS_PASSWORD:     ((cf.nats_password))
+        CF_SYSTEM_DOMAIN:     ((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        CF_ORG:               ((cf.org))
+        CF_SPACE:             ((cf.space))
+        SHIELD_URL:           ((shield.core))
+        SHIELD_TOKEN:         ((shield.token))
+        SHIELD_TENANT:        ((shield.tenant))
+        SHIELD_STORAGE:       ((shield.storage))
+        CURRENT:              true #use current "in production" mongodb version
 
 
 #      on_failure: &deployment-unlock
@@ -335,9 +337,9 @@ jobs:
 #        params: {release: deployment-lock}
 #      on_abort:
 #        *deployment-unlock    
-      - &update-deployed-version
-        put: deployed-version
-        params: { file: output/keyval.properties }       
+    - &update-deployed-version
+      put: deployed-version
+      params: { file: output/keyval.properties }       
 
 - &insert-datas
   name: insert-datas-rs
@@ -490,8 +492,8 @@ jobs:
   serial: true
   plan:
     - get: mongodb-bosh-release
-#      trigger: true
-#      passed: [mongo-version-upgrade-rs]
+      trigger: true
+      passed: [ mongo-version-upgrade-rs ]
 
     - &acceptance-tests-plan
       do:  
@@ -520,8 +522,8 @@ jobs:
     - &create-service-broker-plan
       do:
         - get: mongodb-bosh-release
-          #passed: [ deploy-replicaset ]
-          #trigger: true
+          passed: [ mongo-version-upgrade-rs ]
+          trigger: true
         - task: get-broker-password
           file: mongodb-bosh-release/ci/tasks/get-broker-password.yml
           params:
@@ -566,10 +568,36 @@ jobs:
             BOSH_IP:              ((bosh-server.ip))
             JUMPBOX_KEY:          ((bosh-server.jumpbox_private_key))        
 
+        - *errand-lock
+
         - task: run-smoke-tests
           file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
           params:
             ALIAS:                ((bosh-server.alias))
             DEPLOYMENT_NAME:      ((deployment.name))
+          ensure:
+            <<: *errand-unlock
 
 #    - <<: *deployment-unlock #
+
+#======================================================================================================================================
+# Sharding tests
+#======================================================================================================================================             
+
+- <<: *deploy-current-version
+  name: deploy-current-version-sharding
+  plan:
+    - <<: *deploy-current-version_init
+    - <<: *remove-deployment
+      params :
+        ALIAS:              ((bosh-server.alias))
+        DEPLOYMENT_NAME:    ((deployment.name))-shard
+    - <<: *do-deploy
+      task: "deploy-sharded-cluster -> current-main-version"
+      attempts: 3
+      params: 
+        <<: *deploy-parameters
+        DEPLOYMENT_NAME:      ((deployment.name))-shard
+        SHARDED: true
+  
+    - <<: *update-deployed-version             
