@@ -21,9 +21,9 @@ fi
 cf api ${CF_API_URL} ${opts}
 cf login -u admin -p ${CF_ADMIN_PASSWORD}
 
-cf delete-service-broker mongodb -f
+cf delete-service-broker broker-${DEPLOYMENT_NAME} -f
 
-cf create-service-broker mongodb \
+cf create-service-broker broker-${DEPLOYMENT_NAME} \
             mongodb-broker $(cat broker-password/password.txt) \
-            http://mongodb-broker-mongodb-ci-deployment.$(echo ${CF_API_URL}|cut -d"/" -f3|cut -d"." -f2-) --space-scoped
+            http://mongodb-broker-${DEPLOYMENT_NAME}.$(echo ${CF_API_URL}|cut -d"/" -f3|cut -d"." -f2-) --space-scoped
 
