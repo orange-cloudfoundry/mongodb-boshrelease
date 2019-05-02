@@ -595,7 +595,7 @@ jobs:
     - <<: *do-deploy
       task: "deploy-sharded-cluster -> current-main-version"
       attempts: 3
-      params: 
+      params: &deploy-parameters-shard
         <<: *deploy-parameters
         DEPLOYMENT_NAME:      ((deployment.name))-shard
         SHARDED: true
@@ -633,7 +633,8 @@ jobs:
 
     - *update-deployment-specs
 
-    - <<: *check-mongo-version
+    - &check-mongo-version-shard
+      <<: *check-mongo-version
       params:
         <<: *check-mongo-version-params
         SHARDED: true
@@ -645,7 +646,7 @@ jobs:
 
     - *list-inserted-values
 
-- <<: mongo-version-upgrade
+- <<: *mongo-version-upgrade
   name: mongo-version-upgrade-shard
   plan:
     - aggregate:
@@ -676,7 +677,7 @@ jobs:
     - <<: *do-deploy
       task: upgrade-shard
       params: 
-        <<: *deploy-parameters
+        <<: *deploy-parameters-shard
         CURRENT: false
         OPSFILES: |
                   enable-mongodb-broker.yml 
@@ -686,7 +687,7 @@ jobs:
         #                      enable-shield.yml
     - *update-deployed-version    
 
-    - *check-mongo-version
+    - *check-mongo-version-shard
 
     - <<: *check-datas
       task: check-datas-after-version-upgrade

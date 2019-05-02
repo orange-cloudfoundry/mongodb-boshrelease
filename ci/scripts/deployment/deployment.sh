@@ -35,7 +35,7 @@ then
     then
         MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-new-version/metadata|jq -r '.version.ref'`
     fi
-    
+
     MANIFEST=manifest-shard.yml
     operations_dir="sharding"
     catalog_label="Sharded Cluster - Continuous Interation Tests"
@@ -100,15 +100,20 @@ broker_catalog_yml: |
     # cat /tmp/broker_deployment_vars_yml >> /tmp/broker_deployment_vars
     deployment_var_init="${deployment_var_init} \
                         -l /tmp/broker_deployment_vars.yml"
-fi                        
 
-# if using broker route registrar opsfiles, setting cloudfoundry variables
-if [[ ${OPSFILES} == *"enable-mongodb-broker.yml"* ]]
-then
+    # if using broker route registrar opsfiles, setting cloudfoundry variables
+
     deployment_var_init="${deployment_var_init} \
                         -v cf.nats_host=${CF_NATS_HOST} \
                         -v cf.nats_password=${CF_NATS_PASSWORD} \
                         -v cf.system_domain=${CF_SYSTEM_DOMAIN}"
+
+    # If we are in sharding mode, then use-broker-shard-links.yml MUST be used
+    if [ "${SHARDED}" == "true" ]
+    then
+      deployment_ops_files_cmd="${deployment_ops_files_cmd} -o ${ROOT_FOLDER}/mongodb-bosh-release-patched/operations/${operations_dir}/use-broker-shard-links.yml"
+    fi
+
 fi   
 
 # if using broker smoke-tests opsfiles, setting appropriate cloudfoundry variables
