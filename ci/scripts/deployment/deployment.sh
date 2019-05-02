@@ -38,11 +38,11 @@ then
 
     MANIFEST=manifest-shard.yml
     operations_dir="sharding"
-    catalog_label="Sharded Cluster - Continuous Interation Tests"
+    catalog_label="Sharded Cluster - Continuous Integration Tests"
 else
     MANIFEST=manifest-rs.yml
     operations_dir="replicaset"
-    catalog_label="Single Replicaset - Continuous Interation Tests"
+    catalog_label="Single Replicaset - Continuous Integration Tests"
 fi
 
 deployment_ops_files_cmd=""
