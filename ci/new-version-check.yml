@@ -651,8 +651,8 @@ jobs:
   plan:
     - aggregate:
       - get: datas
-#        trigger: true
-#        passed: [insert-datas-shard]
+        trigger: true
+        passed: [insert-datas-shard]
 
       - get: deployment-specs
 #        passed: [insert-datas-shard]
@@ -694,3 +694,11 @@ jobs:
       params: 
         <<: *check-datas-params
         SHARDED: true
+
+- <<: *acceptance-tests
+  plan:
+    - get: mongodb-bosh-release
+      trigger: true
+      passed: [ mongo-version-upgrade-shard ]
+
+    - *acceptance-tests-plan
