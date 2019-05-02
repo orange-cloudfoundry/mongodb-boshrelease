@@ -18,6 +18,4 @@ params:
   CF_API_URL: ""
   SKIP_SSL: ""
   BOSH_IP: ""
-  JUMPBOX_KEY: ""
-  REQUIRE_SSL: ""
   USE_BOSH_LITE: ""
