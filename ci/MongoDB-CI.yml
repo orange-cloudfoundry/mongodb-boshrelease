@@ -246,11 +246,9 @@ jobs:
           <<: *task-create-release-params
           CURRENT:          false
 
-      on_failure: &deployment-unlock
+      ensure: &deployment-unlock
         put: deployment-lock
         params: {release: deployment-lock}
-      on_abort:
-        *deployment-unlock
 
 #======================================================================================================================================
 # Replicaset tests
@@ -274,7 +272,6 @@ jobs:
 
         - *create-bosh-config
 
-
       - &get-config-files
         task: "get-config-files -> current-main-version"
         file: mongodb-bosh-release/ci/tasks/get-config-files.yml
@@ -289,6 +286,8 @@ jobs:
           CONFIG_PATH:        ((blobstore.config_path))          
           GOLANG_VERSION:     ((deployment.golang-version))
           CURRENT:            true
+
+      - *task-deployment-lock    
 
     - &remove-deployment
       task: "delete-deployment"

@@ -124,7 +124,7 @@ then
                         -v cf.admin.password=${CF_ADMIN_PASSWORD} \
                         -v cf.org=${CF_ORG} \
                         -v cf.space=${CF_SPACE} \
-                        -v cf.mongodb.appdomain=${CF_SYSTEM_DOMAIN}
+                        -v cf.mongodb.appdomain=${CF_SYSTEM_DOMAIN} \
                         -v cf.mongodb.serviceinstancename=${DEPLOYMENT_NAME}-instance"
 fi   
 
