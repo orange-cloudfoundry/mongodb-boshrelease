@@ -17,3 +17,5 @@ params:
   CF_ADMIN_PASSWORD: ""
   CF_API_URL: ""
   SKIP_SSL: ""
+  USE_BOSH_LITE: false
+  DEPLOYMENT_NAME: ""
