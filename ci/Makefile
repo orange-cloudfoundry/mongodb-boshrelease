@@ -1,6 +1,6 @@
 
 TARGET?=dw
-PIPELINES_LIST?=clone-blobstore new-version-check cf-integration
+PIPELINES_LIST?=MongoDB-CI 
 SETTINGS?=settings.yml
 delete-team:
 	fly -t $(TARGET) destroy-team --team-name mongo --non-interactive
