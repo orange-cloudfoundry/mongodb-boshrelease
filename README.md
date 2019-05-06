@@ -2,41 +2,41 @@
 
 ## Contents
 
-* [What's new](#what's-new)
-* [Purpose](#purpose)
-* [What should the Release do](#what-should-the-release-do)
-* [Prerequisites](#prerequisites)
-* [Packages versions summary](#packages-versions-summary)
-* [Installation](#installation)
-  * [Clone the repository](#clone-the-repository)
-  * [Deployment Manifest](#create-the-deployment-manifest)
-  * [Deployment](#deployment)
-* [Broker](#broker)
-* [Configuring CF to use Mongodb service](#configuring)
-* [Mongodb-server job variables]()
-
-## What's new
-* 2017-12-20:
-> mongodb compilation has been delayed to it's own [bosh release](https://github.com/orange-cloudfoundry/mongodb-compilation-boshrelease). Now only the compiled blob is provided, which allow to considerably reducing compilation times
-
-* 2018-03-30:
-
-> * Two different blobs condidering the stemcell used for deployments (centos or ubuntu)
-> * Enhencing acceptance tests integration
-
+  * [Purpose](#purpose)
+  * [What should the Release do](#what-should-the-release-do)
+  * [Packages versions summary](#packages-versions-summary)
+  * [Installation](#installation)
+    + [Clone the repository](#clone-the-repository)
+    + [Deployment manifests](#deployment-manifests)
+      - [Variables](#variables)
+    + [Operation files](#operation-files)
+    + [Deployment](#deployment)
+  * [Broker](#broker)
+    + [Mongodb Broker](#mongodb-broker-(broker job))
+    + [Mongodb Broker Smoke Tests](#mongodb-broker-smoke-tests-(broker-smoke-tests-job))
+  * [Configuring CF to use Mongodb service](#configuring-cf-to-use-mongodb-service)
+    + [Available Plans](#available-plans)
+    + [Broker registration](#broker-registration)
+    + [Service provisioning](#service-provisioning)
+    + [Service binding](#service-binding)
+    + [Service unbinding](#service-unbinding)
+    + [Service deprovisioning](#service-deprovisioning)
+  * [Contributing](#contributing)
+    + [Ruby Env Setup](#ruby-env-setup)
 
 ## Purpose
 
 This project is a [Mongodb](https://www.mongodb.com) [Bosh](http://bosh.io) release.
-It's entirelly compiled from sources code, which allow to include some features like [Rocksdb](http://rocksdb.org/) engine. 
+The blobs are the provided ones from the mongodb community and are not compiled anymore. So the release can now only be deployed on an ubuntu stemcell.
 
-As it is compiled with statics libraries, the release could be implemented on ubuntu or centos Stemcell.
+This version exclude the rocksdb engine, which is not supported anymore. 
 
 ## What should the Release do
 
 > 
 * Configure a standalone or a set of standalone servers
-* Configure a replica set (Shard and config server are not implemented yet)
+* Configure a replica set 
+* Configure a sharded cluster including config server and mongos
 * Complete requirements for mongodb servers ([production notes](https://docs.mongodb.org/manual/administration/production-notes/))
 * Install mongodb component (shell / tools / mongod)
 * Authentification using bosh/credhub generated passwords (could be disable)
@@ -45,12 +45,12 @@ As it is compiled with statics libraries, the release could be implemented on ub
 
 * Mongodb database and modules version
 
-| Package     | Version | Note |
-| ----------- | ------- | ---- |
-| mongodb     | `3.4.7` |      |
-| mongo-rocks | `3.4.7` |      |
-| mongo-tools | `3.4.7` |      |
-| rocksdb     | `5.7.3` |      |
+| Package         | Version     | Note                  |
+| --------------- | ----------- | --------------------- |
+| mongodb         | `3.6.12`    |                       |
+| ~~mongo-rocks~~ | ~~`3.4.7`~~ | Not supported anymore |
+| mongo-tools     | `3.6.12`    |                       |
+| ~~rocksdb~~     | ~~`3.4.7`~~ | Not supported anymore |
 
 
 ## Installation
@@ -58,19 +58,46 @@ As it is compiled with statics libraries, the release could be implemented on ub
 ### Clone the repository
 
 ```sh
-git clone --recursive https://github.com/orange-cloudfoundry/mongodb-compilation-boshrelease.git
+git clone --recursive https://github.com/orange-cloudfoundry/mongodb-boshrelease.git
 ```
 
-### Create the deployment manifest
+### Deployment manifests
 
-An example is provided, update and complete it with your own configuration
+Two different base manifests are provided for single replicaset or sharded deployment and can be found in the `manifests` directory
+
+#### Variables
+
+Release include a `deployment-vars-template.yml` file, which includes all the needed variables for  the deployment. Just copy and fill the variables for your needs.
+
+
+
+### Operation files
+
+The release provides a set of operation files to enable or disable features. Operation files are located in the `operations`directory. This folder contains commons opsfiles and two subdirectories for sharding and replicaset  
+
+| Ops file                                      | feature                                                      | needed variable                                              | dependecies                                                  |
+| --------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **rename-azs.yml**                            | *use specific azs*                                           | azs-list                                                     |                                                              |
+| **use-specific-mongodb-release.yml**          | *use a named uploaded mongodb release version instead of the latest one* | mongodb-release-version                                      |                                                              |
+| **use_mmapv1.yml**                            | *use mmapv1 engine instead of wiredtiger default*            |                                                              |                                                              |
+| **use-trusty.yml**                            | *use an ubuntu trusty stemcell instead of the xenial default* |                                                              |                                                              |
+| **use-specific-stemcell.yml**                 | *Use a specifically named stemcell version instead of the latest one* | stemcell-version                                             |                                                              |
+| **enable-mongodb-acceptance-test.yml**        | *Deploy the acceptance tests errand*                         | accept_vm_type                                               |                                                              |
+| **enable-mongodb-broker.yml**                 |                                                              | broker_vm_type<br />broker_persistent_disk_type<br />broker_catalog_yml |                                                              |
+| **enable-mongodb-broker-route-registrar.yml** |                                                              | cf.nats_host<br />cf.nats_password<br />cf.system_domain     | enable-mongodb-broker.yml                                    |
+| **enable-mongodb-broker-smoke-tests.yml**     |                                                              |                                                              | enable-mongodb-broker.yml<br />enable-mongodb-broker-route-registrar.yml |
+| **rename-broker-network.yml**                 | *use a specific network for the broker instead of the default one* |                                                              | enable-mongodb-broker.yml                                    |
+| **enable-prometheus-exporter.yml**            | *deploy the prometheus mongodb exporter from prometheus-addons bosh release* | clustermonitor_username                                      |                                                              |
+|                                               |                                                              |                                                              |                                                              |
+
+**Note that operations directory include some others opsfiles like ssl ones that are not fully tested yet and should not be use**
 
 ### Deployment
 
 ```sh
-bosh -d [deployment name] create-release
-bosh -d [deployment name] upload-release
-bosh -d [deployment name] -n deploy manifest.yml --vars-store=credentials.yml -v appli="mongodb"
+bosh create-release
+bosh upload-release
+bosh -d [deployment name] -n deploy manifests/manifest[rs|shard].yml <-o operations/[operation file name] -o ...> -l <deployment-vars-file> <--vars-store=credentials.yml >
 ```
 *--vars-store=credentials.yml is uneeded if you are using credhub*
 
