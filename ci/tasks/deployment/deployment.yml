@@ -8,15 +8,21 @@ image_resource:
     tag: latest
 
 inputs:
-  - name: mongodb-bosh-release
+  - name: mongodb-bosh-release-patched
   - name: bosh-director-config
+  - name: mongodb-version
+    optional: true
+  - name: mongodb-new-version
+    optional: true
+  
+outputs:
+  - name: output  
 
 run:
-  path: mongodb-bosh-release/ci/scripts/deployment.sh
+  path: mongodb-bosh-release-patched/ci/scripts/deployment/deployment.sh
 
 params:
   CF_NATS_HOST: ""
-  MANIFEST: ""
   PERSISTENT_DISK_TYPE: ""
   CF_ORG: ""
   DEPLOYMENT_NETWORK: ""
@@ -36,3 +42,9 @@ params:
   CF_SPACE: ""
   BROKER_VM_TYPE: ""
   DEPLOYMENT_NAME: ""
+  SHIELD_TENANT: ""
+  SHIELD_URL: ""
+  SHIELD_TOKEN: ""
+  SHIELD_STORAGE: ""
+  CURRENT: ""
+  SHARDED: false

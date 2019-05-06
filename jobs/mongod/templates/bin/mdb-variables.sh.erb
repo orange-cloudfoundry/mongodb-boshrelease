@@ -16,12 +16,12 @@
   mongo_current_ip = spec.ip
 %>
 property_require_ssl=<%= esc(p("require_ssl")) %>
-property_node_role=<%= esc(p("node_role")) %>
 property_mongod_listen_port=<%= esc(mongo_DbTypeport) %>
 property_root_username=<%= esc(p("root_username")) %>
 property_root_password=<%= esc(p("root_password")) %>
 property_admin_username=<%= esc(p("admin_username")) %>
 property_admin_password=<%= esc(p("admin_password")) %>
+property_replication_enable=<%= esc(p("replication.enable")) %>
 property_replica_set_name=<%= esc(p("replication.replica_set_name")) %>
 
 deployment_current_ip=<%= esc(mongo_current_ip) %>

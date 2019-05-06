@@ -20,11 +20,6 @@ then
 	aws_secret_access_key=$SECRET_ACCESS_KEY
 	EOF
 
-	if [ "${MONGODB_VERSION}" == "" ]
-	then
-	  MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-version/version`
-	fi
-
 	aws_opt="--endpoint-url ${ENDPOINT_URL}"
 
 	if ${SKIP_SSL}
@@ -45,19 +40,26 @@ then
 
 	cd mongodb-bosh-release-patched || exit 666
 
+	SUFFIX=""
+	if [ "$CURRENT" != "true" ]
+	then 
+		MONGODB_VERSION=`cat ${ROOT_FOLDER}/mongodb-new-version/metadata|jq -r '.version.ref'`
+		SUFFIX="-${MONGODB_VERSION}"
+	fi
+
 	#retrieve blob list
 	aws ${aws_opt} s3 \
-		cp s3://${BUCKET}/${CONFIG_PATH}/blobs-${MONGODB_VERSION}.yml config/blobs.yml \
+		cp s3://${BUCKET}/${CONFIG_PATH}/blobs${SUFFIX}.yml config/blobs.yml \
 		||echo "no archived blobs.yml, use release default one"
 
 	#retrieve final.yml
 	aws ${aws_opt} s3 \
-		cp s3://${BUCKET}/${CONFIG_PATH}/final-${MONGODB_VERSION}.yml config/final.yml \
+		cp s3://${BUCKET}/${CONFIG_PATH}/final${SUFFIX}.yml config/final.yml \
 		||echo "no archived final.yml, use release default one"
 
 	#retrieve private.yml
 	aws ${aws_opt} s3 \
-		cp s3://${BUCKET}/${CONFIG_PATH}/private-${MONGODB_VERSION}.yml config/private.yml  \
+		cp s3://${BUCKET}/${CONFIG_PATH}/private${SUFFIX}.yml config/private.yml  \
 		||echo "no archived private.yml, use release default one"
 
 	#get the list of availables blobs ids on blobsore
@@ -79,4 +81,11 @@ then
 			[ -d ${d} ] && rm -rf ${d}
 		done
 	fi
+
+	# removing builds references but golang ones
+	mkdir .tmp
+	find .final_builds -type d  -name '*golang*' -print |xargs -i sh -c 'dest=$(dirname $1) && mkdir -p .tmp/$dest && mv $1 .tmp/$dest' {} {} 
+	rm -rf releases .final_builds .dev_builds
+	mv .tmp/.final_builds .
+	rm -rf .tmp
 fi

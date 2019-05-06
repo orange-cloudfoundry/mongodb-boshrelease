@@ -1,6 +1,6 @@
-#!/usr/bin/env bash 
+#!/usr/bin/env sh 
 
-set -e
+set -ex
 
 if [ "${SKIP_SSL}" == "true" ]
 then
@@ -19,20 +19,6 @@ fi
 cf api ${CF_API_URL} ${opts}
 cf login -u admin -p ${CF_ADMIN_PASSWORD}
 
-if cf service ${DEPLOYMENT_NAME}-instance 1>/dev/null
-then
-	for app in $(cf services|grep "^${DEPLOYMENT_NAME}-instance"|awk '{print $4}')
-	do
-		cf unbind-service ${app} ${DEPLOYMENT_NAME}-instance
-	done
-	cf delete-service -f ${DEPLOYMENT_NAME}-instance
+cd mongodb-bosh-release/src/cf-mongodb-example-app
 
-fi
-
-if [ ! -z "$(cf services|awk '{if ($4=="mongodb-example-app"){print $0}}')" ]
-then
-   cf delete -f mongodb-example-app
-fi
-
-cf delete-service-broker -f broker-${DEPLOYMENT_NAME}
-
+cf push

@@ -7,14 +7,14 @@
 
 #add bpm
 - type: replace
-  path: /releases/-
+  path: /releases/name=bpm?
   value:
     name: bpm
     version: latest
 
 #add routing
 - type: replace
-  path: /releases/-
+  path: /releases/name=routing?
   value:
     name: routing
     version: latest
@@ -222,11 +222,11 @@
             days: 7
 
           systems:
-          - name: mongo-fpc-(ip)
+          - name: mongo-(ip)
             agent: (ip):5444
             config:
               mongo_host: (ip)
-              mongo_user: MongoRoot
+              mongo_user: ((mongo_root_username))
               mongo_password: ((mongo_root_password))
               mongo_bindir: "/var/vcap/packages/mongodb/bin"
             jobs:

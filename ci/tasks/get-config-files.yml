@@ -9,7 +9,7 @@ image_resource:
 
 inputs:
   - name: mongodb-bosh-release
-  - name: mongodb-version
+  - name: mongodb-new-version
 
 outputs:
   - name: mongodb-bosh-release-patched
@@ -18,6 +18,7 @@ run:
   path: mongodb-bosh-release/ci/scripts/get-config-files.sh
 
 params:
+  CURRENT: ""
   ACCESS_KEY_ID: ""
   BUCKET: ""
   ENDPOINT_URL: ""

@@ -1,4 +1,0 @@
----
-- path: /instance_groups/name=mongod/networks
-  type: replace
-  value: [{name: ((network_name))}]

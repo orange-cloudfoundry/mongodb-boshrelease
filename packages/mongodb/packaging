@@ -11,7 +11,12 @@ export HOME=/var/vcap
 
 typeset -l stemcell=$(grep -w "^ID" /etc/os-release|cut -d"=" -f2|tr -d \")
 
-for i in `find mongodb/ -type f -name "mongodb-${stemcell}-x86_64-*.tar.gz" -print`
-do
-   tar xf $i -C $BOSH_INSTALL_TARGET
-done
+# new releases will use linux compiled mongodb version instead of dedicated stemcell
+
+if [ -f mongodb/mongodb-${stemcell}-x86_64-*.tar.gz ]
+then
+	tar xf mongodb/mongodb-${stemcell}-x86_64-*.tar.gz -C $BOSH_INSTALL_TARGET
+else
+	# mongodb provide bin in a root directory, we have to omit it
+	tar xf mongodb/mongodb-linux-x86_64-*.tar.gz -C $BOSH_INSTALL_TARGET --strip 1
+fi

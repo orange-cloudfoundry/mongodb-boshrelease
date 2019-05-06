@@ -1,0 +1,23 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/aws-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release
+run:
+  path: mongodb-bosh-release/ci/scripts/clone-blobstore/blobstore-cleanup.sh
+
+params:
+  SKIP_SSL: ""
+  SSL_CERT: ""
+  ACCESS_KEY_ID: ""
+  BUCKET: ""
+  ENDPOINT_URL: ""
+  SECRET_ACCESS_KEY: ""
+
+
