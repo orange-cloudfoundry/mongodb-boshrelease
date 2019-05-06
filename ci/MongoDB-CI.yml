@@ -50,17 +50,23 @@ resources:
   - &deployment-lock
     name: deployment-lock
     type: pool
-    source:
+    source: &locks-source
       uri: ((repositories.locks-pool.uri))
       branch: ((repositories.locks-pool.branch))
-      pool: concourse-deployment-lock
+      pool: deployment-lock
       username: ((repositories.locks-pool.username))
       password: ((repositories.locks-pool.password))
   
   # lock to avoid multiple errand running on the same deployment
   - <<: *deployment-lock
-    name: bosh-errand-lock    
-  
+    name: bosh-errand-lock
+    source: 
+      <<: *locks-source
+      pool: errand-lock
+
+####################################################################################################################################
+#                       JOBS
+####################################################################################################################################      
 
 jobs:
 
@@ -349,46 +355,48 @@ jobs:
       passed: [ deploy-current-version-rs ]
       trigger: true
 
-    - get: deployment-lock   
+    - &insert-datas-plan
+      do:  
 
-    - aggregate: 
+        - get: deployment-lock   
 
-      - get: deployed-version
+        - aggregate: 
 
-      - *create-bosh-config
+          - get: deployed-version
+
+          - *create-bosh-config
+
+        - &get-mongo-pwd
+          task: get-mongo-pwd
+          file: mongodb-bosh-release/ci/tasks/data-insertion/get-root-pwd.yml
+          params: &get-mongo-pwd-params
+            BOSH_ALIAS:       ((bosh-server.alias))
+            IP:               ((credhub.ip))
+            PORT:             ((credhub.port))
+            USER:             ((credhub.username))
+            PASSWORD:         ((credhub.password))
+            CA_CERT:          ((credhub.ca))
+            UAA_CA_CERT:      ((uaa.ca))
+            DEPLOYMENT_NAME:  *deployment_name
+            VAR:              "root_password"
 
 
-    - &get-mongo-pwd
-      task: get-mongo-pwd
-      file: mongodb-bosh-release/ci/tasks/data-insertion/get-root-pwd.yml
-      params: &get-mongo-pwd-params
-        BOSH_ALIAS:       ((bosh-server.alias))
-        IP:               ((credhub.ip))
-        PORT:             ((credhub.port))
-        USER:             ((credhub.username))
-        PASSWORD:         ((credhub.password))
-        CA_CERT:          ((credhub.ca))
-        UAA_CA_CERT:      ((uaa.ca))
-        DEPLOYMENT_NAME:  *deployment_name
-        VAR:              "root_password"
+        - &update-deployment-specs
+          put: deployment-specs
+          params: { file: output/keyval.properties}
 
+        - &get-deployment-ips
+          task: get-deployment-ips
+          file: mongodb-bosh-release/ci/tasks/data-insertion/get-deployment-ips.yml
+          params: &get-deployment-ips-params
+            CA_CERT:          ((bosh-server.ca))
+            IP:               ((bosh-server.ip))
+            ALIAS:            ((bosh-server.alias)) 
+            USER:             ((bosh-server.user))
+            PASSWORD:         ((bosh-server.password))
+            DEPLOYMENT_NAME:  *deployment_name
 
-    - &update-deployment-specs
-      put: deployment-specs
-      params: { file: output/keyval.properties}
-
-    - &get-deployment-ips
-      task: get-deployment-ips
-      file: mongodb-bosh-release/ci/tasks/data-insertion/get-deployment-ips.yml
-      params: &get-deployment-ips-params
-        CA_CERT:          ((bosh-server.ca))
-        IP:               ((bosh-server.ip))
-        ALIAS:            ((bosh-server.alias)) 
-        USER:             ((bosh-server.user))
-        PASSWORD:         ((bosh-server.password))
-        DEPLOYMENT_NAME:  *deployment_name
-
-    - *update-deployment-specs
+        - *update-deployment-specs
 
     - &check-mongo-version
       task: check-mongo-version
@@ -565,6 +573,9 @@ jobs:
 
     - &run-smoke-tests-plan
       do:
+
+        - get: deployment-lock
+
         - *create-bosh-config
 
         - task: create-example-app
@@ -618,22 +629,7 @@ jobs:
       passed: [ deploy-current-version-sharding ]
       trigger: true
 
-    - get: deployment-lock   
-
-    - aggregate: 
-
-      - get: deployed-version
-
-      - *create-bosh-config
-
-
-    - *get-mongo-pwd
-      
-    - *update-deployment-specs
-
-    - *get-deployment-ips
-      
-    - *update-deployment-specs
+    - *insert-datas-plan
 
     - &check-mongo-version-shard
       <<: *check-mongo-version
