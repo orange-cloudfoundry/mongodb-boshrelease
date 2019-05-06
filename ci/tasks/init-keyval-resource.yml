@@ -1,0 +1,19 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: alpine
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release
+
+outputs:
+  - name: output  
+
+run:
+  path: mongodb-bosh-release/ci/scripts/init-keyval-resource.sh
+
+params:

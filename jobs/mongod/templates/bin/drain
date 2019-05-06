@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+function prepend_datetime() {
+  awk -W interactive '{ system("echo -n [$(date +%FT%T%z)]"); print " " $0 }'
+}
+
+
+output_for_bosh() {
+    exit_code=$?
+
+    if [ $exit_code -eq 0 -a $REMOVED -eq 1 ]; then
+        echo "$(date +%F_%T): mongodb member removed"
+    elif [ $exit_code -ne 0 -a $REMOVED -eq 1 ]; then
+        echo "$(date +%F_%T): drain failed"
+    fi
+
+    echo $exit_code >&3
+}
+
+exec 3>&1
+trap output_for_bosh EXIT
+
+REMOVED=0
+
+exec \
+    1> >(prepend_datetime >> /var/vcap/sys/log/mongod/drain.stdout.log) \
+    2> >(prepend_datetime >> /var/vcap/sys/log/mongod/drain.stderr.log)
+
+JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
+source ${JOBS_COMMON_DIR}/bin/setenv mongod
+source ${JOBS_COMMON_DIR}/bin/mdb-functions
+
+echo "current_state : ${BOSH_JOB_STATE} next_state:${BOSH_JOB_NEXT_STATE}" 
+
+if echo "${BOSH_JOB_NEXT_STATE}" | grep '"persistent_disk":0'
+then
+	echo "$(date +%F_%T): detected 'scale-in' condition, decommissioning current node"
+
+    # In standalone mode node is simply removed
+	# otherwise
+	if [ "$(get_node_role)" != "sa" ]
+	then
+        REMOVED=1
+	    rs_scaleIn # remove the node from replicaset
+	fi
+    
+fi

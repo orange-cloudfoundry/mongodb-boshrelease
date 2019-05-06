@@ -1,0 +1,4 @@
+---
+- path: /instance_groups/name=mongodb-broker/networks
+  type: replace
+  value: [{name: ((network_name))}]

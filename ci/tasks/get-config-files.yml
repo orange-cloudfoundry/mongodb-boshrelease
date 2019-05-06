@@ -1,0 +1,31 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/aws-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release
+  - name: mongodb-version
+
+outputs:
+  - name: mongodb-bosh-release-patched
+
+run:
+  path: mongodb-bosh-release/ci/scripts/get-config-files.sh
+
+params:
+  ACCESS_KEY_ID: ""
+  BUCKET: ""
+  ENDPOINT_URL: ""
+  MONGODB_VERSION: ""
+  SECRET_ACCESS_KEY: ""
+  SIGNATURE_VERSION: ""
+  SKIP_SSL: ""
+  SSL_CERT: ""
+  USE_RELEASE_CONFIG: ""
+  CONFIG_PATH: ""
+  GOLANG_VERSION: ""

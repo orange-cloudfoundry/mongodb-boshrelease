@@ -1,0 +1,29 @@
+---
+
+# add mongodb_broker instance group
+- type: replace
+  path: /instance_groups/name=mongodb-broker?
+  value:
+    name: mongodb-broker
+    instances: 1
+    vm_type: ((broker_vm_type))
+    stemcell: ubuntu
+    azs: [z1]
+    networks: [{name: ((deployments-network))}]
+    persistent_disk_type: ((broker_persistent_disk_type))
+    jobs:
+    - name: broker
+      release: ((release_name))
+      consumes:
+        server: {from: deployment-server}
+      properties:
+        broker:
+          user: mongodb-broker
+          password: ((broker_password))
+          catalog_yml: ((broker_catalog_yml))
+
+- type: replace
+  path: /variables/name=broker_password?
+  value:
+    name: broker_password
+    type: password          

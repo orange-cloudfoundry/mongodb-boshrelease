@@ -1,0 +1,1191 @@
+---
+resource_types:
+  - name: keyval
+    type: docker-image
+    source:
+      repository: swce/keyval-resource
+
+resources:
+
+#  - name: daily-build
+#    type: time
+#    source:
+#      start:    22:00 
+#      stop:     23:00
+#      location: Europe/Paris
+
+  - name: mongodb-compilation-bosh-release
+    type: git
+    source:
+      uri:    ((repositories.mongodb-compilation.uri))
+      branch: ((repositories.mongodb-compilation.branch))
+
+  - name: mongodb-bosh-release
+    type: git
+    source:
+      uri:    ((repositories.mongodb.uri))
+      branch: ((repositories.mongodb.branch))
+
+  - name: mongodb-version
+    type: semver
+    source: 
+      initial_version: 1.0.0
+      driver: git
+      uri: https://github.com/orange-cloudfoundry/mongodb-compilation-boshrelease.git
+      branch: ((repositories.mongodb-compilation.branch))
+      file: mongodb_compiled_version
+      username: ((repositories.mongodb-compilation.username))
+      password: ((repositories.mongodb-compilation.password))
+      git_user: "((repositories.mongodb-compilation.git_user)) <((repositories.mongodb-compilation.email))>"
+
+  - name: rocksdb-version
+    type: semver
+    source: 
+      initial_version: 1.0.0
+      driver: git
+      uri: https://github.com/orange-cloudfoundry/mongodb-compilation-boshrelease.git
+      branch: ((repositories.mongodb-compilation.branch))
+      file: rocksdb_compiled_version
+      username: ((repositories.mongodb-compilation.username))
+      password: ((repositories.mongodb-compilation.password))
+      git_user: "((repositories.mongodb-compilation.git_user)) <((repositories.mongodb-compilation.email))>"
+
+  - name: passed-version
+    type: semver
+    source: 
+      initial_version:  1.0.0
+      driver:           git
+      uri:              https://github.com/orange-cloudfoundry/mongodb-compilation-boshrelease.git
+      branch:           ((repositories.mongodb-compilation.branch))
+      file:             test_passed_version
+      username:         ((repositories.mongodb-compilation.username))
+      password:         ((repositories.mongodb-compilation.password))
+      git_user:         "((repositories.mongodb-compilation.git_user)) <((repositories.mongodb-compilation.email))>"
+
+  - name: versions
+    type: keyval
+
+  - name: deployment-specs
+    type: keyval
+
+  - name: datas
+    type: keyval
+
+  - name: all-tests-passed
+    type: keyval  
+
+  - &bosh-lock
+    name: bosh-errand-lock-ubuntu
+    type: pool
+    source:
+      uri: ((repositories.locks-pool.uri))
+      branch: ((repositories.locks-pool.branch))
+      pool: bosh
+      username: ((repositories.locks-pool.username))
+      password: ((repositories.locks-pool.password))
+
+  - <<: *bosh-lock
+    name: bosh-errand-lock-centos
+
+  - <<: *bosh-lock
+    name: deployment-spec-lock
+
+  - <<: *bosh-lock
+    name: deployment-ubuntu-lock
+
+  - <<: *bosh-lock
+    name: deployment-centos-lock
+
+jobs:
+
+- name: init-bootstrap-config
+  plan:
+    - get: mongodb-bosh-release
+
+    - aggregate:
+#      - try:
+#        get: daily-build
+#        trigger: true
+
+      - get: mongodb-version
+        trigger: true
+      - get: rocksdb-version
+        trigger: true
+      - &create-bosh-config
+        do:
+          - get: mongodb-compilation-bosh-release 
+          - task: create-bosh-config
+            file: mongodb-compilation-bosh-release/ci/common/tasks/create-bosh-config.yml
+            params:
+              CA_CERT:  ((bosh-server.ca))
+              IP:       ((bosh-server.ip))
+              ALIAS:    ((bosh-server.alias)) 
+              USER:     ((bosh-server.user))
+              PASSWORD: ((bosh-server.password))
+
+    - task: set-versions
+      file: mongodb-compilation-bosh-release/ci/compilation/set-versions/tasks/set-versions.yml
+      params: 
+        MONGO_VERSION:  ((deployment.bootstrap.mongodb-version))
+        ROCKS_VERSION:  ((deployment.bootstrap.rocksdb-version))
+
+    - put: versions
+      params: {file: versions/keyval.properties}
+
+    - &get-config-files
+      task: get-config-files
+      file: mongodb-compilation-bosh-release/ci/common/tasks/get-config-files.yml
+      params: &get-config-files-params
+        ACCESS_KEY_ID:      ((blobstores.compilation.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstores.compilation.secret_access_key))
+        ENDPOINT_URL:       ((blobstores.compilation.endpoint-url))
+        BUCKET:             ((blobstores.compilation.bucket))
+        SIGNATURE_VERSION:  ((blobstores.compilation.signature-version))
+        SKIP_SSL:           ((blobstores.compilation.skip-ssl-validation))
+        SSL_CERT:           ((blobstores.compilation.certificate))
+        MONGODB_VERSION:    ((deployment.bootstrap.mongodb-version))
+        GOLANG_VERSION:     ((deployment.golang-version))
+
+    - &upload-compiled-blobs
+      task: upload-compiled-blobs
+      file: mongodb-compilation-bosh-release/ci/deployment/deploy/tasks/upload-compiled-blobs.yml
+      params:
+        ACCESS_KEY_ID:            ((blobstores.release.access_key_id))
+        SECRET_ACCESS_KEY:        ((blobstores.release.secret_access_key))
+        ENDPOINT_URL:             ((blobstores.release.endpoint-url))
+        BUCKET:                   ((blobstores.release.bucket))
+        COMPIL_ACCESS_KEY_ID:     ((blobstores.compilation.access_key_id))
+        COMPIL_SECRET_ACCESS_KEY: ((blobstores.compilation.secret_access_key))
+        COMPIL_ENDPOINT_URL:      ((blobstores.compilation.endpoint-url))
+        COMPIL_BUCKET:            ((blobstores.compilation.bucket))
+        SIGNATURE_VERSION:        ((blobstores.compilation.signature-version))
+        SKIP_SSL:                 ((blobstores.compilation.skip-ssl-validation))
+        SSL_CERT:                 ((blobstores.compilation.certificate))
+        COMPIL_SKIP_SSL:          ((blobstores.compilation.skip-ssl-validation))
+        COMPIL_SSL_CERT:          ((blobstores.compilation.certificate))
+
+    - &upload-config-files
+      task: upload-config-files
+      file: mongodb-compilation-bosh-release/ci/common/tasks/upload-config-files.yml
+      params: &upload-config-files-params
+        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
+        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
+        BUCKET:             ((blobstores.release.bucket))
+        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
+        SSL_CERT:           ((blobstores.release.certificate))
+        MONGODB_VERSION:    ((deployment.bootstrap.mongodb-version))
+
+- name: init-new-config
+  plan:
+    - get: mongodb-bosh-release
+
+    - aggregate:
+      - get: versions
+        trigger: true
+        passed: [init-bootstrap-config] 
+      - get: mongodb-version
+      - get: rocksdb-version
+      - *create-bosh-config
+
+    - task: set-versions
+      file: mongodb-compilation-bosh-release/ci/compilation/set-versions/tasks/set-versions.yml
+
+    - put: versions
+      params: {file: versions/keyval.properties}
+
+#    - put: all-tests-passed-ubuntu-WiredTiger
+#      resource: all-tests-passed
+#      params: {file: versions/keyval.properties}
+#
+#    - put: all-tests-passed-centos-WiredTiger
+#      resource: all-tests-passed
+#      params: {file: versions/keyval.properties}
+#
+#    - put: all-tests-passed-ubuntu-MongoRocks
+#      resource: all-tests-passed
+#      params: {file: versions/keyval.properties}
+#      
+#    - put: all-tests-passed-centos-MongoRocks
+#      resource: all-tests-passed
+#      params: {file: versions/keyval.properties}
+
+    - put: all-tests-passed
+      params: {file: versions/keyval.properties}
+
+    - <<: *get-config-files
+      params:
+        <<: *get-config-files-params
+        MONGODB_VERSION:    "" 
+
+    - *upload-compiled-blobs
+
+    - <<: *upload-config-files
+      params:
+        <<: *upload-config-files-params
+        MONGODB_VERSION:    ""
+
+########################################################################################################
+#                                      BUMP VERSION (if everything is ok)                             #
+########################################################################################################
+
+- name: bump-versions
+  serial: true
+  plan:
+    #- aggregate:
+    - get: all-tests-passed-ubuntu-WiredTiger
+      resource: all-tests-passed
+      passed: [delete-deployment-ubuntu-WiredTiger]
+
+    - get: all-tests-passed-centos-WiredTiger
+      resource: all-tests-passed
+      passed: [delete-deployment-centos-WiredTiger]
+
+    - get: all-tests-passed-ubuntu-MongoRocks
+      resource: all-tests-passed
+      passed: [delete-deployment-ubuntu-MongoRocks]
+
+    - get: all-tests-passed-centos-MongoRocks
+      resource: all-tests-passed
+      passed: [delete-deployment-centos-MongoRocks]
+
+    - get: versions
+      trigger: true     
+      passed: [init-new-config]         
+
+    - *create-bosh-config
+
+    - task: propagate-versions
+      file: mongodb-compilation-bosh-release/ci/compilation/bump-versions/tasks/propagate-versions.yml
+    - put: passed-version
+      params: { file: new_versions/mongodb }
+
+##############################################################################################################
+##############################################################################################################
+##                                          Ubuntu                                                          ##
+##############################################################################################################
+##############################################################################################################
+
+########################################################################################################
+#                                      Deploy a bootstrap version of mongodb
+########################################################################################################
+
+- &deploy-bootstrap
+  name: deploy-bootstrap-ubuntu-WiredTiger
+  serial: true
+  plan:
+    - &bs-init
+      do:
+        - get: mongodb-bosh-release
+
+        - aggregate: 
+          - get: versions
+            trigger: true
+            passed: [init-bootstrap-config]
+          - *create-bosh-config
+
+    - &deployment-ubuntu-lock
+      put: deployment-ubuntu-lock
+      params: {claim: deploy-ubuntu}
+
+    - &bs-get-config-files
+      task: get-config-files
+      file: mongodb-compilation-bosh-release/ci/common/tasks/get-config-files-mainrelease.yml
+      params:
+        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
+        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
+        BUCKET:             ((blobstores.release.bucket))
+        SIGNATURE_VERSION:  ((blobstores.release.signature-version))
+        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
+        SSL_CERT:           ((blobstores.release.certificate))
+        MONGODB_VERSION:    ((deployment.bootstrap.mongodb-version))
+        GOLANG_VERSION:     ((deployment.golang-version))
+        
+    - &deploy
+      task: deploy-rs
+      file: mongodb-compilation-bosh-release/ci/deployment/deploy/tasks/deploy-rs.yml
+      attempts: 3
+      params: &deploy-params
+        CA_CERT:              ((bosh-server.ca))
+        IP:                   ((bosh-server.ip))
+        ALIAS:                ((bosh-server.alias))
+        USER:                 ((bosh-server.user))
+        PASSWORD:             ((bosh-server.password))
+        RELEASE_NAME:         ((deployment.tests.name))
+        DEPLOYMENT_NAME:      ((deployment.tests.name))
+        DEPLOYMENT_NETWORK:   ((deployment.tests.network))
+        SHIELD_URL:           ((deployment.tests.shield.core))
+        SHIELD_TOKEN:         ((deployment.tests.shield.token))
+        SHIELD_TENANT:        ((deployment.tests.shield.tenant))
+        SHIELD_STORAGE:       ((deployment.tests.shield.storage))
+        MONGO_PORT:           ((deployment.tests.mongod.port))
+        PERSISTENT_DISK_TYPE: ((deployment.tests.mongod.persistent-disk-type))
+        VM_TYPE:              ((deployment.tests.mongod.vm-type))
+        ROOT_USERNAME:        ((deployment.tests.mongod.root-username))
+        STEMCELL:             ((deployment.bootstrap.stemcell.version))
+        STEMCELL_OS:          ((deployment.bootstrap.stemcell.os))
+        STEMCELL_ALIAS:       ((deployment.bootstrap.stemcell.type))
+        STEMCELL_TYPE:        ""
+        ENGINE:               "wiredtiger"
+        # for ssl deployment
+        REQUIRE_SSL:          ((deployment.tests.mongod.require_ssl))
+        CA_NAME:              ((deployment.tests.mongod.ca_name))
+
+########################################################################################################
+#                                      Insert some datas
+########################################################################################################      
+
+- &insert-datas
+  name: insert-datas-ubuntu-WiredTiger
+  serial: true
+  plan:
+
+    - &insert-datas-trigger
+      get: versions
+      trigger: true
+      passed: [deploy-bootstrap-ubuntu-WiredTiger]
+
+    - &insert-datas-plan
+      do:
+        - *create-bosh-config
+
+        - &deployment-spec-lock
+          put: deployment-spec-lock
+          params: {claim: deploy-specs}
+
+        - &get-mongo-pwd
+          task: get-mongo-pwd
+          file: mongodb-compilation-bosh-release/ci/deployment/insertions-tests/tasks/get-root-pwd.yml
+          params: &get-mongo-pwd-params
+            BOSH_ALIAS:       ((bosh-server.alias))
+            IP:               ((deployment.tests.credhub.ip))
+            PORT:             ((deployment.tests.credhub.port))
+            USER:             ((deployment.tests.credhub.username))
+            PASSWORD:         ((deployment.tests.credhub.password))
+            VAR:              mongo_root_password
+            DEPLOYMENT_NAME:  ((deployment.tests.name))
+          on_failure: &deployment-spec-unlock
+            put: deployment-spec-lock
+            params: {release: deployment-spec-lock}
+          on_abort:
+            *deployment-spec-unlock
+
+        - &update-deployment-specs
+          put: deployment-specs
+          params: { file: output/keyval.properties}
+
+        - &get-deployment-ips
+          task: get-deployment-ips
+          file: mongodb-compilation-bosh-release/ci/deployment/insertions-tests/tasks/get-deployment-ips.yml
+          params: &get-deployment-ips-params
+            CA_CERT:          ((bosh-server.ca))
+            IP:               ((bosh-server.ip))
+            ALIAS:            ((bosh-server.alias)) 
+            USER:             ((bosh-server.user))
+            PASSWORD:         ((bosh-server.password))
+            DEPLOYMENT_NAME:  ((deployment.tests.name))
+          ensure:
+            *deployment-spec-unlock
+
+        - *update-deployment-specs
+
+        - &check-mongo-version
+          task: check-mongo-version
+          file: mongodb-compilation-bosh-release/ci/deployment/deploy/tasks/check-mongo-version.yml
+          params:
+            USER: ((deployment.tests.mongod.root-username))
+            PORT: ((deployment.tests.mongod.port))
+            # for ssl
+            REQUIRE_SSL: ((deployment.tests.mongod.require_ssl))            
+            CA_CERT: ((deployment.tests.mongod.ca_cert))
+
+        - &insert-collection
+          task: insert-collection
+          file: mongodb-compilation-bosh-release/ci/deployment/insertions-tests/tasks/insert-collection.yml
+          params: &insert-collection-params
+            USER:       ((deployment.tests.mongod.root-username))
+            PORT:       ((deployment.tests.mongod.port))
+            DB:         ((deployment.tests.mongod.database-name))
+            COLLECTION: ((deployment.tests.mongod.collection-name))
+            # for ssl
+            REQUIRE_SSL: ((deployment.tests.mongod.require_ssl))
+            CA_CERT: ((deployment.tests.mongod.ca_cert))
+
+        - &list-inserted-values
+          put: datas
+          params: { file: datas/keyval.properties }
+
+########################################################################################################
+#                                      Reinsert datas for test purposes
+########################################################################################################      
+
+- &reinsert-datas
+  name: reinsert-datas-ubuntu-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      passed: [insert-datas-ubuntu-WiredTiger]
+
+    - get: deployment-specs
+      passed: [insert-datas-ubuntu-WiredTiger]
+
+    - *create-bosh-config
+
+    - &reinsert-collection
+      task: reinsert-collection
+      file: mongodb-compilation-bosh-release/ci/deployment/insertions-tests/tasks/reinsert-collection.yml
+      params: &reinsert-collection-params
+        <<: *insert-collection-params
+
+########################################################################################################
+#                                      Mongodb Version Upgrade Test 
+########################################################################################################
+
+- &mongo-version-upgrade
+  name: mongo-version-upgrade-ubuntu-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      trigger: true
+      passed: [insert-datas-ubuntu-WiredTiger]
+
+    - get: versions
+      passed: [init-new-config]
+
+    - get: deployment-specs
+      passed: [insert-datas-ubuntu-WiredTiger]
+
+    - get: mongodb-bosh-release
+
+    - *create-bosh-config
+
+    - &check-datas
+      task: check-datas-before-version-upgrade
+      file: mongodb-compilation-bosh-release/ci/common/tasks/check-datas.yml
+      params:
+        USER: ((deployment.tests.mongod.root-username))
+        PORT: ((deployment.tests.mongod.port))
+        DB:   ((deployment.tests.mongod.database-name))
+        COLLECTION: ((deployment.tests.mongod.collection-name))
+        # for ssl
+        REQUIRE_SSL: ((deployment.tests.mongod.require_ssl))
+        CA_CERT: ((deployment.tests.mongod.ca_cert))
+
+    - &get-config-files-mainrelease
+      task: get-config-files-mainrelease
+      file: mongodb-compilation-bosh-release/ci/common/tasks/get-config-files-mainrelease.yml
+      params:
+        ACCESS_KEY_ID:      ((blobstores.release.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstores.release.secret_access_key))
+        ENDPOINT_URL:       ((blobstores.release.endpoint-url))
+        BUCKET:             ((blobstores.release.bucket))
+        SIGNATURE_VERSION:  ((blobstores.release.signature-version))
+        SKIP_SSL:           ((blobstores.release.skip-ssl-validation))
+        SSL_CERT:           ((blobstores.release.certificate))
+
+    - <<: *deploy
+      task: upgrade-rs
+
+    - *check-mongo-version
+
+    - <<: *check-datas
+      task: check-datas-after-version-upgrade
+
+########################################################################################################
+#                                      Stemcell Upgrade Test 
+########################################################################################################
+
+- &stemcell-upgrade
+  name: stemcell-upgrade-ubuntu-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      trigger: true
+      passed: [mongo-version-upgrade-ubuntu-WiredTiger]
+
+    - get: deployment-specs
+      passed: [mongo-version-upgrade-ubuntu-WiredTiger]
+
+    - get: versions
+      passed: [mongo-version-upgrade-ubuntu-WiredTiger]
+
+    - get: mongodb-bosh-release
+
+    - *create-bosh-config
+
+    - *get-config-files-mainrelease
+
+    - <<: *deploy
+      task: upgrade-stemcell
+      params:
+        <<: *deploy-params
+        STEMCELL: latest
+
+    - <<: *check-datas
+      task: check-datas-after-stemcell-upgrade
+
+########################################################################################################
+#                                      Mongodb Acceptance Tests
+########################################################################################################
+
+- &acceptance-tests
+  name: acceptance-tests-ubuntu-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      trigger: true
+      passed: [stemcell-upgrade-ubuntu-WiredTiger]
+
+    - &acceptance-tests-plan
+      do:  
+
+        - *create-bosh-config
+
+        - &errand-lock-ubuntu
+          put: bosh-errand-lock-ubuntu
+          params: {claim: errand-ubuntu}
+
+        - &run-acceptance-tests
+          task: run-acceptance-tests
+          file: mongodb-compilation-bosh-release/ci/deployment/acceptance-tests/tasks/run-acceptance-tests.yml
+          params: &run-acceptance-tests-params
+            ALIAS:    ((bosh-server.alias))
+            DEPLOYMENT_NAME:  ((deployment.tests.name))
+          ensure:
+            &errand-unlock-ubuntu
+            put: bosh-errand-lock-ubuntu
+            params: {release: bosh-errand-lock-ubuntu}
+
+########################################################################################################
+#                                      Mongodb Shield Test
+########################################################################################################           
+
+- &backup-restore-test
+  name: backup-restore-test-ubuntu-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      trigger: true
+      passed: [stemcell-upgrade-ubuntu-WiredTiger]
+
+    - get: deployment-specs
+      passed: [stemcell-upgrade-ubuntu-WiredTiger]
+
+    - &backup-restore-test-plan
+      do:
+
+        - *create-bosh-config
+
+        - &shield-clean-up
+          task: shield-clean-up
+          file: mongodb-compilation-bosh-release/ci/deployment/backup-restore-test/tasks/shield-clean-up.yml
+          params: &shield-clean-up-params
+            SHIELD_CA:          ((deployment.tests.shield.ca))
+            SHIELD_CORE_TOKEN:  ((deployment.tests.shield.token))
+            SHIELD_CORE:        ((deployment.tests.shield.core))
+            SHIELD_TENANT:      ((deployment.tests.shield.tenant))
+            SHIELD_TARGET:      ((deployment.tests.name))
+
+        - *errand-lock-ubuntu
+
+        - &run-shield-import-errand
+          task: run-shield-import-errand
+          file: mongodb-compilation-bosh-release/ci/deployment/backup-restore-test/tasks/run-shield-errand.yml
+          params: &run-shield-import-errand-params
+            ALIAS:      ((bosh-server.alias))
+            DEPLOYMENT: ((deployment.tests.name))
+          ensure:
+            *errand-unlock-ubuntu
+
+        - &update-targets-hosts
+          task: update-targets-hosts
+          file: mongodb-compilation-bosh-release/ci/deployment/backup-restore-test/tasks/update-targets-hosts.yml
+          params: &update-targets-hosts-params
+            SHIELD_CA:          ((deployment.tests.shield.ca))
+            SHIELD_CORE_TOKEN:  ((deployment.tests.shield.token))
+            SHIELD_CORE:        ((deployment.tests.shield.core))
+            SHIELD_TENANT:      ((deployment.tests.shield.tenant))
+            SHIELD_TARGET:      ((deployment.tests.name))
+            MONGO_PORT:         ((deployment.tests.mongod.port))
+            DB:                 ((deployment.tests.mongod.database-name))
+
+        - <<: *check-datas
+          task: check-content-before-backup
+
+        - &run-backup
+          task: run-backup
+          file: mongodb-compilation-bosh-release/ci/deployment/backup-restore-test/tasks/run-backup.yml
+          attempts: 3
+          params: &run-backup-params
+            SHIELD_CA:          ((deployment.tests.shield.ca))
+            SHIELD_CORE_TOKEN:  ((deployment.tests.shield.token))
+            SHIELD_CORE:        ((deployment.tests.shield.core))
+            SHIELD_TENANT:      ((deployment.tests.shield.tenant))
+            SHIELD_TARGET:      ((deployment.tests.name))
+            DB:                 ((deployment.tests.mongod.database-name))
+            COLLECTION:         ((deployment.tests.mongod.collection-name))
+
+        - &drop-collection
+          task: drop-collection
+          file: mongodb-compilation-bosh-release/ci/deployment/backup-restore-test/tasks/drop-collection.yml
+          params: &drop-collection-params
+            USER: ((deployment.tests.mongod.root-username))
+            PORT: ((deployment.tests.mongod.port))
+            DB:         ((deployment.tests.mongod.database-name))
+            COLLECTION: ((deployment.tests.mongod.collection-name))
+
+        - &run-restore
+          task: run-restore
+          file: mongodb-compilation-bosh-release/ci/deployment/backup-restore-test/tasks/run-restore.yml
+          params: &run-restore-params
+            SHIELD_CA:          ((deployment.tests.shield.ca))
+            SHIELD_CORE_TOKEN:  ((deployment.tests.shield.token))
+            SHIELD_CORE:        ((deployment.tests.shield.core))
+            SHIELD_TENANT:      ((deployment.tests.shield.tenant))
+            SHIELD_TARGET:      ((deployment.tests.name))
+
+        - <<: *check-datas
+          task: test-restoration
+          attempts: 3
+
+########################################################################################################
+#                                      Removing the deployment
+########################################################################################################            
+
+- &delete-deployment
+  name: delete-deployment-ubuntu-WiredTiger
+  serial: true
+  plan:
+
+    - get: datas
+      trigger: true
+      passed: [backup-restore-test-ubuntu-WiredTiger,acceptance-tests-ubuntu-WiredTiger]
+
+    - get: deployment-ubuntu-lock
+      passed: [deploy-bootstrap-ubuntu-WiredTiger]
+
+    - &all-tests-passed-in
+      get: all-tests-passed 
+      passed: [init-new-config]
+
+    - *create-bosh-config
+
+    - &remove-deployment
+      task: remove-deployment
+      file: mongodb-compilation-bosh-release/ci/deployment/remove-deployment/tasks/remove-deployment.yml      
+      params: &remove-deployment-params
+        ALIAS:                ((bosh-server.alias))
+        RELEASE_NAME:         ((deployment.tests.name))
+        DEPLOYMENT_NAME:      ((deployment.tests.name))
+
+    - &all-tests-passed-out
+      put: all-tests-passed
+      params: {file: all-tests-passed/keyval.properties} 
+
+    - &deployment-ubuntu-unlock
+      put: deployment-ubuntu-lock
+      params: {release: deployment-ubuntu-lock}
+ 
+
+##############################################################################################################
+##############################################################################################################
+##                                          CENTOS                                                          ##
+##############################################################################################################
+##############################################################################################################        
+
+########################################################################################################
+#                                      Deploy a bootstrap version of mongodb
+########################################################################################################
+
+- name: deploy-bootstrap-centos-WiredTiger
+  serial: true
+  plan:
+    - *bs-init
+    - &deployment-centos-lock
+      put: deployment-centos-lock
+      params: {claim: deploy-centos} 
+    - *bs-get-config-files
+    - <<: *deploy
+      params:
+        <<: *deploy-params
+        STEMCELL_TYPE: centos
+
+########################################################################################################
+#                                      Insert some datas  
+########################################################################################################      
+
+- name: insert-datas-centos-WiredTiger
+  serial: true
+  plan:
+    - get: versions
+      trigger: true
+      passed: [deploy-bootstrap-centos-WiredTiger]
+
+    - &insert-datas-centos-plan
+      do:
+        - *create-bosh-config
+
+        - *deployment-spec-lock
+
+        - <<: *get-mongo-pwd
+          params:
+            <<: *get-mongo-pwd-params
+            STEMCELL_TYPE:    centos
+
+        - *update-deployment-specs
+
+        - <<: *get-deployment-ips
+          params:
+            <<: *get-deployment-ips-params
+            STEMCELL_TYPE:    centos
+
+        - *update-deployment-specs
+
+        - *check-mongo-version
+
+        - <<: *insert-collection
+          params:
+            <<: *insert-collection-params
+            STEMCELL_TYPE:    centos
+
+        - *list-inserted-values
+
+########################################################################################################
+#                                      Reinsert datas for test purposes  
+########################################################################################################      
+
+- name: reinsert-datas-centos-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      passed: [insert-datas-centos-WiredTiger]
+
+    - get: deployment-specs
+      passed: [insert-datas-centos-WiredTiger]
+
+    - *create-bosh-config
+
+    - &reinsert-collection-centos
+      <<: *reinsert-collection
+      params:
+        <<: *reinsert-collection-params
+        STEMCELL_TYPE:    centos
+
+########################################################################################################
+#                                      Mongodb Version Upgrade Test 
+########################################################################################################
+
+- name: mongo-version-upgrade-centos-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      trigger: true
+      passed: [insert-datas-centos-WiredTiger]
+
+    - get: deployment-specs
+      passed: [insert-datas-centos-WiredTiger]
+
+    - get: versions
+      passed: [init-new-config]
+
+    - get: mongodb-bosh-release
+
+    - *create-bosh-config
+
+    - <<: *check-datas
+      task: check-datas-before-version-upgrade
+
+    - *get-config-files-mainrelease
+
+    - <<: *deploy
+      task: upgrade-mongo
+      params:
+        <<: *deploy-params
+        STEMCELL:             ((deployment.bootstrap.stemcell))
+        STEMCELL_TYPE:        centos
+
+    - *check-mongo-version
+
+    - <<: *check-datas
+      task: check-datas-after-version-upgrade
+
+########################################################################################################
+#                                      Stemcell Upgrade Test 
+########################################################################################################
+
+- name: stemcell-upgrade-centos-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      trigger: true
+      passed: [mongo-version-upgrade-centos-WiredTiger]
+
+    - get: deployment-specs
+      passed: [mongo-version-upgrade-centos-WiredTiger]
+
+    - get: versions
+      passed: [mongo-version-upgrade-centos-WiredTiger]
+
+    - get: mongodb-bosh-release
+
+    - *create-bosh-config
+
+    - *get-config-files-mainrelease
+
+    - <<: *deploy
+      task: upgrade-stemcell
+      params:
+        <<: *deploy-params
+        STEMCELL:             latest
+        STEMCELL_TYPE:        centos
+
+    - <<: *check-datas
+      task: check-datas-after-stemcell-upgrade
+
+########################################################################################################
+#                                      Mongodb Acceptance Tests
+########################################################################################################
+
+- name: acceptance-tests-centos-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      trigger: true
+      passed: [stemcell-upgrade-centos-WiredTiger]
+
+    - &acceptance-tests-centos-plan
+      do:
+        - *create-bosh-config
+
+        - &errand-lock-centos
+          put: bosh-errand-lock-centos
+          params: {claim: errand-centos}
+
+        - <<: *run-acceptance-tests
+          params:
+            <<: *run-acceptance-tests-params
+            STEMCELL_TYPE:    centos
+          ensure:
+            &errand-unlock-centos
+            put: bosh-errand-lock-centos
+            params: {release: bosh-errand-lock-centos}
+
+########################################################################################################
+#                                      Mongodb Shield Test 
+########################################################################################################           
+
+- name: backup-restore-test-centos-WiredTiger
+  serial: true
+  plan:
+    - get: datas
+      trigger: true
+      passed: [stemcell-upgrade-centos-WiredTiger]
+
+    - get: deployment-specs
+      passed: [stemcell-upgrade-centos-WiredTiger]
+
+    - &backup-restore-test-centos-plan
+      do:
+
+        - *create-bosh-config
+
+        - <<: *shield-clean-up
+          params:
+            <<: *shield-clean-up-params
+            STEMCELL_TYPE:      centos
+
+        - *errand-lock-centos
+
+        - <<: *run-shield-import-errand
+          params:
+            <<: *run-shield-import-errand-params
+            STEMCELL_TYPE: centos
+          ensure:
+            *errand-unlock-centos
+
+        - <<: *update-targets-hosts
+          params:
+            <<: *update-targets-hosts-params
+            STEMCELL_TYPE:      centos
+
+        - <<: *check-datas
+          task: check-content-before-backup
+
+        - <<: *run-backup
+          params:
+            <<: *run-backup-params
+            STEMCELL_TYPE:      centos
+
+        - <<: *drop-collection
+          params:
+            <<: *drop-collection-params
+            STEMCELL_TYPE:  centos
+
+        - <<: *run-restore
+          params:
+            <<: *run-restore-params
+            STEMCELL_TYPE:      centos
+
+        - <<: *check-datas
+          task: test-restoration
+          attempts: 3
+
+########################################################################################################
+#                                      Removing the deployment 
+########################################################################################################            
+
+- name: delete-deployment-centos-WiredTiger
+  serial: true
+  plan:
+
+    - get: datas
+      trigger: true
+      passed: [backup-restore-test-centos-WiredTiger,acceptance-tests-centos-WiredTiger]
+
+    - get: deployment-centos-lock
+      passed: [deploy-bootstrap-centos-WiredTiger]
+
+    - *all-tests-passed-in
+      
+    - *create-bosh-config
+
+    - &remove-deployment-centos
+      <<: *remove-deployment
+      params:
+        <<: *remove-deployment-params
+        STEMCELL_TYPE:        centos
+
+    - *all-tests-passed-out   
+
+    - &deployment-centos-unlock
+      put: deployment-centos-lock
+      params: {release: deployment-centos-lock}
+
+##############################################################################################################
+##############################################################################################################
+##                                          MongoRocks                                                          ##
+##############################################################################################################
+##############################################################################################################        
+
+
+# ubuntu
+
+- <<: *deploy-bootstrap
+  name: deploy-bootstrap-ubuntu-MongoRocks
+  plan:
+    - *bs-init
+    - *bs-get-config-files
+    - *deployment-ubuntu-lock
+    - <<: *deploy
+      params:
+        <<: *deploy-params
+        ENGINE:         rocksdb
+
+- <<: *insert-datas
+  name: insert-datas-ubuntu-MongoRocks
+  plan:
+    - <<: *insert-datas-trigger
+      passed: [deploy-bootstrap-ubuntu-MongoRocks]
+    - *insert-datas-plan
+
+- <<: *reinsert-datas
+  name: reinsert-datas-ubuntu-MongoRocks
+  plan:
+    - get: datas
+      passed: [insert-datas-ubuntu-MongoRocks]
+    - get: deployment-specs
+      passed: [insert-datas-ubuntu-MongoRocks]
+    - *create-bosh-config
+    - *reinsert-collection
+
+- <<: *mongo-version-upgrade
+  name: mongo-version-upgrade-ubuntu-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [insert-datas-ubuntu-MongoRocks]
+    - get: versions
+      passed: [init-new-config]
+    - get: deployment-specs
+      passed: [insert-datas-ubuntu-MongoRocks]
+    - get: mongodb-bosh-release
+    - *create-bosh-config
+    - <<: *check-datas
+      task: check-datas-before-version-upgrade
+    - *get-config-files-mainrelease
+    - <<: *deploy
+      task: upgrade-mongo
+      params:
+        <<: *deploy-params
+        STEMCELL: ((deployment.bootstrap.stemcell))
+        ENGINE:   rocksdb
+    - *check-mongo-version
+    - <<: *check-datas
+      task: check-datas-after-version-upgrade
+
+- <<: *stemcell-upgrade
+  name: stemcell-upgrade-ubuntu-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [mongo-version-upgrade-ubuntu-MongoRocks]
+    - get: deployment-specs
+      passed: [mongo-version-upgrade-ubuntu-MongoRocks]
+    - get: versions
+      passed: [mongo-version-upgrade-ubuntu-MongoRocks]
+    - get: mongodb-bosh-release
+    - *create-bosh-config
+    - *get-config-files-mainrelease
+    - <<: *deploy
+      task: upgrade-stemcell
+      params:
+        <<: *deploy-params
+        STEMCELL:  latest
+        ENGINE:    rocksdb
+    - <<: *check-datas
+      task: check-datas-after-stemcell-upgrade
+
+- <<: *acceptance-tests
+  name: acceptance-tests-ubuntu-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [stemcell-upgrade-ubuntu-MongoRocks]
+    - *acceptance-tests-plan
+
+- <<: *backup-restore-test
+  name: backup-restore-test-ubuntu-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [stemcell-upgrade-ubuntu-MongoRocks]
+    - get: deployment-specs
+      passed: [stemcell-upgrade-ubuntu-MongoRocks]
+    - *backup-restore-test-plan
+
+- <<: *delete-deployment
+  name:  delete-deployment-ubuntu-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [backup-restore-test-ubuntu-MongoRocks,acceptance-tests-ubuntu-MongoRocks]
+    - get: deployment-ubuntu-lock
+      passed: [deploy-bootstrap-ubuntu-MongoRocks]
+    - *all-tests-passed-in      
+    - *create-bosh-config
+    - *remove-deployment
+    - *all-tests-passed-out     
+    - *deployment-ubuntu-unlock
+
+# centos
+
+- <<: *deploy-bootstrap
+  name: deploy-bootstrap-centos-MongoRocks
+  plan:
+    - *bs-init
+    - *bs-get-config-files
+    - *deployment-centos-lock
+    - <<: *deploy
+      params:
+        <<: *deploy-params
+        ENGINE:         rocksdb
+        STEMCELL_TYPE:  centos
+
+- <<: *insert-datas
+  name: insert-datas-centos-MongoRocks
+  plan:
+    - <<: *insert-datas-trigger
+      passed: [deploy-bootstrap-centos-MongoRocks]
+    - *insert-datas-centos-plan
+
+- <<: *reinsert-datas
+  name: reinsert-datas-centos-MongoRocks
+  plan:
+    - get: datas
+      passed: [insert-datas-centos-MongoRocks]
+    - get: deployment-specs
+      passed: [insert-datas-centos-MongoRocks]
+    - *create-bosh-config
+    - *reinsert-collection-centos
+
+- <<: *mongo-version-upgrade
+  name: mongo-version-upgrade-centos-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [insert-datas-centos-MongoRocks]
+    - get: versions
+      passed: [init-new-config]
+    - get: deployment-specs
+      passed: [insert-datas-centos-MongoRocks]
+    - get: mongodb-bosh-release
+    - *create-bosh-config
+    - <<: *check-datas
+      task: check-datas-before-version-upgrade
+    - *get-config-files-mainrelease
+    - <<: *deploy
+      task: upgrade-mongo
+      params:
+        <<: *deploy-params
+        STEMCELL_TYPE:  centos
+        STEMCELL: ((deployment.bootstrap.stemcell))
+        ENGINE:   rocksdb
+    - *check-mongo-version
+    - <<: *check-datas
+      task: check-datas-after-version-upgrade
+
+- <<: *stemcell-upgrade
+  name: stemcell-upgrade-centos-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [mongo-version-upgrade-centos-MongoRocks]
+    - get: deployment-specs
+      passed: [mongo-version-upgrade-centos-MongoRocks]
+    - get: versions
+      passed: [mongo-version-upgrade-centos-MongoRocks]
+    - get: mongodb-bosh-release
+    - *create-bosh-config
+    - *get-config-files-mainrelease
+    - <<: *deploy
+      task: upgrade-stemcell
+      params:
+        <<: *deploy-params
+        STEMCELL:  latest
+        ENGINE:    rocksdb
+        STEMCELL_TYPE:  centos
+    - <<: *check-datas
+      task: check-datas-after-stemcell-upgrade
+
+- <<: *acceptance-tests
+  name: acceptance-tests-centos-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [stemcell-upgrade-centos-MongoRocks]
+    - *acceptance-tests-centos-plan
+
+- <<: *backup-restore-test
+  name: backup-restore-test-centos-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [stemcell-upgrade-centos-MongoRocks]
+    - get: deployment-specs
+      passed: [stemcell-upgrade-centos-MongoRocks]
+    - *backup-restore-test-centos-plan
+
+- <<: *delete-deployment
+  name:  delete-deployment-centos-MongoRocks
+  plan:
+    - get: datas
+      trigger: true
+      passed: [backup-restore-test-centos-MongoRocks,acceptance-tests-centos-MongoRocks]
+    - get: deployment-centos-lock
+      passed: [deploy-bootstrap-centos-MongoRocks]
+    - *create-bosh-config
+    - *all-tests-passed-in
+    - *remove-deployment-centos
+    - *all-tests-passed-out  
+    - *deployment-centos-unlock

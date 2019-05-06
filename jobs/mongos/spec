@@ -1,0 +1,35 @@
+---
+name: mongos
+packages:
+  - mongodb
+  - mongodb-jobs-common
+
+consumes:
+  - name: routing-service
+    type: mongos
+
+  - name: config-server
+    type: cfgsvr
+
+provides:
+  - name: routing-service
+    type: mongos
+    properties:
+    - port
+
+templates:
+  bin/mdb-variables.sh.erb: bin/mdb-variables.sh
+  bin/pre-start: bin/pre-start
+  bin/mongos_ctl : bin/mongos_ctl
+  config/mongos.conf.erb: config/mongos.conf
+  config/keyfile.erb: config/keyfile
+  ssl/CA.key.erb: ssl/CA.key
+  ssl/CA.crt.erb: ssl/CA.crt
+
+properties:
+  port:
+      default: 27017
+      description: Default mongodb port for mongos
+  deployment_timeout:
+      default: 120
+      description: The maximum time to wait for config-server availability before exiting with error

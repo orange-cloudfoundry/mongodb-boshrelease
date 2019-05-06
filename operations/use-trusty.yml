@@ -1,0 +1,4 @@
+---
+- path: /stemcells/alias=ubuntu/os
+  type: replace
+  value: ubuntu-trusty

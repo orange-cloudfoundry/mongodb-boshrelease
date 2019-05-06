@@ -1,0 +1,416 @@
+#!/usr/bin/env bash
+
+source ${JOB_DIR}/bin/mdb-variables.sh
+
+####################### return if ssl is in use or not ########################
+check_ssl()
+{
+    echo "${property_require_ssl}"
+}
+#################################################################################################
+
+####################### return if replicaset is in use or not ########################
+get_node_role()
+{
+    echo "${property_node_role}"
+}
+###############################################################################################
+
+####################### List the nodes actually referenced in replicaset ########################
+get_actual_members()
+{
+    m_list=""
+    for i in `${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port}/?replicaSet=rs0 ${MONGO_CMD_PARAM} \
+                           --eval 'rs.status().members' \
+                          | grep name | tr -s [:space:] | tr -d '"' | cut -d ":" -f2`
+    do
+      m_list="${m_list} ${i}"
+    done
+    echo ${m_list}
+}
+#################################################################################################
+
+######################## Start mongod process in no-auth mode ###################################
+start_mongod_noauth()
+{
+    # Stopping eventually running instance
+    if [ -f ${PIDFILE} ]
+      then
+      [ `ps -p $(cat ${PIDFILE})|wc -l` -gt 1 ] && kill_and_wait ${PIDFILE}
+    fi
+
+    pid_guard ${PIDFILE} ${JOB_NAME}
+    
+    # create temporary conf file excluding keyfile and clusterAuthMode (for x509)
+    [ -f /tmp/${JOB_NAME}_bs.conf ] && rm -f /tmp/${JOB_NAME}_bs.conf
+    #grep -v '^ *keyFile:' $MONGODB_CONF/${JOB_NAME}.conf >/tmp/${JOB_NAME}_bs.conf
+    sed -e '/^[[:space:]]*keyFile:/d' \
+        -e '/^[[:space:]]*clusterAuthMode:[[:space:]]*x509.*/d' \
+        $MONGODB_CONF/${JOB_NAME}.conf >/tmp/${JOB_NAME}_bs.conf
+    chmod a+r /tmp/${JOB_NAME}_bs.conf
+
+    # start mongod without auth
+    chpst -u vcap:vcap $MONGODB_BIN/mongod --config /tmp/${JOB_NAME}_bs.conf --noauth \
+      --pidfilepath ${PIDFILE}
+}
+################################################################################################
+
+######################## Start mongod process with authentication ##############################
+start_mongod_with_auth()
+{
+
+    echo "=============> Starting with authentication"
+    # Stopping eventually running instance
+    if [ -f ${PIDFILE} ]
+    then
+      Master=$(check_master)|cut -d":" -f1
+      if [ "$Master" == "${deployment_current_ip}" ]
+      then
+        ${MONGO_CMD} $MONGO_CMD_PARAM mongodb://${deployment_rs_config}/admin --eval "rs.stepDown()"
+      fi
+
+
+      [ `ps -p $(cat ${PIDFILE})|wc -l` -gt 1 ] && kill_and_wait ${PIDFILE}
+    fi
+
+    pid_guard ${PIDFILE} ${JOB_NAME}
+
+    # start mongod without auth
+    chpst -u vcap:vcap $MONGODB_BIN/mongod --config $MONGODB_CONF/${JOB_NAME}.conf \
+      --pidfilepath ${PIDFILE}
+}
+################################################################################################
+
+##################### Create mongodb directories and update rights #############################
+rights_and_directories()
+{
+    # creating needed directories
+    for dir in $RUN_DIR $LOG_DIR $TMP_DIR $STORE_DIR $DATA_DIR
+    do
+      mkdir -p ${dir}
+      chown vcap:vcap ${dir}
+      chmod 775 ${dir}
+    done
+
+    # permissions on keyfile have to be 600
+    # otherwise "permissions on /var/vcap/jobs/mongod/config/keyfile are too open" occur
+    keyfile=/var/vcap/jobs/${JOB_NAME}/config/keyfile
+    chmod 600 ${keyfile}
+    chown vcap:vcap ${keyfile}
+}
+################################################################################################
+
+###################### Perform the OS mandatories ##############################################
+system_update()
+{
+    # disabeling transparent_hugepage
+    if [ -d /sys/kernel/mm/transparent_hugepage ]; then
+          thp_path=/sys/kernel/mm/transparent_hugepage
+    elif [ -d /sys/kernel/mm/redhat_transparent_hugepage ]; then
+          thp_path=/sys/kernel/mm/redhat_transparent_hugepage
+    else
+          return 0
+    fi
+
+    echo 'never' > ${thp_path}/enabled 2>/dev/null || echo 0
+    echo 'never' > ${thp_path}/defrag 2>/dev/null || echo 0
+    unset thp_path
+}
+################################################################################################
+
+######################## Look for an existing Primary node #####################################
+check_master()
+{
+    # looking for already created master node
+    Master=""
+
+    for Server in $(echo ${deployment_rs_config}|tr -s "," " ")
+    do
+      if [ "${Master}" == "" ]
+      then
+        if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
+                          --eval 'db.isMaster().ismaster' \
+                          2>/dev/null`" == "true" ]
+        then
+          Master=${Server}
+        else
+
+          if [ "`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${Server} \
+                              -u ${property_root_username} \
+                              -p ${property_root_password} \
+                              --authenticationDatabase admin \
+                              --eval 'db.isMaster().ismaster' \
+                              2>/dev/null`" == "true" ]
+          then
+            Master=${Server}
+          fi
+        fi
+      fi
+    done
+    echo ${Master}
+}
+################################################################################################
+
+######################### Create Mongodb Admin and Root users ##################################
+create_admin_users()
+{
+     # check if admin users have already been created
+    created=""
+    while [ "${created}" == "" ]
+    do
+      created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_rs_config}/admin \
+                                               --eval 'db.getUser("'${property_admin_username}'")' \
+                                               2>/dev/null||echo 1`
+      if [ $(echo "${created}"|grep "Error: not master and slaveOk=false"|wc -l) -gt 0 ]
+      then 
+         created=""
+      fi   
+      if [ "${created}" != "" -a "${created}" != "null" ]
+      then
+        created=`${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}/admin \
+          --eval 'db.getUser("'${property_admin_username'")' ||echo 1`        
+      fi      
+    done
+    # Create admin users if not already created
+    if [ "${created}" == "null" ]
+    then
+       ${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}:${property_mongod_listen_port} \
+                                       --eval "job_dir=\"${JOB_DIR}\""  \
+                                       --shell < ${JOBS_COMMON_DIR}/js/create_admin_user.js
+    fi
+}
+################################################################################################
+
+######################### Replicaset initialisation on primary node ############################
+init_primary()
+{
+    CR=1
+    while [ ${CR} -ne 0 ]
+    do
+      ${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+                   --eval "job_dir=\"${JOB_DIR}\""  \
+                   --shell < ${JOBS_COMMON_DIR}/js/initiate_rs.js
+      CR=$?
+    done
+    # wait until rs is fully active
+    while [ `${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+                          --eval 'rs.status().ok' \
+                          ||echo 0` -ne 1 ]
+    do
+      sleep 3
+    done
+}
+################################################################################################
+
+########################## Primary node initialization #########################################
+run_replicaset()
+{
+    Master=$( check_master )
+    if [ "${Master}" == "" -o "${Master}" == "${deployment_current_ip}:${property_mongod_listen_port}" ]
+    then
+      # check if rs is already initialized
+      if [ "$(${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+                           --eval 'rs.status().codeName' \
+                         || echo 'Err')" == "NotYetInitialized" ]
+      then
+        init_primary          # perform rs.initiate
+        create_admin_users    # Create admin and root users
+      fi
+    else
+      add_secondary
+    fi
+}
+################################################################################################
+
+########################## Adding secondary node to replicaset #################################
+add_secondary()
+{
+  # on secondary nodes, mongod HAVE TO be started with authentication
+  start_mongod_with_auth          # Start mongod with authentication
+
+  Master=$( check_master )
+
+  # At this point primary should be started with authentication too
+  MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
+
+  # if root user is not available, primary has probably not finish his job, wait for it
+  
+  root_initialized=""
+  while [ "$root_initialized" == "" ]
+  do
+    root_initialized=`${MONGO_CMD} mongodb://${Master} \
+      ${MONGO_CMD_PARAM} --eval 'db.getUser("'${property_root_username}'")' admin||echo "null"`
+    
+    [ "$root_initialized" == "null" ] && sleep 2
+  done
+
+   # Adding current node to rs
+  ${MONGO_CMD} mongodb://${Master} \
+    ${MONGO_CMD_PARAM} --eval 'rs.add("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
+
+  [ $? -ne 0 ] && exit 1
+  # need to wait for complete add before restarting
+  _timeout=30
+  add_ok="false"
+  while [ "${add_ok}" == "false" ]
+  do
+    add_ok=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+      --eval 'rs.isMaster().secondary'||echo "false"`
+    if [ "${add_ok}" != "true" ]
+    then
+      add_ok="false"
+      sleep 2
+      _timeout=$((_timeout-2))
+      [ ${_timeout} -le 0 ] && echo "node ${deployment_current_ip}:${property_mongod_listen_port} hasn\'t been added. Timeout reached" && exit 1
+    fi
+  done
+}
+################################################################################################
+
+########################## Adding shard server to cluster #################################
+add_shard()
+{
+  # We only need to add it once, on the replicaset master node
+
+  Master=$( check_master )
+  if [ "${Master}" == "" ] || [ "${Master}" == "${deployment_current_ip}:${property_mongod_listen_port}" ]
+  then
+
+    MONGO_CMD_PARAM="${MONGO_CMD_PARAM} -u ${property_root_username} -p ${property_root_password} --authenticationDatabase admin"
+
+    # before 3.6 mongos could only connect to spcefic address and do not accept addresses list
+    current_version=$(${MONGODB_BIN}/mongos --version \
+            | perl -e '@in=<STDIN>;
+                  foreach $ln (@in){
+                    if ($ln=~/mongos version v(\d+.\d+.\d+).*/){
+                      print $1
+                    }
+                  }')
+    major_version=$(echo ${current_version}|perl -e 'print((split(/\./,<STDIN>))[0])')
+    mid_version=$(echo ${current_version}|perl -e 'print((split(/\./,<STDIN>))[1])')
+
+    _timeout=30
+    RC=1
+    while [ ${RC} -ne 0 ]
+    do
+      if [ ${major_version} -lt 3 ] || [ ${mid_version} -lt 6 ]
+      then
+        # trying each ip one by one
+        for mongos_ip in $(echo ${deployment_mongos_config}|tr -s "," " ")
+        do
+          if [ ${RC} -ne 0 ]
+          then
+            ${MONGO_CMD} mongodb://${mongos_ip} ${MONGO_CMD_PARAM} \
+                --eval "sh.addShard(\"${property_replica_set_name}/${Master}\")"
+            # check if shard is effectivelly added
+            [ $(${MONGO_CMD} mongodb://${mongos_ip} ${MONGO_CMD_PARAM} \
+                --eval "db.adminCommand({listShards:1}).shards" \
+                | grep "_id"|sed -e "s/[[:space:]]*//g"|cut -d":" -f2 \
+                | grep -w ${property_replica_set_name} |wc -l) -gt 0 ] && RC=0
+          fi
+        done
+      else
+        ${MONGO_CMD} mongodb://${deployment_mongos_config} ${MONGO_CMD_PARAM} \
+              --eval "sh.addShard(\"${property_replica_set_name}/${Master}\")"
+        [ $(${MONGO_CMD} mongodb://${deployment_mongos_config} ${MONGO_CMD_PARAM} \
+              --eval "db.adminCommand({listShards:1}).shards" \
+              | grep "_id"|sed -e "s/[[:space:]]*//g"|cut -d":" -f2 \
+              | grep -w ${property_replica_set_name} |wc -l) -gt 0 ] && RC=0
+      fi
+      if [ ${RC} -ne 0 ]
+      then 
+        sleep 2
+        _timeout=$((_timeout-2))
+        [ ${_timeout} -le 0 ] \
+          && echo "shard ${property_replica_set_name}/${Master} hasn\'t been added. Timeout reached" \
+          && exit 1
+      fi
+    done
+  fi
+}
+################################################################################################
+
+# this function perform a crypted backup of the current root password
+# allowing pasword changes in deployment manifest
+backup_root_password()
+{
+ 
+  if [ ! -f ${DATA_DIR}/mongo_private.pem ]
+  then
+    openssl genrsa -out ${DATA_DIR}/mongo_private.pem 1024
+    chmod 600 ${DATA_DIR}/mongo_private.pem
+  fi
+
+  if [ ! -f ${DATA_DIR}/mongo_public.pem ]
+  then
+    openssl rsa -in ${DATA_DIR}/mongo_private.pem -out ${DATA_DIR}/mongo_public.pem -outform PEM -pubout
+  fi
+
+  echo "${property_root_username} ${property_root_password}" > /tmp/mongo_ident.conf.tmp
+
+  cat /tmp/mongo_ident.conf.tmp | \
+    openssl rsautl -encrypt -inkey ${DATA_DIR}/mongo_public.pem -pubin \
+    > ${DATA_DIR}/mongo_ident.conf
+
+  rm -f /tmp/mongo_ident.conf.tmp
+
+}
+################################################################################################
+
+############# setting mongo connection script depending if we are on ssl mode or not ###########
+setMongoCmd()
+{
+    if [ $(check_ssl) -eq 0 ]
+    then
+      MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo.sh"
+    else
+      # Generate the certificates
+      ${JOBS_COMMON_DIR}/bin/generate_ssl_cert.sh
+      MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo-ssl.sh"
+    fi
+    echo $MONGO_CMD
+}
+################################################################################################
+
+############# Removing node from replicaset when reducing number of instances ##################
+rs_scaleIn()
+{
+    set -x
+#    touch /tmp/continue
+
+    MONGO_CMD="$(setMongoCmd)"
+
+    MONGO_CMD_PARAM="--quiet"
+
+    # stopping the instance
+    ${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${deployment_current_ip}:${property_mongod_listen_port}/admin?authSource=admin" \
+          ${MONGO_CMD_PARAM} \
+          --eval "db.shutdownServer()"
+
+    if [ $? -eq 0 ]      
+    then  
+      # getting master uri
+      Timeout=120
+      Master=""
+      while [ "${Master}" == "" -a ${Timeout} -gt 0 ]
+      do
+        Master=$( check_master )
+
+        if [ "${Master}" == "" ]
+        then
+          sleep 1
+          Timeout=$((Timeout-1))
+        fi
+      done
+    fi
+    [ ${Timeout} -le 0 ] \
+      && echo "Cannot connect find a valid master node. Timeout reached" \
+      && exit 1
+    
+    ${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${Master}/admin?replicaSet=${property_replica_set_name}&authSource=admin" \
+              ${MONGO_CMD_PARAM} \
+              --eval "rs.remove(\"${deployment_current_ip}:${property_mongod_listen_port}\")"
+    return $?
+}
+################################################################################################
+

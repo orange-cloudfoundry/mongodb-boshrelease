@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+set -e # exit immediately if a simple command exits with a non-zero status.
+set -u # report the usage of uninitialized variables.
+
+export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
+source ${JOBS_COMMON_DIR}/bin/setenv shardsvr
+
+case $1 in
+
+  start)
+    startit=0
+    if [ ! -f $PIDFILE ]
+    then
+      startit=1
+    else
+      if [ `ps -p $(cat $PIDFILE)|wc -l` -le 1 ]
+      then
+        startit=1
+      fi
+    fi
+    if [ $startit -eq 1 ]
+    then
+      pid_guard $PIDFILE $JOB_NAME
+
+      exec chpst -u vcap:vcap $MONGODB_BIN/mongod --config $MONGODB_CONF/${JOB_NAME}.conf \
+        --pidfilepath $PIDFILE  >>$LOG_DIR/${JOB_NAME}.stdout.log 2>>$LOG_DIR/${JOB_NAME}.stderr.log
+    fi
+    ;;
+  stop)
+    kill_and_wait $PIDFILE
+
+    ;;
+  *)
+    echo "Usage: shardsvr_ctl {start|stop}"
+
+    ;;
+
+esac
+exit 0

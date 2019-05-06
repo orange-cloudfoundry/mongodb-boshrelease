@@ -1,40 +1,6 @@
 <%-
-mongo_DbVersion = p("db_version")
-mongo_DbToolVersion = p("db_tool_version")
-
 Conf_bindIp = "127.0.0.1,#{spec.ip}"
 
-# Managed the mongodb port binding depending on the mongodb role
-if p("node_role") == "rs" || p("node_role") == "sa"
-  DbTypeport=p("rs_port")
-  _rsconfig = ''
-  link('server').instances.each do |instance|
-    _rsconfig = "#{_rsconfig}#{instance.address}:#{DbTypeport},"
-  end
-  # remove last ,
-  rsconfig = _rsconfig[0..-2]
-end
-if p("node_role") == "sh"
-  DbTypeport=p("sh_port")
-end
-if p("node_role") == "cfg"
-  DbTypeport=p("cfg_port")
-end
-if p("node_role") == "mongos"
-  DbTypeport=p("mongos_port")
-end
-
-# Retrieve all parts of the Mongodb version
-/(?<_DbVersionMaj>\d+)\.(?<_DbVersionMid>\d+)\.(?<_DbVersionMin>\d+)/ =~ p("db_version") #=> 0
-
-DbVersionMaj = _DbVersionMaj
-DbVersionMid = _DbVersionMid
-DbVersionMin = _DbVersionMin
-
-# Mongodb orange products parameters
-DbProductName = "mongodb-cf-release"
-#DbPymongoName: mongodb-orange-python-pymongo
-#DbToolName: mongodb-orange-tools
 # Mongodb directory
 Sys_Db_dirRoot="/var/vcap/store/mongod"
 Sys_Db_dirCfg="/var/vcap/jobs/mongod/config"
@@ -43,13 +9,12 @@ Sys_Db_dirData="/var/vcap/store/mongod/data"
 Sys_Db_dirLog="/var/vcap/sys/log/mongod"
 Sys_Db_dirRun="/var/vcap/sys/run/mongod"
 Sys_Db_dirManaged = [ Sys_Db_dirRoot, Sys_Db_dirCfg, Sys_Db_dirData, Sys_Db_dirLog, Sys_Db_dirRun ]
+
 # Mongodb configuration parameters
 Conf_systemLog = Sys_Db_dirLog + "/mongod.log"
-#Conf_cfgFile = Sys_Db_dirCfg + "/mongod.conf"
-#Conf_pidFile = Sys_Db_dirRun + "/mongod.pid"
-Conf_port = DbTypeport
-Conf_PEMKeyFile = Sys_Db_dirSSL + "/server.pem"
-Conf_CAFile = Sys_Db_dirSSL + "/ca_chain.crt"
+Conf_port = p("port")
+Conf_PEMKeyFile = Sys_Db_dirSSL + "/mongodb.pem"
+Conf_CAFile = Sys_Db_dirSSL + "/CA.crt"
 
 storage_journal_enabled = "true"
 storage_mmap_v1_small_files = p("mmap_v1_small_files")
@@ -132,6 +97,7 @@ net:
     mode: requireSSL
     PEMKeyFile: <%= Conf_PEMKeyFile %>
     CAFile: <%= Conf_CAFile %>
+    clusterFile: <%= Conf_PEMKeyFile %>
     allowConnectionsWithoutCertificates: true
     allowInvalidHostnames: true
 <%- end -%>

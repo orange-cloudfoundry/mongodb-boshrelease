@@ -1,0 +1,61 @@
+<%-
+Conf_bindIp = "127.0.0.1,#{spec.ip}"
+
+# Mongodb directories
+Sys_Db_dirRoot="/var/vcap/store/mongos"
+Sys_Db_dirCfg="/var/vcap/jobs/mongos/config"
+Sys_Db_dirSSL="/var/vcap/jobs/mongos/ssl"
+Sys_Db_dirData="/var/vcap/store/mongos/data"
+Sys_Db_dirLog="/var/vcap/sys/log/mongos"
+Sys_Db_dirRun="/var/vcap/sys/run/mongos"
+
+# Mongodb configuration parameters
+Conf_systemLog = Sys_Db_dirLog + "/mongos.log"
+Conf_port = p("port")
+Conf_PEMKeyFile = Sys_Db_dirSSL + "/mongodb.pem"
+Conf_CAFile = Sys_Db_dirSSL + "/CA.crt"
+
+# retriving config from cfgsvr job
+cfgsvr_port = link('config-server').p("port")
+cfgsvf_replicaset_name = link('config-server').p("replication.replica_set_name")
+_cfgsvr_rsconfig = cfgsvf_replicaset_name + '/'
+link('config-server').instances.each do |instance|
+  _cfgsvr_rsconfig = "#{_cfgsvr_rsconfig}#{instance.address}:#{cfgsvr_port},"
+end
+# remove last ,
+cfgsvr_rsconfig = _cfgsvr_rsconfig[0..-2]
+-%>
+systemLog:
+  destination: file
+  path: <%= Conf_systemLog %>
+  logAppend: true
+  logRotate: reopen
+processManagement:
+  fork: true
+net:
+  bindIp: <%= Conf_bindIp %>
+  port: <%= Conf_port %>
+  unixDomainSocket:
+    enabled: true
+    pathPrefix: <%= Sys_Db_dirRun %>
+<%- if link('config-server').p("require_ssl") == 1 -%>
+  ssl:
+    mode: requireSSL
+    PEMKeyFile: <%= Conf_PEMKeyFile %>
+    CAFile: <%= Conf_CAFile %>
+    clusterFile: <%= Conf_PEMKeyFile %>
+    allowConnectionsWithoutCertificates: true
+    allowInvalidHostnames: true
+<%- end -%>
+<%- if link('config-server').p("enable_role_based_access_control") == 1 -%>
+security:
+  <%- if link('config-server').p("require_ssl") == 1 -%>
+  clusterAuthMode: x509
+  <%- else -%>
+  keyFile: /var/vcap/jobs/mongos/config/keyfile
+  <%- end -%>
+<%- end -%>
+sharding:
+  configDB: <%= cfgsvr_rsconfig %>
+setParameter:
+  enableLocalhostAuthBypass: 1

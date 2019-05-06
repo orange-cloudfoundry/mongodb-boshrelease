@@ -1,0 +1,4 @@
+---
+- path: /stemcells/alias=ubuntu/version
+  type: replace
+  value: ((stemcell-version))

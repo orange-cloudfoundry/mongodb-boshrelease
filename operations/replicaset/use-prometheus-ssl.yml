@@ -1,0 +1,7 @@
+---
+- type: replace
+  path: /instance_groups/name=mongod/jobs/name=mongodb_exporter/properties/mongodb
+  value:
+    tls: true
+    tls_ca: /var/vcap/jobs/mongos/ssl/CA.crt
+    tls_private_key: /var/vcap/jobs/mongos/ssl/CA.key
