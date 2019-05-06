@@ -21,7 +21,7 @@ cf login -u admin -p ${CF_ADMIN_PASSWORD}
 
 if cf service ${DEPLOYMENT_NAME}-instance 1>/dev/null
 then
-	for app in $(cf services|grep "^mongodb-instance"|awk '{print $4}')
+	for app in $(cf services|grep "^${DEPLOYMENT_NAME}-instance"|awk '{print $4}')
 	do
 		cf unbind-service ${app} ${DEPLOYMENT_NAME}-instance
 	done
@@ -29,7 +29,7 @@ then
 
 fi
 
-if [ -z $(cf services|awk '{if ($4=="mongodb-example-app"){print $0}}') ]
+if [ ! -z "$(cf services|awk '{if ($4=="mongodb-example-app"){print $0}}')" ]
 then
    cf delete -f mongodb-example-app
 fi
