@@ -355,7 +355,7 @@ jobs:
       passed: [ deploy-current-version-rs ]
       trigger: true
 
-    - &insert-datas-plan
+    - &insert-datas-init
       do:  
 
         - get: deployment-lock   
@@ -366,73 +366,75 @@ jobs:
 
           - *create-bosh-config
 
-        - &get-mongo-pwd
-          task: get-mongo-pwd
-          file: mongodb-bosh-release/ci/tasks/data-insertion/get-root-pwd.yml
-          params: &get-mongo-pwd-params
-            BOSH_ALIAS:       ((bosh-server.alias))
-            IP:               ((credhub.ip))
-            PORT:             ((credhub.port))
-            USER:             ((credhub.username))
-            PASSWORD:         ((credhub.password))
-            CA_CERT:          ((credhub.ca))
-            UAA_CA_CERT:      ((uaa.ca))
-            DEPLOYMENT_NAME:  *deployment_name
-            VAR:              "root_password"
+    - &get-mongo-pwd
+      task: get-mongo-pwd
+      file: mongodb-bosh-release/ci/tasks/data-insertion/get-root-pwd.yml
+      params: &get-mongo-pwd-params
+        BOSH_ALIAS:       ((bosh-server.alias))
+        IP:               ((credhub.ip))
+        PORT:             ((credhub.port))
+        USER:             ((credhub.username))
+        PASSWORD:         ((credhub.password))
+        CA_CERT:          ((credhub.ca))
+        UAA_CA_CERT:      ((uaa.ca))
+        DEPLOYMENT_NAME:  *deployment_name
+        VAR:              "root_password"
 
 
-        - &update-deployment-specs
-          put: deployment-specs
-          params: { file: output/keyval.properties}
+    - &update-deployment-specs
+      put: deployment-specs
+      params: { file: output/keyval.properties}
 
-        - &get-deployment-ips
-          task: get-deployment-ips
-          file: mongodb-bosh-release/ci/tasks/data-insertion/get-deployment-ips.yml
-          params: &get-deployment-ips-params
-            CA_CERT:          ((bosh-server.ca))
-            IP:               ((bosh-server.ip))
-            ALIAS:            ((bosh-server.alias)) 
-            USER:             ((bosh-server.user))
-            PASSWORD:         ((bosh-server.password))
-            DEPLOYMENT_NAME:  *deployment_name
+    - &get-deployment-ips
+      task: get-deployment-ips
+      file: mongodb-bosh-release/ci/tasks/data-insertion/get-deployment-ips.yml
+      params: &get-deployment-ips-params
+        CA_CERT:          ((bosh-server.ca))
+        IP:               ((bosh-server.ip))
+        ALIAS:            ((bosh-server.alias)) 
+        USER:             ((bosh-server.user))
+        PASSWORD:         ((bosh-server.password))
+        DEPLOYMENT_NAME:  *deployment_name
 
-        - *update-deployment-specs
+    - *update-deployment-specs
 
-    - &check-mongo-version
-      task: check-mongo-version
-      file: mongodb-bosh-release/ci/tasks/deployment/check-mongo-version.yml
-      privileged: true  
-      params: &check-mongo-version-params
-        USER:           ((deployment.mongodb.root-username))
-        PORT:           ((deployment.mongodb.port))
-        # for ssl
-        REQUIRE_SSL:    ((deployment.mongodb.require_ssl))            
-        CA_CERT:        ((deployment.mongodb.ca_cert))
-        # if deployments are done on a bosh lite 
-        USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
-        BOSH_IP:        ((bosh-server.ip))
-        JUMPBOX_KEY:    ((bosh-server.jumpbox_private_key))
+    - &insert-datas-plan
+      do:
+        - &check-mongo-version
+          task: check-mongo-version
+          file: mongodb-bosh-release/ci/tasks/deployment/check-mongo-version.yml
+          privileged: true  
+          params: &check-mongo-version-params
+            USER:           ((deployment.mongodb.root-username))
+            PORT:           ((deployment.mongodb.port))
+            # for ssl
+            REQUIRE_SSL:    ((deployment.mongodb.require_ssl))            
+            CA_CERT:        ((deployment.mongodb.ca_cert))
+            # if deployments are done on a bosh lite 
+            USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
+            BOSH_IP:        ((bosh-server.ip))
+            JUMPBOX_KEY:    ((bosh-server.jumpbox_private_key))
 
-    - &insert-collection
-      task: insert-collection
-      file: mongodb-bosh-release/ci/tasks/data-insertion/insert-collection.yml
-      privileged: true        
-      params: &insert-collection-params
-        USER:       ((deployment.mongodb.root-username))
-        PORT:       ((deployment.mongodb.port))
-        DB:         ((deployment.mongodb.database-name))
-        COLLECTION: ((deployment.mongodb.collection-name))
-        # for ssl
-        REQUIRE_SSL: ((deployment.mongodb.require_ssl))
-        CA_CERT: ((deployment.mongodb.ca_cert))
-        # if deployments are done on a bosh lite 
-        USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
-        BOSH_IP:        ((bosh-server.ip))
-        JUMPBOX_KEY:    ((bosh-server.jumpbox_private_key))
+        - &insert-collection
+          task: insert-collection
+          file: mongodb-bosh-release/ci/tasks/data-insertion/insert-collection.yml
+          privileged: true        
+          params: &insert-collection-params
+            USER:       ((deployment.mongodb.root-username))
+            PORT:       ((deployment.mongodb.port))
+            DB:         ((deployment.mongodb.database-name))
+            COLLECTION: ((deployment.mongodb.collection-name))
+            # for ssl
+            REQUIRE_SSL: ((deployment.mongodb.require_ssl))
+            CA_CERT: ((deployment.mongodb.ca_cert))
+            # if deployments are done on a bosh lite 
+            USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
+            BOSH_IP:        ((bosh-server.ip))
+            JUMPBOX_KEY:    ((bosh-server.jumpbox_private_key))
 
-    - &list-inserted-values
-      put: datas
-      params: { file: datas/keyval.properties }
+        - &list-inserted-values
+          put: datas
+          params: { file: datas/keyval.properties }
 
 - &mongo-version-upgrade
   name: mongo-version-upgrade-rs
@@ -502,7 +504,7 @@ jobs:
       trigger: true
       passed: [ mongo-version-upgrade-rs ]
 
-    - &acceptance-tests-plan
+    - &acceptance-tests-init
       do:  
 
         - *create-bosh-config
@@ -511,17 +513,18 @@ jobs:
           put: bosh-errand-lock
           params: {claim: bosh-errand-lock}  
 
-        - task: run-acceptance-tests
-          file: mongodb-bosh-release/ci/tasks/run-acceptance-tests.yml
-          params:
-            ALIAS:    ((bosh-server.alias))
-            DEPLOYMENT_NAME:  *deployment_name
-          ensure:
-            &errand-unlock
-            put: bosh-errand-lock
-            params: {release: bosh-errand-lock}
+    - &run-acceptance-tests
+      task: run-acceptance-tests
+      file: mongodb-bosh-release/ci/tasks/run-acceptance-tests.yml
+      params: &run-acceptance-tests-params
+        ALIAS:    ((bosh-server.alias))
+        DEPLOYMENT_NAME:  *deployment_name
+      ensure:
+        &errand-unlock
+        put: bosh-errand-lock
+        params: {release: bosh-errand-lock}
 
-- &create-service-broker
+- &create-service-broker-job
   name: create-service-broker
   plan:
 
@@ -529,39 +532,39 @@ jobs:
       passed: [ mongo-version-upgrade-rs ]
       trigger: true
 
-    - &create-service-broker-plan
-      do:      
+    - &remove-cf-components
+      task: remove-cf-components
+      file: mongodb-bosh-release/ci/tasks/remove-cf-components.yml
+      params: &remove-cf-components-params
+        CF_API_URL:           https://api.((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        SKIP_SSL:             ((cf.skip_ssl_validation))
+        DEPLOYMENT_NAME:      *deployment_name
+        USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
 
-        - task: remove-cf-components
-          file: mongodb-bosh-release/ci/tasks/remove-cf-components.yml
-          params:
-            CF_API_URL:           https://api.((cf.system_domain))
-            CF_ADMIN_PASSWORD:    ((cf.admin_password))
-            SKIP_SSL:             ((cf.skip_ssl_validation))
-            DEPLOYMENT_NAME:      *deployment_name
-            USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
+    - &get-broker-password
+      task: get-broker-password
+      file: mongodb-bosh-release/ci/tasks/get-broker-password.yml
+      params: &get-broker-password-params
+        BOSH_ALIAS:       ((bosh-server.alias))
+        IP:               ((credhub.ip))
+        PORT:             ((credhub.port))
+        USER:             ((credhub.username))
+        PASSWORD:         ((credhub.password))
+        DEPLOYMENT_NAME:  *deployment_name
+        UAA_CA:           ((uaa.ca))
+        CREDHUB_CA:       ((credhub.ca))
 
-        - task: get-broker-password
-          file: mongodb-bosh-release/ci/tasks/get-broker-password.yml
-          params: 
-            BOSH_ALIAS:       ((bosh-server.alias))
-            IP:               ((credhub.ip))
-            PORT:             ((credhub.port))
-            USER:             ((credhub.username))
-            PASSWORD:         ((credhub.password))
-            DEPLOYMENT_NAME:  *deployment_name
-            UAA_CA:           ((uaa.ca))
-            CREDHUB_CA:       ((credhub.ca))
-
-        - task: create-service-broker
-          file: mongodb-bosh-release/ci/tasks/create-service-broker.yml
-          privileged: true
-          params: 
-            CF_API_URL:           https://api.((cf.system_domain))
-            CF_ADMIN_PASSWORD:    ((cf.admin_password))
-            SKIP_SSL:             ((cf.skip_ssl_validation))
-            USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
-            DEPLOYMENT_NAME:      *deployment_name
+    - &create-service-broker
+      task: create-service-broker
+      file: mongodb-bosh-release/ci/tasks/create-service-broker.yml
+      privileged: true
+      params: &create-service-broker-params
+        CF_API_URL:           https://api.((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        SKIP_SSL:             ((cf.skip_ssl_validation))
+        USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
+        DEPLOYMENT_NAME:      *deployment_name
 
 - &run-smoke-tests-job
   name: run-smoke-tests
@@ -571,7 +574,7 @@ jobs:
       passed: [ create-service-broker ]
       trigger: true
 
-    - &run-smoke-tests-plan
+    - &run-smoke-tests-init
       do:
 
         - get: deployment-lock
@@ -590,13 +593,14 @@ jobs:
 
         - *errand-lock
 
-        - task: run-smoke-tests
-          file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
-          params:
-            ALIAS:                ((bosh-server.alias))
-            DEPLOYMENT_NAME:      *deployment_name
-          ensure:
-            <<: *errand-unlock
+    - &run-smoke-tests
+      task: run-smoke-tests
+      file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
+      params: &run-smoke-tests-params
+        ALIAS:                ((bosh-server.alias))
+        DEPLOYMENT_NAME:      *deployment_name
+      ensure:
+        <<: *errand-unlock
 
     - *deployment-unlock
 
@@ -611,13 +615,14 @@ jobs:
     - <<: *remove-deployment
       params :
         ALIAS:              ((bosh-server.alias))
-        DEPLOYMENT_NAME:    &deployment_name ((deployment.name))-shard
+        DEPLOYMENT_NAME:    ((deployment.name))-shard
     - <<: *do-deploy
       task: "deploy-sharded-cluster -> current-main-version"
       attempts: 3
       params: &deploy-parameters-shard
         <<: *deploy-parameters
         SHARDED: true
+        DEPLOYMENT_NAME:   ((deployment.name))-shard
   
     - <<: *update-deployed-version
 
@@ -629,8 +634,22 @@ jobs:
       passed: [ deploy-current-version-sharding ]
       trigger: true
 
-    - *insert-datas-plan
+    - *insert-datas-init
 
+    - <<: *get-mongo-pwd
+      params: 
+        <<: *get-mongo-pwd-params
+        DEPLOYMENT_NAME:  ((deployment_name))-shard
+
+    - *update-deployment-specs
+
+    - <<: *get-deployment-ips
+      params: 
+        <<: *get-deployment-ips-params
+        DEPLOYMENT_NAME:  ((deployment_name))-shard
+
+    - *update-deployment-specs
+   
     - &check-mongo-version-shard
       <<: *check-mongo-version
       params:
@@ -701,9 +720,15 @@ jobs:
       trigger: true
       passed: [ mongo-version-upgrade-shard ]
 
-    - *acceptance-tests-plan
+    - *acceptance-tests-init
 
-- <<: *create-service-broker
+    - task: run-acceptance-tests
+      file: mongodb-bosh-release/ci/tasks/run-acceptance-tests.yml
+      params:
+        <<: *run-acceptance-tests-params
+        DEPLOYMENT_NAME:  ((deployment_name))-shard
+
+- <<: *create-service-broker-job
   name: create-service-broker-sharding
   plan:
 
@@ -711,7 +736,20 @@ jobs:
       passed: [ mongo-version-upgrade-shard ]
       trigger: true
 
-    - *create-service-broker-plan  
+    - <<: *remove-cf-components
+      params: 
+        <<: *remove-cf-components-params
+        DEPLOYMENT_NAME:      ((deployment_name))-shard
+
+    - <<: *get-broker-password
+      params: 
+        <<: *get-broker-password-params
+        DEPLOYMENT_NAME:  ((deployment_name))-shard
+
+    - <<: *create-service-broker
+      params: 
+        <<: *create-service-broker-params
+        DEPLOYMENT_NAME:      ((deployment_name))-shard
 
 - <<: *run-smoke-tests-job
   name: run-smoke-tests-sharding
@@ -721,7 +759,12 @@ jobs:
           passed: [ create-service-broker-sharding ]
           trigger: true
     
-        - *run-smoke-tests-plan
+        - *run-smoke-tests-init
+
+        - <<: *run-smoke-tests
+          params: 
+            <<: *run-smoke-tests-params
+            DEPLOYMENT_NAME:      ((deployment_name))-shard
 
         - *deployment-unlock
      
