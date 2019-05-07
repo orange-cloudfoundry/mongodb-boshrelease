@@ -18,7 +18,8 @@ resources:
       uri:    ((repositories.mongodb.uri))
       branch: ((repositories.mongodb.branch))
 
-  - name: mongodb-version
+  - &mongodb_version
+    name: mongodb-version
     type: semver
     source: &semver-source
       initial_version:  1.0.0
@@ -29,6 +30,12 @@ resources:
       username:         ((repositories.mongodb.username))
       password:         ((repositories.mongodb.password))
       git_user:         "((repositories.mongodb.git_user)) <((repositories.mongodb.email))>"
+
+  - <<: *mongodb_version
+    name: mongodb-tested-version
+    source:
+      <<: *semver-source
+      branch: develop    
     
   - name: mongodb-new-version
     type: mongo-src
@@ -767,5 +774,22 @@ jobs:
             DEPLOYMENT_NAME:      ((deployment_name))-shard
 
         - *deployment-unlock
-     
-          
+
+####################################################################################################################################
+#  Bumping successfully tested version to the git
+####################################################################################################################################     
+
+- name: bump-tested-version
+  serial: true
+  plan:
+    - get: mongodb-bosh-release
+      passed: [run-smoke-tests,run-smoke-tests-sharding,acceptance-tests,acceptance-tests-shard]
+      trigger: true
+
+    - get: deployed-version
+
+    - task: bump-version
+      file: mongodb-bosh-release/ci/tasks/bump-version.yml
+
+    - put: mongodb-tested-version
+      params: {file: bump-version/version}         
