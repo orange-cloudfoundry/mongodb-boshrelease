@@ -20,4 +20,4 @@
           appdomain: ((cf.mongodb.appdomain))
           servicename: mongodb
           serviceplan: default
-          serviceinstancename: mongodb-instance
+          serviceinstancename: ((cf.mongodb.serviceinstancename))
