@@ -1,6 +1,6 @@
 #!/usr/bin/env sh 
 
-set -ex
+set -e
 
 if [ "${SKIP_SSL}" == "true" ]
 then
@@ -21,4 +21,4 @@ cf login -u admin -p ${CF_ADMIN_PASSWORD}
 
 cd mongodb-bosh-release/src/cf-mongodb-example-app
 
-cf push
+cf push ${APP_NAME}

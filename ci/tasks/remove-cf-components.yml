@@ -19,3 +19,4 @@ params:
   SKIP_SSL: ""
   USE_BOSH_LITE: false
   DEPLOYMENT_NAME: ""
+  APP_NAME: ""

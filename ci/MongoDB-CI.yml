@@ -548,6 +548,7 @@ jobs:
         SKIP_SSL:             ((cf.skip_ssl_validation))
         DEPLOYMENT_NAME:      *deployment_name
         USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
+        APP_NAME:             ((cf.sample_app_name))        
 
     - &get-broker-password
       task: get-broker-password
@@ -573,6 +574,7 @@ jobs:
         USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
         DEPLOYMENT_NAME:      *deployment_name
 
+
 - &run-smoke-tests-job
   name: run-smoke-tests
   plan:
@@ -588,17 +590,19 @@ jobs:
 
         - *create-bosh-config
 
-        - task: create-example-app
-          file: mongodb-bosh-release/ci/tasks/create-sample-app.yml
-          params:
-            CF_API_URL:           https://api.((cf.system_domain))
-            CF_ADMIN_PASSWORD:    ((cf.admin_password))
-            SKIP_SSL:             ((cf.skip_ssl_validation))
-            USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
-            BOSH_IP:              ((bosh-server.ip))
-            JUMPBOX_KEY:          ((bosh-server.jumpbox_private_key))        
+    - &create-sample-app
+      task: create-example-app
+      file: mongodb-bosh-release/ci/tasks/create-sample-app.yml
+      params: &create-sample-app-params
+        CF_API_URL:           https://api.((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        SKIP_SSL:             ((cf.skip_ssl_validation))
+        USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
+        BOSH_IP:              ((bosh-server.ip))
+        JUMPBOX_KEY:          ((bosh-server.jumpbox_private_key))
+        APP_NAME:             ((cf.sample_app_name))    
 
-        - *errand-lock
+    - *errand-lock
 
     - &run-smoke-tests
       task: run-smoke-tests
@@ -646,14 +650,14 @@ jobs:
     - <<: *get-mongo-pwd
       params: 
         <<: *get-mongo-pwd-params
-        DEPLOYMENT_NAME:  ((deployment_name))-shard
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
 
     - *update-deployment-specs
 
     - <<: *get-deployment-ips
       params: 
         <<: *get-deployment-ips-params
-        DEPLOYMENT_NAME:  ((deployment_name))-shard
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
 
     - *update-deployment-specs
    
@@ -729,11 +733,10 @@ jobs:
 
     - *acceptance-tests-init
 
-    - task: run-acceptance-tests
-      file: mongodb-bosh-release/ci/tasks/run-acceptance-tests.yml
+    - <<: *run-acceptance-tests
       params:
         <<: *run-acceptance-tests-params
-        DEPLOYMENT_NAME:  ((deployment_name))-shard
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
 
 - <<: *create-service-broker-job
   name: create-service-broker-sharding
@@ -746,17 +749,18 @@ jobs:
     - <<: *remove-cf-components
       params: 
         <<: *remove-cf-components-params
-        DEPLOYMENT_NAME:      ((deployment_name))-shard
+        DEPLOYMENT_NAME:      ((deployment.name))-shard
+        APP_NAME:             ((cf.sample_app_name))-shard        
 
     - <<: *get-broker-password
       params: 
         <<: *get-broker-password-params
-        DEPLOYMENT_NAME:  ((deployment_name))-shard
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
 
     - <<: *create-service-broker
       params: 
         <<: *create-service-broker-params
-        DEPLOYMENT_NAME:      ((deployment_name))-shard
+        DEPLOYMENT_NAME:      ((deployment.name))-shard
 
 - <<: *run-smoke-tests-job
   name: run-smoke-tests-sharding
@@ -768,10 +772,16 @@ jobs:
     
         - *run-smoke-tests-init
 
+        - <<: *create-sample-app
+          params:
+            <<: *create-sample-app-params
+            APP_NAME: ((cf.sample_app_name))-shard
+        - *errand-lock
+
         - <<: *run-smoke-tests
           params: 
             <<: *run-smoke-tests-params
-            DEPLOYMENT_NAME:      ((deployment_name))-shard
+            DEPLOYMENT_NAME:      ((deployment.name))-shard
 
         - *deployment-unlock
 

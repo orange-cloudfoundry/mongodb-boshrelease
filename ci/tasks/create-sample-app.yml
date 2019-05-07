@@ -19,3 +19,4 @@ params:
   SKIP_SSL: ""
   BOSH_IP: ""
   USE_BOSH_LITE: ""
+  APP_NAME: "" 

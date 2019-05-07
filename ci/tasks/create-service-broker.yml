@@ -21,3 +21,4 @@ params:
   BOSH_IP: ""
   USE_BOSH_LITE: ""
   DEPLOYMENT_NAME: ""
+  APP_NAME: ""  

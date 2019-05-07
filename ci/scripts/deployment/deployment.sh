@@ -1,6 +1,6 @@
 #!/usr/bin/env bash 
 
-set -e
+set -ex
 
 apt-get install -qqy jq
 
@@ -125,7 +125,7 @@ then
                         -v cf.org=${CF_ORG} \
                         -v cf.space=${CF_SPACE} \
                         -v cf.mongodb.appdomain=${CF_SYSTEM_DOMAIN} \
-                        -v cf.mongodb.serviceinstancename=${DEPLOYMENT_NAME}-instance"
+                        -v serviceinstancename=${DEPLOYMENT_NAME}-instance"
 fi   
 
 
