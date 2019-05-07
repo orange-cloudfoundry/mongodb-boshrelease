@@ -24,6 +24,9 @@ properties:
   cf.space:
     description: 'Space within organization to run mongodb-example-app'
     default: mongodb
+  cf.mongodb.appname:
+    description: 'name of the sample App'
+    default: mongodb-example-app  
   cf.mongodb.appdomain:
     description: 'CF mongodb application domain'
   cf.mongodb.servicename:

@@ -19,7 +19,7 @@ CF_ADMIN_PASSWORD='<%= p("cf.admin.password") %>'
 CF_SKIP_SSL_VALIDATION='<%= p("cf.skip.ssl.validation") %>'
 CF_ORG='<%= p("cf.org") %>'
 CF_SPACE='<%= p("cf.space") %>'
-CF_MONGODB_APPNAME=mongodb-example-app
+CF_MONGODB_APPNAME='<%= p("cf.mongodb.appname") %>'
 CF_MONGODB_APPDOMAIN='<%= p("cf.mongodb.appdomain") %>'
 CF_MONGODB_SERVICENAME='<%= p("cf.mongodb.servicename") %>'
 CF_MONGODB_SERVICEPLAN='<%= p("cf.mongodb.serviceplan") %>'
