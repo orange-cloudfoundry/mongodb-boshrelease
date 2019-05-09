@@ -1,0 +1,5 @@
+check process routing_service
+  with pidfile /var/vcap/sys/run/mongos/mongos.pid
+  start program "/var/vcap/jobs/mongos/bin/mongos_ctl start"
+  stop program "/var/vcap/jobs/mongos/bin/mongos_ctl stop"
+  group vcap

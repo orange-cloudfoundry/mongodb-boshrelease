@@ -1,0 +1,180 @@
+---
+name: cfgsvr
+packages:
+  - mongodb
+  - mongodb-jobs-common
+
+consumes:
+  - name: config-server
+    type: cfgsvr
+
+provides:
+  - name: config-server
+    type: cfgsvr
+    properties:
+    - root_username
+    - root_password
+    - admin_username
+    - admin_password
+    - port
+    - replication.key
+    - replication.enable
+    - replication.replica_set_name
+    - require_ssl
+    - server_certificate.private_key
+    - server_certificate.certificate
+    - enable_role_based_access_control
+
+templates:
+  bin/mdb-variables.sh.erb: bin/mdb-variables.sh
+  bin/pre-start: bin/pre-start
+  bin/cfgsvr_ctl : bin/cfgsvr_ctl
+  config/cfgsvr.conf.erb: config/cfgsvr.conf
+  config/keyfile.erb: config/keyfile
+  ssl/CA.key.erb: ssl/CA.key
+  ssl/CA.crt.erb: ssl/CA.crt
+
+properties:
+  port:
+      default: 27019
+      description: Default mongodb port for replicasets AND standalone server
+
+  storage_engine:
+      default: wiredTiger
+      description: |
+        The storage engine for the mongod database.
+        Use "mmapv1" to specify the MMAPv1 storage engine.
+        Use "wiredTiger" to specify the WiredTiger storage engine.
+        Use "rocksdb" to specify the RocksDB storage engine.
+
+        Here the "inMemory" engine is not supported.
+
+        Ref: https://docs.mongodb.com/manual/reference/configuration-options/#storage.engine
+  mmap_v1_small_files:
+      default: "false"
+      description: |
+        When 'true', MongoDB uses a smaller default file size. This option
+        reduces the initial size for data files and limits the maximum size to
+        512 megabytes. When "true", the size of each journal file will also be
+        reduced from 1 GB to 128 MB. Use this option if you have a large number
+        of databases that each holds a small quantity of data.
+
+        Setting this to "true" can lead the mongod instance to create a large
+        number of files, which can affect performance for larger databases.
+
+        Ref: https://docs.mongodb.com/manual/reference/configuration-options/#storage.mmapv1.smallFiles
+  wired_tiger_cache_size_gb:
+      default: null
+      description: |
+        The maximum size of the internal cache that WiredTiger will use for all
+        data. Values can range from 256MB to 10TB and can be a float.
+
+        The default WiredTiger internal cache size value assumes that there is a
+        single mongod instance per machine. If a single machine contains
+        multiple MongoDB instances, then you should decrease the setting to
+        accommodate the other mongod instances.
+
+        Ref: https://docs.mongodb.com/manual/reference/configuration-options/#storage.wiredTiger.engineConfig.cacheSizeGB
+  slow_query_threshold_ms:
+      default: 100
+      description: |
+        The threshold in milliseconds at which the database profiler considers a
+        query slow. MongoDB records all slow queries to the log, even when the
+        database profiler is off. When the profiler is on, it writes to the
+        'system.profile' collection.
+
+        Ref: https://docs.mongodb.com/manual/reference/configuration-options/#operationProfiling.slowOpThresholdMs
+  replication.enable:
+      default: 1
+      description: |
+        When set to 1, this settings activates replication.
+  replication.replica_set_name:
+      default: cs0
+      description: |
+        The name of the replica set that the mongod is part of. All hosts in the
+        replica set must have the same set name.
+
+        If your application connects to more than one replica set, each set
+        should have a distinct name. Some drivers group replica set connections
+        by replica set name.
+
+            Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.replSetName
+  replication.operation_log_max_size_mb:
+      default: 256
+      description: |
+        The maximum size in megabytes for the replication operation log (i.e.,
+        the oplog). The mongod process creates an oplog based on the maximum
+        amount of space available. For 64-bit systems, the oplog is typically 5%
+        of available disk space. Once the mongod has created the oplog for the
+        first time, changing the this maximum size option will not affect the
+        size of the oplog.
+
+        Ref: https://docs.mongodb.com/manual/reference/configuration-options/#replication.oplogSizeMB
+  replication.key:
+      description: |
+        Specify key which will be used in keyfile. Mandatory for replication
+        without ssl With keyfile authentication, each mongod instances in the
+        replica set uses the contents of the keyfile as the shared password
+        for authenticating other members in the deployment. Only mongod
+        instances with the correct keyfile can join the replica set.
+
+        The content of the keyfile must be between 6 and 1024 characters long
+        and must be the same for all members of the replica set.
+  enable_role_based_access_control:
+      default: 1
+      description: |
+        When set to '1', this option enables Role-Based Access Control (RBAC) to
+        govern each user’s access to database resources and operations. In such
+        case, a user can access only the database resources and actions for
+        which they have been granted privileges.
+
+        When set to any other value, all users can access any database and
+        perform any action. This is meant to be done in development environments
+        only. Never disable this option in production.
+
+        Ref: https://docs.mongodb.com/manual/reference/configuration-options/#security.authorization
+  admin_username:
+      default: MongoAdmin
+      description: |
+        Username of the default admin user.
+  admin_password:
+      description: |
+        Password for the admin user, in clear text.
+  root_username:
+      default: MongoRoot
+      description: |
+        Username of the default root user.
+  root_password:
+      description: |
+        Password for the root user, in clear text.
+  server_certificate.ca:
+      default: "NOT INITIALIZED"
+      description: Mongodb certificate for ttl/ssl auth - CA part
+  server_certificate.private_key: 
+      default: "NOT INITIALIZED"
+  server_certificate.certificate: 
+      default: "NOT INITIALIZED"
+  require_ssl:
+      default: 1
+      description: |
+        Enforce TLS/SSL for connecting to the server.
+
+        When this options is set to '1', all connections to mongod must be
+        encrypted with TLS/SSL, and un-encrypted connections will be refused.
+        For example, when using the 'mongo' client, the '--ssl' argument will be
+        mandatory.
+
+        When this options is set to '0', then all connections to mongod must not
+        be encrypted, and SSL/TLS will not be possible. For example, when using
+        the 'mongo' client, the '--ssl' argument will not be possible. This
+        should be reserved to development environments and be avoided in
+        production.
+  arbiter_only:
+      default: no
+      example: yes
+      description: |
+        Have the node be an arbitrer only, and hold no database (when set to
+        'yes').
+
+        This option overrides any value set to 'mongodb.mmap_v1_small_files' and
+        'mongodb.replication.operation_log_max_size_mb'.

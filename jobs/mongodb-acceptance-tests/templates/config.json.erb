@@ -1,26 +1,61 @@
 <%-
-lnk = link('server')
-mongo_port = lnk.p("rs_port")
-if lnk.p("node_role") == "sh"
-  mongo_port = lnk.p("sh_port")
-end
-if lnk.p("node_role") == "cfg"
-  mongo_port = lnk.p("cfg_port")
-end
-if lnk.p("node_role") == "mongos"
-  mongo_port = lnk.p("mongos_port")
-end
-mongo_hosts = []
+mongo_hosts = []  
 mongo_ports = []
-lnk.instances.each do |instance|
-  mongo_hosts << "#{instance.address}"
-  mongo_ports << "#{mongo_port}"
+mongos_hosts = []
+mongos_ports = []
+cfgsrv_hosts = []
+cfgsrv_ports = []
+cfgsrv_replicasetname = ""
+mongo_replicasetname = ""
+ca_cert = ""
+lnk = ""
+
+if_link("server") do
+   lnk = link("server")
+   mongo_port = lnk.p("port")
+   lnk.instances.each do |instance|
+       mongo_hosts << "#{instance.address}"
+       mongo_ports << "#{mongo_port}"
+   end
+   if lnk.p('replication.enable') == 1
+     mongo_replicasetname = lnk.p("replication.replica_set_name")
+   end
+   if lnk.p('require_ssl') == 1
+      ca_cert = "/var/vcap/jobs/mongodb-acceptance-tests/ssl/CA.crt"
+   end   
 end
-if lnk.p("node_role") == "sa"
-  mongo_replicasetname = ""
-else
-  mongo_replicasetname = lnk.p("replication.replica_set_name")
+
+if_link("config-server") do
+   lnk = link("config-server")
+   mongo_port = lnk.p("port")
+   lnk.instances.each do |instance|
+        cfgsrv_hosts << "#{instance.address}"
+        cfgsrv_ports << "#{mongo_port}"
+   end
+   if lnk.p('replication.enable') == 1
+      cfgsrv_replicasetname = lnk.p("replication.replica_set_name")
+   end   
+   if lnk.p('require_ssl') == 1
+      ca_cert = "/var/vcap/jobs/mongodb-acceptance-tests/ssl/CA.crt"
+   end   
 end
+if_link("shard-server") do
+   mongo_port = link("shard-server").p("port")
+   link("shard-server").instances.each do |instance|
+        mongo_hosts << "#{instance.address}"
+        mongo_ports << "#{mongo_port}"
+   end
+   if link("config-server").p('replication.enable') == 1
+     mongo_replicasetname = link("shard-server").p("replication.replica_set_name")
+   end  
+end
+if_link("mongos") do
+   mongo_port = link("mongos").p("port")
+   link("mongos").instances.each do |instance|
+        mongos_hosts << "#{instance.address}"
+        mongos_ports << "#{mongo_port}"
+   end
+end   
 -%>
 {
   "timeout_scale":                    <%= p('timeout_scale') %>,
@@ -29,5 +64,12 @@ end
   "mongo_root_username":              "<%= lnk.p('root_username') %>",
   "mongo_root_password":              "<%= lnk.p('root_password') %>",
   "mongo_replica_set_name":           "<%= mongo_replicasetname %>",
-  "mongo_replica_set_enable":         <%= lnk.p('replication.enable') %>
+  "mongo_replica_set_enable":         <%= lnk.p('replication.enable') %>,
+  "mongo_require_ssl":                <%= lnk.p('require_ssl') %>,
+  "mongo_cert":                       "<%= ca_cert %>",
+  "mongo_mongos_hosts":               <%= mongos_hosts.to_json %>,
+  "mongo_mongos_ports":               <%= mongos_ports.to_json %>,
+  "mongo_cfgsrv_hosts":               <%= cfgsrv_hosts.to_json %>,
+  "mongo_cfgsrv_ports":               <%= cfgsrv_ports.to_json %>,
+  "mongo_cfgsrv_replica_set_name":    "<%= cfgsrv_replicasetname %>"
 }

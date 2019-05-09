@@ -1,0 +1,22 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/cf-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release
+
+run:
+  path: mongodb-bosh-release/ci/scripts/create-sample-app.sh
+
+params:
+  CF_ADMIN_PASSWORD: ""
+  CF_API_URL: ""
+  SKIP_SSL: ""
+  BOSH_IP: ""
+  USE_BOSH_LITE: ""
+  APP_NAME: "" 

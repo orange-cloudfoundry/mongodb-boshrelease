@@ -7,6 +7,10 @@ packages:
 consumes:
 - name: server
   type: mongod
+  optional: true
+- name: config-server
+  type: cfgsvr
+  optional: true
 
 templates:
   bin/ctl: bin/ctl

@@ -1,0 +1,22 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: govau/cf-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release
+
+run:
+  path: mongodb-bosh-release/ci/scripts/remove-cf-components.sh
+
+params:
+  CF_ADMIN_PASSWORD: ""
+  CF_API_URL: ""
+  SKIP_SSL: ""
+  USE_BOSH_LITE: false
+  DEPLOYMENT_NAME: ""
+  APP_NAME: ""

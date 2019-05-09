@@ -1,0 +1,28 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/mongo-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release
+  - name: deployed-version
+  - name: deployment-specs
+  
+run:
+  path: mongodb-bosh-release/ci/scripts/deployment/check-mongo-version.sh
+
+params:
+  CA_CERT: ""
+  PORT: ""
+  REQUIRE_SSL:  ""
+  USER: ""
+  USE_BOSH_LITE: false
+  BOSH_IP: ""
+  JUMPBOX_KEY: ""
+  SHARDED: false
+
+  

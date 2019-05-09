@@ -1,0 +1,28 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/credhub-cli
+    tag: latest
+
+inputs:
+  - name: mongodb-bosh-release
+
+outputs:
+  - name: output
+
+run:
+  path: mongodb-bosh-release/ci/scripts/data-insertion/get-root-pwd.sh
+
+params:
+  USER: ""
+  VAR: ""
+  BOSH_ALIAS: ""
+  DEPLOYMENT_NAME: ""
+  IP: ""
+  PASSWORD: ""
+  PORT: ""
+  CA_CERT: ""
+  UAA_CA_CERT: ""  

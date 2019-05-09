@@ -1,0 +1,113 @@
+name: ((deployment_name))
+
+releases:
+  - name: &mongodb_release ((release_name))
+    version: latest
+ 
+update:
+  canaries: 1
+  canary_watch_time: 30000-240000
+  update_watch_time:  30000-240000
+  max_in_flight: 1 #<-- important to limit max in flight
+  serial: false
+
+stemcells:
+- alias: &stemcell ubuntu
+  os: ubuntu-xenial
+  version: latest
+
+instance_groups:
+- name: cfgsvr
+  release: *mongodb_release
+  azs: [z1]
+  instances: ((nb_instances)) # 
+  vm_type: ((vm_type))
+  env:
+    bosh:
+      swap_size: 0
+  stemcell: *stemcell
+  networks:
+  - name: ((deployments-network))
+  persistent_disk_type: ((persistent_disk_type))
+  env:
+    persistent_disk_fs: xfs
+  jobs:
+  - name: cfgsvr
+    release: *mongodb_release
+    consumes:
+      config-server: {from: deployment-server}
+    provides:
+      config-server: {as: deployment-server}
+    properties:
+      require_ssl: 0
+      replication:
+        enable: 1
+        key: ((keyfile_content))
+      root_username: &root_user ((root_username))
+      root_password: &root_pass ((root_password))
+      admin_password: ((admin_password))
+
+  - name: mongos
+    release: *mongodb_release
+
+- name: shard-0
+  release: *mongodb_release
+  azs: [z1]
+  instances: ((nb_instances)) # 
+  vm_type: ((vm_type))
+  env:
+    bosh:
+      swap_size: 0
+  stemcell: *stemcell
+  networks:
+  - name: ((deployments-network))
+  persistent_disk_type: ((persistent_disk_type))
+  env:
+    persistent_disk_fs: xfs
+  jobs:
+
+  - name: shardsvr
+    release: *mongodb_release
+    provides: 
+      shard-server: {as: sh-svr0}
+    consumes: 
+      shard-server: {from: sh-svr0}  
+    properties:
+      replication:
+        replica_set_name: sh0
+
+- name: shard-1
+  release: *mongodb_release
+  azs: [z1]
+  instances: ((nb_instances)) # 
+  vm_type: ((vm_type))
+  env:
+    bosh:
+      swap_size: 0
+  stemcell: *stemcell
+  networks:
+  - name: ((deployments-network))
+  persistent_disk_type: ((persistent_disk_type))
+  env:
+    persistent_disk_fs: xfs
+  jobs:
+
+  - name: shardsvr
+    release: *mongodb_release
+    provides: 
+      shard-server: {as: sh-svr1}
+    consumes: 
+      shard-server: {from: sh-svr1}  
+    properties:
+      replication:
+        replica_set_name: sh1   
+
+variables:
+  - name: admin_password
+    type: password
+  - name: root_password
+    type: password
+  - name: keyfile_content
+    type: password
+    options: 
+      length: 200

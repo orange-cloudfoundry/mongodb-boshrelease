@@ -1,0 +1,40 @@
+---
+#add bpm job for route registrar on mongodb-broker instance group
+- type: replace
+  path: /instance_groups/name=mongodb-broker/jobs/-
+  value:
+    name: bpm
+    release: bpm
+
+#add route registrar job on mongodb-broker instance group
+- type: replace
+  path: /instance_groups/name=mongodb-broker/jobs/-
+  value:
+    name: route_registrar
+    release: routing
+    properties:
+      nats:
+        machines:
+        - ((cf.nats_host))
+        password: ((cf.nats_password))
+        port: 4222
+        user: nats
+      route_registrar:
+        routes:
+        - name: broker-endpoint
+          registration_interval: 10s
+          port: 8080
+          uris:
+            - mongodb-broker-((deployment_name)).((cf.system_domain))
+
+# add bpm and routing releases
+- type: replace
+  path: /releases/name=bpm?
+  value:
+    name: bpm
+    version: latest
+- type: replace
+  path: /releases/name=routing?
+  value:
+    name: routing
+    version: latest    

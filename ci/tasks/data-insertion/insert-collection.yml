@@ -1,0 +1,31 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: jraverdyorange/mongo-cli
+    tag: latest
+
+inputs:
+  - name: bosh-director-config
+  - name: mongodb-bosh-release
+  - name: deployment-specs
+  
+outputs:
+  - name: datas
+
+run:
+  path: mongodb-bosh-release/ci/scripts/data-insertion/insert-collection.sh
+
+params:
+  USE_BOSH_LITE: ""
+  CA_CERT: ""
+  BOSH_IP: ""
+  USER: ""
+  PORT: ""
+  COLLECTION: ""
+  DB: ""
+  JUMPBOX_KEY: ""
+  REQUIRE_SSL: ""
+  SHARDED: false

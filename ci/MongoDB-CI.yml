@@ -1,0 +1,807 @@
+---
+resource_types:
+  - name: keyval
+    type: docker-image
+    source:
+      repository: swce/keyval-resource
+
+  - name: mongo-src
+    type: docker-image
+    source:
+      repository: jraverdyorange/concourse-mongodb-resource
+
+resources:
+
+  - name: mongodb-bosh-release
+    type: git
+    source:
+      uri:    ((repositories.mongodb.uri))
+      branch: ((repositories.mongodb.branch))
+
+  - &mongodb_version
+    name: mongodb-version
+    type: semver
+    source: &semver-source
+      initial_version:  1.0.0
+      driver:           git
+      uri:              https://github.com/orange-cloudfoundry/mongodb-boshrelease.git
+      branch:           master
+      file:             mongodb_version
+      username:         ((repositories.mongodb.username))
+      password:         ((repositories.mongodb.password))
+      git_user:         "((repositories.mongodb.git_user)) <((repositories.mongodb.email))>"
+
+  - <<: *mongodb_version
+    name: mongodb-tested-version
+    source:
+      <<: *semver-source
+      branch: develop    
+    
+  - name: mongodb-new-version
+    type: mongo-src
+    source:
+      branch: "3.6"
+
+  - name: mongodb-version-update
+    type: keyval
+
+  - name: deployment-specs
+    type: keyval
+
+  - name: deployed-version
+    type: keyval
+
+  - name: datas
+    type: keyval      
+
+  - &deployment-lock
+    name: deployment-lock
+    type: pool
+    source: &locks-source
+      uri: ((repositories.locks-pool.uri))
+      branch: ((repositories.locks-pool.branch))
+      pool: deployment-lock
+      username: ((repositories.locks-pool.username))
+      password: ((repositories.locks-pool.password))
+  
+  # lock to avoid multiple errand running on the same deployment
+  - <<: *deployment-lock
+    name: bosh-errand-lock
+    source: 
+      <<: *locks-source
+      pool: errand-lock
+
+####################################################################################################################################
+#                       JOBS
+####################################################################################################################################      
+
+jobs:
+
+# clone current "main" blobstore to dev one
+- name: clone-blobstore
+  serial_groups: [new_mongo_version]
+  serial: true
+  plan:
+    - get: mongodb-bosh-release
+
+    - get: mongodb-new-version
+      trigger: true    
+
+    - &create-bosh-config
+      task: create-bosh-config
+      file: mongodb-bosh-release/ci/tasks/create-bosh-config.yml
+      params:
+        CA_CERT:  ((bosh-server.ca))
+        IP:       ((bosh-server.ip))
+        ALIAS:    ((bosh-server.alias)) 
+        USER:     ((bosh-server.user))
+        PASSWORD: ((bosh-server.password))
+
+    - task: blobstore-cleanup
+      file: mongodb-bosh-release/ci/tasks/clone-blobstore/blobstore-cleanup.yml
+      params:
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))
+        SKIP_SSL:           ((blobstore.skip-ssl-validation))
+        SSL_CERT:           ((blobstore.certificate))
+
+
+    - task: get-release-blobs
+      file: mongodb-bosh-release/ci/tasks/clone-blobstore/get-release-blobs.yml
+      params:
+        ALIAS:              ((bosh-server.alias))
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))     
+        SIGNATURE_VERSION:  ((blobstore.signature-version))
+        GOLANG_VERSION:     ((deployment.golang-version))
+
+    - task: blobs-rename
+      file: mongodb-bosh-release/ci/tasks/clone-blobstore/blobs-rename.yml
+      params:
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))
+        SIGNATURE_VERSION:  ((blobstore.signature-version))
+        CONFIG_PATH:        ((blobstore.config_path))         
+
+- name: prepare-blobstore
+  serial: true
+  plan:
+
+    - get: mongodb-bosh-release
+
+    - get: mongodb-new-version
+      passed: [clone-blobstore]
+      trigger: true          
+
+    - aggregate:
+
+      - get: mongodb-version
+
+      - *create-bosh-config
+        
+    - &get-config-files
+      task: get-config-files
+      file: mongodb-bosh-release/ci/tasks/get-config-files.yml
+      params: &get-config-files-params
+        CURRENT: true # fetch current main release config
+        CONFIG_PATH:        ((blobstore.config_path))
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))
+        SIGNATURE_VERSION:  ((blobstore.signature-version))
+        SKIP_SSL:           ((blobstore.skip-ssl-validation))
+        SSL_CERT:           ((blobstore.certificate))
+        GOLANG_VERSION:     ((deployment.golang-version))
+
+    - &upload-new-blobs
+      task: upload-new-blobs
+      file: mongodb-bosh-release/ci/tasks/prepare-blobstore/upload-new-blobs.yml
+      params:
+        ACCESS_KEY_ID:            ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:        ((blobstore.secret_access_key))
+        ENDPOINT_URL:             ((blobstore.endpoint-url))
+        BUCKET:                   ((blobstore.bucket))
+        SIGNATURE_VERSION:        ((blobstore.signature-version))
+        SKIP_SSL:                 ((blobstore.skip-ssl-validation))
+        SSL_CERT:                 ((blobstore.certificate))
+
+    - &upload-config-files
+      task: upload-config-files
+      file: mongodb-bosh-release/ci/tasks/prepare-blobstore/upload-config-files.yml
+      params: &upload-config-files-params
+        ACCESS_KEY_ID:      ((blobstore.access_key_id))
+        SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+        ENDPOINT_URL:       ((blobstore.endpoint-url))
+        BUCKET:             ((blobstore.bucket))
+        SKIP_SSL:           ((blobstore.skip-ssl-validation))
+        SSL_CERT:           ((blobstore.certificate))
+        CONFIG_PATH:        ((blobstore.config_path))
+
+    - &update-keyval-resource
+      do:
+        - task: update-keyval-resource
+          file: mongodb-bosh-release/ci/tasks/update-keyval-resource.yml
+          params: &keyval-resource-params
+            KEY: "New version checked at"
+            VALUE: DATE
+
+        - put: mongodb-version-update
+          params:
+            file: keyvalout/keyval.properties 
+
+- &create-releases
+  name: create-releases
+  serial_groups: [new_mongo_version]
+  serial: true
+  plan:
+    - get: mongodb-bosh-release
+#      trigger: true
+
+    - aggregate:
+      - get: mongodb-version-update
+        trigger: true
+         
+      - get: mongodb-version
+
+      - get: mongodb-new-version
+
+      - *create-bosh-config
+
+
+    - &task-deployment-lock
+      put: deployment-lock
+      params: {claim: deployment-lock}
+
+    - do:  
+
+      - &task-get-config-files
+        task: "get-config-files -> current-main-version"
+        file: mongodb-bosh-release/ci/tasks/get-config-files.yml
+        params: &task-get-config-files-params
+          ACCESS_KEY_ID:      ((blobstore.access_key_id))
+          SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+          ENDPOINT_URL:       ((blobstore.endpoint-url))
+          BUCKET:             ((blobstore.bucket))
+          SIGNATURE_VERSION:  ((blobstore.signature-version))
+          SKIP_SSL:           ((blobstore.skip-ssl-validation))
+          SSL_CERT:           ((blobstore.certificate))
+          CONFIG_PATH:        ((blobstore.config_path))          
+          GOLANG_VERSION:     ((deployment.golang-version))
+          CURRENT:            true
+
+      - &task-create-release
+        task: "create-release -> current-main-version"
+        file: mongodb-bosh-release/ci/tasks/deployment/create-release.yml
+        params: &task-create-release-params
+          ALIAS:            ((bosh-server.alias))
+          UUID:             ((bosh-server.uuid))
+          BOSH_RELEASE:     ((deployment.name))
+          DEPLOYMENT_NAME:  &deployment_name ((deployment.name))
+          NETWORK:          ((deployment.network))
+          CURRENT:          true
+
+      - <<: *task-get-config-files
+        task: "get-config-files -> new-mongodb-version"  
+        params:
+          <<: *task-get-config-files-params
+          CURRENT:          false  
+
+      - <<: *task-create-release
+        task: "create-release -> new-mongodb-version"
+        params:
+          <<: *task-create-release-params
+          CURRENT:          false
+
+      ensure: 
+        &deployment-unlock
+        put: deployment-lock
+        params: {release: deployment-lock}
+
+#======================================================================================================================================
+# Replicaset tests
+#======================================================================================================================================             
+
+- &deploy-current-version
+  name: deploy-current-version-rs
+  serial: true
+  plan:
+
+    - &deploy-current-version_init
+      do:
+      - get: mongodb-bosh-release
+        passed: [ create-releases ]
+        trigger: true
+
+      - aggregate: 
+        - get: mongodb-version
+
+        - get: mongodb-new-version
+
+        - *create-bosh-config
+
+      - &get-config-files
+        task: "get-config-files -> current-main-version"
+        file: mongodb-bosh-release/ci/tasks/get-config-files.yml
+        params: &get-config-files-params
+          ACCESS_KEY_ID:      ((blobstore.access_key_id))
+          SECRET_ACCESS_KEY:  ((blobstore.secret_access_key))
+          ENDPOINT_URL:       ((blobstore.endpoint-url))
+          BUCKET:             ((blobstore.bucket))
+          SIGNATURE_VERSION:  ((blobstore.signature-version))
+          SKIP_SSL:           ((blobstore.skip-ssl-validation))
+          SSL_CERT:           ((blobstore.certificate))
+          CONFIG_PATH:        ((blobstore.config_path))          
+          GOLANG_VERSION:     ((deployment.golang-version))
+          CURRENT:            true
+
+      - *task-deployment-lock    
+
+    - &remove-deployment
+      task: "delete-deployment"
+      file: mongodb-bosh-release/ci/tasks/deployment/remove-deployment.yml            
+      params :
+        ALIAS:              ((bosh-server.alias))
+        DEPLOYMENT_NAME:    *deployment_name
+
+    - &do-deploy
+      task: "deploy-replicaset -> current-main-version"
+      file: mongodb-bosh-release/ci/tasks/deployment/deployment.yml
+      attempts: 1
+      params: &deploy-parameters
+        ALIAS:                ((bosh-server.alias))
+        RELEASE_NAME:         ((deployment.name))
+        DEPLOYMENT_NAME:      *deployment_name
+        DEPLOYMENT_NETWORK:   ((deployment.network))
+        PERSISTENT_DISK_TYPE: ((deployment.mongodb.persistent-disk-type))
+        VM_TYPE:              ((deployment.mongodb.vm-type))        
+        MONGO_PORT:           ((deployment.mongodb.port))
+        ROOT_USERNAME:        ((deployment.mongodb.root-username))
+        NB_INSTANCES:         ((deployment.mongodb.nb_instances))
+        ENGINE:               "wiredtiger"
+        BROKER_VM_TYPE:       ((deployment.broker.vm_type))
+        BROKER_PERSISTENT_DISK_TYPE: ((deployment.broker.persistent_disk_type))
+        BROKER_CATALOG_YML:   ((deployment.broker.catalog_yml))
+        # for ssl deployment not fully implemented YET
+        #REQUIRE_SSL:          ((deployment.mongodb.require_ssl))
+        #CA_NAME:              ((deployment.mongodb.ca_name))
+        # for cloudfoundry deployment
+        CF_NATS_HOST:         ((cf.nats_host))
+        CF_NATS_PASSWORD:     ((cf.nats_password))
+        CF_SYSTEM_DOMAIN:     ((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        CF_ORG:               ((cf.org))
+        CF_SPACE:             ((cf.space))
+        SHIELD_URL:           ((shield.core))
+        SHIELD_TOKEN:         ((shield.token))
+        SHIELD_TENANT:        ((shield.tenant))
+        SHIELD_STORAGE:       ((shield.storage))
+        CURRENT:              true #use current "in production" mongodb version
+        APP_NAME:             ((cf.sample_app_name))
+
+
+#      on_failure: &deployment-unlock
+#        put: deployment-lock
+#        params: {release: deployment-lock}
+#      on_abort:
+#        *deployment-unlock    
+    - &update-deployed-version
+      put: deployed-version
+      params: { file: output/keyval.properties }       
+
+- &insert-datas
+  name: insert-datas-rs
+  serial: true
+  plan:
+
+    - get: mongodb-bosh-release
+      passed: [ deploy-current-version-rs ]
+      trigger: true
+
+    - &insert-datas-init
+      do:  
+
+        - get: deployment-lock   
+
+        - aggregate: 
+
+          - get: deployed-version
+
+          - *create-bosh-config
+
+    - &get-mongo-pwd
+      task: get-mongo-pwd
+      file: mongodb-bosh-release/ci/tasks/data-insertion/get-root-pwd.yml
+      params: &get-mongo-pwd-params
+        BOSH_ALIAS:       ((bosh-server.alias))
+        IP:               ((credhub.ip))
+        PORT:             ((credhub.port))
+        USER:             ((credhub.username))
+        PASSWORD:         ((credhub.password))
+        CA_CERT:          ((credhub.ca))
+        UAA_CA_CERT:      ((uaa.ca))
+        DEPLOYMENT_NAME:  *deployment_name
+        VAR:              "root_password"
+
+
+    - &update-deployment-specs
+      put: deployment-specs
+      params: { file: output/keyval.properties}
+
+    - &get-deployment-ips
+      task: get-deployment-ips
+      file: mongodb-bosh-release/ci/tasks/data-insertion/get-deployment-ips.yml
+      params: &get-deployment-ips-params
+        CA_CERT:          ((bosh-server.ca))
+        IP:               ((bosh-server.ip))
+        ALIAS:            ((bosh-server.alias)) 
+        USER:             ((bosh-server.user))
+        PASSWORD:         ((bosh-server.password))
+        DEPLOYMENT_NAME:  *deployment_name
+
+    - *update-deployment-specs
+
+    - &insert-datas-plan
+      do:
+        - &check-mongo-version
+          task: check-mongo-version
+          file: mongodb-bosh-release/ci/tasks/deployment/check-mongo-version.yml
+          privileged: true  
+          params: &check-mongo-version-params
+            USER:           ((deployment.mongodb.root-username))
+            PORT:           ((deployment.mongodb.port))
+            # for ssl
+            REQUIRE_SSL:    ((deployment.mongodb.require_ssl))            
+            CA_CERT:        ((deployment.mongodb.ca_cert))
+            # if deployments are done on a bosh lite 
+            USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
+            BOSH_IP:        ((bosh-server.ip))
+            JUMPBOX_KEY:    ((bosh-server.jumpbox_private_key))
+
+        - &insert-collection
+          task: insert-collection
+          file: mongodb-bosh-release/ci/tasks/data-insertion/insert-collection.yml
+          privileged: true        
+          params: &insert-collection-params
+            USER:       ((deployment.mongodb.root-username))
+            PORT:       ((deployment.mongodb.port))
+            DB:         ((deployment.mongodb.database-name))
+            COLLECTION: ((deployment.mongodb.collection-name))
+            # for ssl
+            REQUIRE_SSL: ((deployment.mongodb.require_ssl))
+            CA_CERT: ((deployment.mongodb.ca_cert))
+            # if deployments are done on a bosh lite 
+            USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
+            BOSH_IP:        ((bosh-server.ip))
+            JUMPBOX_KEY:    ((bosh-server.jumpbox_private_key))
+
+        - &list-inserted-values
+          put: datas
+          params: { file: datas/keyval.properties }
+
+- &mongo-version-upgrade
+  name: mongo-version-upgrade-rs
+  serial: true
+  plan:
+    - aggregate:
+      - get: datas
+        trigger: true
+        passed: [insert-datas-rs]
+
+      - get: deployment-specs
+        passed: [insert-datas-rs]
+
+      - get: mongodb-new-version
+
+      - get: mongodb-bosh-release
+
+    - *create-bosh-config
+
+    - &check-datas
+      task: check-datas-before-version-upgrade
+      file: mongodb-bosh-release/ci/tasks/data-insertion/check-datas.yml
+      privileged: true
+      params: &check-datas-params
+        USER: ((deployment.mongodb.root-username))
+        PORT: ((deployment.mongodb.port))
+        DB:   ((deployment.mongodb.database-name))
+        COLLECTION: ((deployment.mongodb.collection-name))
+        # for ssl
+        REQUIRE_SSL: ((deployment.mongodb.require_ssl))
+        CA_CERT: ((deployment.mongodb.ca_cert))
+        # if deployments are done on a bosh lite 
+        USE_BOSH_LITE:  ((bosh-server.is_bosh_lite))
+        BOSH_IP:        ((bosh-server.ip))
+        JUMPBOX_KEY:    ((bosh-server.jumpbox_private_key))        
+
+    - <<: *get-config-files
+      task: "get-config-files -> new-mongodb-version"
+      params:
+        <<: *get-config-files-params
+        CURRENT: false
+
+    - <<: *do-deploy
+      task: upgrade-rs
+      params: 
+        <<: *deploy-parameters
+        CURRENT: false
+        OPSFILES: |
+                  enable-mongodb-broker.yml 
+                  enable-mongodb-broker-route-registrar.yml 
+                  enable-mongodb-broker-smoke-tests.yml
+                  enable-mongodb-acceptance-test.yml
+        #                      enable-shield.yml
+    - *update-deployed-version    
+
+    - *check-mongo-version
+
+    - <<: *check-datas
+      task: check-datas-after-version-upgrade
+
+
+- &acceptance-tests
+  name: acceptance-tests
+  serial: true
+  plan:
+    - get: mongodb-bosh-release
+      trigger: true
+      passed: [ mongo-version-upgrade-rs ]
+
+    - &acceptance-tests-init
+      do:  
+
+        - *create-bosh-config
+
+        - &errand-lock
+          put: bosh-errand-lock
+          params: {claim: bosh-errand-lock}  
+
+    - &run-acceptance-tests
+      task: run-acceptance-tests
+      file: mongodb-bosh-release/ci/tasks/run-acceptance-tests.yml
+      params: &run-acceptance-tests-params
+        ALIAS:    ((bosh-server.alias))
+        DEPLOYMENT_NAME:  *deployment_name
+      ensure:
+        &errand-unlock
+        put: bosh-errand-lock
+        params: {release: bosh-errand-lock}
+
+- &create-service-broker-job
+  name: create-service-broker
+  plan:
+
+    - get: mongodb-bosh-release
+      passed: [ mongo-version-upgrade-rs ]
+      trigger: true
+
+    - &remove-cf-components
+      task: remove-cf-components
+      file: mongodb-bosh-release/ci/tasks/remove-cf-components.yml
+      params: &remove-cf-components-params
+        CF_API_URL:           https://api.((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        SKIP_SSL:             ((cf.skip_ssl_validation))
+        DEPLOYMENT_NAME:      *deployment_name
+        USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
+        APP_NAME:             ((cf.sample_app_name))        
+
+    - &get-broker-password
+      task: get-broker-password
+      file: mongodb-bosh-release/ci/tasks/get-broker-password.yml
+      params: &get-broker-password-params
+        BOSH_ALIAS:       ((bosh-server.alias))
+        IP:               ((credhub.ip))
+        PORT:             ((credhub.port))
+        USER:             ((credhub.username))
+        PASSWORD:         ((credhub.password))
+        DEPLOYMENT_NAME:  *deployment_name
+        UAA_CA:           ((uaa.ca))
+        CREDHUB_CA:       ((credhub.ca))
+
+    - &create-service-broker
+      task: create-service-broker
+      file: mongodb-bosh-release/ci/tasks/create-service-broker.yml
+      privileged: true
+      params: &create-service-broker-params
+        CF_API_URL:           https://api.((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        SKIP_SSL:             ((cf.skip_ssl_validation))
+        USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
+        DEPLOYMENT_NAME:      *deployment_name
+
+
+- &run-smoke-tests-job
+  name: run-smoke-tests
+  plan:
+    
+    - get: mongodb-bosh-release
+      passed: [ create-service-broker ]
+      trigger: true
+
+    - &run-smoke-tests-init
+      do:
+
+        - get: deployment-lock
+
+        - *create-bosh-config
+
+    - &create-sample-app
+      task: create-example-app
+      file: mongodb-bosh-release/ci/tasks/create-sample-app.yml
+      params: &create-sample-app-params
+        CF_API_URL:           https://api.((cf.system_domain))
+        CF_ADMIN_PASSWORD:    ((cf.admin_password))
+        SKIP_SSL:             ((cf.skip_ssl_validation))
+        USE_BOSH_LITE:        ((bosh-server.is_bosh_lite))
+        BOSH_IP:              ((bosh-server.ip))
+        JUMPBOX_KEY:          ((bosh-server.jumpbox_private_key))
+        APP_NAME:             ((cf.sample_app_name))    
+
+    - *errand-lock
+
+    - &run-smoke-tests
+      task: run-smoke-tests
+      file: mongodb-bosh-release/ci/tasks/run-smoke-tests.yml
+      params: &run-smoke-tests-params
+        ALIAS:                ((bosh-server.alias))
+        DEPLOYMENT_NAME:      *deployment_name
+      ensure:
+        <<: *errand-unlock
+
+    - *deployment-unlock
+
+#======================================================================================================================================
+# Sharding tests
+#======================================================================================================================================             
+
+- <<: *deploy-current-version
+  name: deploy-current-version-sharding
+  plan:
+    - <<: *deploy-current-version_init
+    - <<: *remove-deployment
+      params :
+        ALIAS:              ((bosh-server.alias))
+        DEPLOYMENT_NAME:    ((deployment.name))-shard
+    - <<: *do-deploy
+      task: "deploy-sharded-cluster -> current-main-version"
+      attempts: 3
+      params: &deploy-parameters-shard
+        <<: *deploy-parameters
+        SHARDED: true
+        DEPLOYMENT_NAME:   ((deployment.name))-shard
+        APP_NAME:          ((cf.sample_app_name))-shard  
+    - <<: *update-deployed-version
+
+- <<: *insert-datas
+  name: insert-datas-shard
+  plan:
+
+    - get: mongodb-bosh-release
+      passed: [ deploy-current-version-sharding ]
+      trigger: true
+
+    - *insert-datas-init
+
+    - <<: *get-mongo-pwd
+      params: 
+        <<: *get-mongo-pwd-params
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
+
+    - *update-deployment-specs
+
+    - <<: *get-deployment-ips
+      params: 
+        <<: *get-deployment-ips-params
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
+
+    - *update-deployment-specs
+   
+    - &check-mongo-version-shard
+      <<: *check-mongo-version
+      params:
+        <<: *check-mongo-version-params
+        SHARDED: true
+
+    - <<: *insert-collection
+      params:
+        <<: *insert-collection-params
+        SHARDED: true
+
+    - *list-inserted-values
+
+- <<: *mongo-version-upgrade
+  name: mongo-version-upgrade-shard
+  plan:
+    - aggregate:
+      - get: datas
+        trigger: true
+        passed: [insert-datas-shard]
+
+      - get: deployment-specs
+        passed: [insert-datas-shard]
+
+      - get: mongodb-new-version
+
+      - get: mongodb-bosh-release
+
+    - *create-bosh-config
+
+    - <<: *check-datas
+      params: 
+        <<: *check-datas-params
+        SHARDED: true      
+
+    - <<: *get-config-files
+      task: "get-config-files -> new-mongodb-version"
+      params:
+        <<: *get-config-files-params
+        CURRENT: false
+
+    - <<: *do-deploy
+      task: upgrade-shard
+      params: 
+        <<: *deploy-parameters-shard
+        CURRENT: false
+        OPSFILES: |
+                  enable-mongodb-broker.yml 
+                  enable-mongodb-broker-route-registrar.yml 
+                  enable-mongodb-broker-smoke-tests.yml
+                  enable-mongodb-acceptance-test.yml
+        #                      enable-shield.yml
+    - *update-deployed-version    
+
+    - *check-mongo-version-shard
+
+    - <<: *check-datas
+      task: check-datas-after-version-upgrade
+      params: 
+        <<: *check-datas-params
+        SHARDED: true
+
+- <<: *acceptance-tests
+  name: acceptance-tests-shard
+  plan:
+
+    - get: mongodb-bosh-release
+      trigger: true
+      passed: [ mongo-version-upgrade-shard ]
+
+    - *acceptance-tests-init
+
+    - <<: *run-acceptance-tests
+      params:
+        <<: *run-acceptance-tests-params
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
+
+- <<: *create-service-broker-job
+  name: create-service-broker-sharding
+  plan:
+
+    - get: mongodb-bosh-release
+      passed: [ mongo-version-upgrade-shard ]
+      trigger: true
+
+    - <<: *remove-cf-components
+      params: 
+        <<: *remove-cf-components-params
+        DEPLOYMENT_NAME:      ((deployment.name))-shard
+        APP_NAME:             ((cf.sample_app_name))-shard        
+
+    - <<: *get-broker-password
+      params: 
+        <<: *get-broker-password-params
+        DEPLOYMENT_NAME:  ((deployment.name))-shard
+
+    - <<: *create-service-broker
+      params: 
+        <<: *create-service-broker-params
+        DEPLOYMENT_NAME:      ((deployment.name))-shard
+
+- <<: *run-smoke-tests-job
+  name: run-smoke-tests-sharding
+  plan:
+ 
+        - get: mongodb-bosh-release
+          passed: [ create-service-broker-sharding ]
+          trigger: true
+    
+        - *run-smoke-tests-init
+
+        - <<: *create-sample-app
+          params:
+            <<: *create-sample-app-params
+            APP_NAME: ((cf.sample_app_name))-shard
+        - *errand-lock
+
+        - <<: *run-smoke-tests
+          params: 
+            <<: *run-smoke-tests-params
+            DEPLOYMENT_NAME:      ((deployment.name))-shard
+
+        - *deployment-unlock
+
+####################################################################################################################################
+#  Bumping successfully tested version to the git
+####################################################################################################################################     
+
+- name: bump-tested-version
+  serial: true
+  plan:
+    - get: mongodb-bosh-release
+      passed: [run-smoke-tests,run-smoke-tests-sharding,acceptance-tests,acceptance-tests-shard]
+      trigger: true
+
+    - get: deployed-version
+
+    - task: bump-version
+      file: mongodb-bosh-release/ci/tasks/bump-version.yml
+
+    - put: mongodb-tested-version
+      params: {file: bump-version/version}         

@@ -1,12 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e # exit immediately if a simple command exits with a non-zero status.
 set -u # report the usage of uninitialized variables.
 
-source `dirname $(readlink -f $0)`/setenv
-
-# Setup env vars and folders for the webapp_ctl script
-source /var/vcap/jobs/mongod/helpers/ctl_setup.sh 'mongod'
+export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
+source ${JOBS_COMMON_DIR}/bin/setenv mongod
 
 case $1 in
 
@@ -25,8 +23,8 @@ case $1 in
     then
       pid_guard $PIDFILE $JOB_NAME
 
-      exec chpst -u vcap:vcap $MONGODB_BIN/mongod --config $MONGODB_CONF/mongod.conf \
-        --pidfilepath $PIDFILE  >>$LOG_DIR/mongodb.stdout.log 2>>$LOG_DIR/mongodb.stderr.log
+      exec chpst -u vcap:vcap $MONGODB_BIN/mongod --config $MONGODB_CONF/${JOB_NAME}.conf \
+        --pidfilepath $PIDFILE  >>$LOG_DIR/${JOB_NAME}.stdout.log 2>>$LOG_DIR/${JOB_NAME}.stderr.log
     fi
     ;;
   stop)
@@ -34,7 +32,7 @@ case $1 in
 
     ;;
   *)
-    echo "Usage: mongodb_server_ctl {start|stop}"
+    echo "Usage: mongod_ctl {start|stop}"
 
     ;;
 

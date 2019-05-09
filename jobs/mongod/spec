@@ -2,9 +2,12 @@
 name: mongod
 packages:
   - mongodb
+  - mongodb-jobs-common
+
 consumes:
   - name: server
     type: mongod
+
 
 provides:
   - name: server
@@ -12,60 +15,28 @@ provides:
     properties:
     - root_username
     - root_password
-    - node_role
-    - rs_port
-    - sh_port
-    - mongos_port
-    - cfg_port
+    - port
     - replication.enable
     - replication.replica_set_name
+    - require_ssl
+    - server_certificate.private_key
+    - server_certificate.certificate
 
 templates:
-  helpers/ctl_setup.sh: helpers/ctl_setup.sh
-  helpers/ctl_utils.sh: helpers/ctl_utils.sh
+  bin/mdb-variables.sh.erb: bin/mdb-variables.sh
   bin/pre-start: bin/pre-start
-  bin/mongod_ctl: bin/mongod_ctl
-  bin/mongo.sh: bin/mongo.sh
-  bin/mongo-ssl.sh: bin/mongo-ssl.sh
-  bin/mongoadmin.sh.erb: bin/mongoadmin.sh
-  bin/setenv.erb: bin/setenv
-  bin/mdb-functions.erb: bin/mdb-functions
-  bin/monit_debugger: bin/monit_debugger
-  bin/generate_ssl_cert.sh.erb: bin/generate_ssl_cert.sh
-  data/properties.sh.erb: data/properties.sh
+  bin/drain: bin/drain
+  bin/mongod_ctl : bin/mongod_ctl
   config/mongod.conf.erb: config/mongod.conf
   config/keyfile.erb: config/keyfile
-  ssl/mongodb.key.erb: ssl/mongodb.key
-  ssl/mongodb.crt.erb: ssl/mongodb.crt
-  ssl/mongodb.ca.erb: ssl/mongodb.ca
-  js/create_admin_user.js.erb: js/create_admin_user.js
-  js/initiate_rs.js.erb: js/initiate_rs.js
+  ssl/CA.key.erb: ssl/CA.key
+  ssl/CA.crt.erb: ssl/CA.crt
 
 properties:
-  db_version:
-      default: 3.4.7
-  db_tool_version:
-      default: 1.4.1
-  node_role:
-      default: rs
-      description: |
-
-        Role for the mongod server in the Mongodb cluster: 'rs' for replica set, 'sa' for stand alone server
-        In the future, 'cfg' (for config server), 'sh' (for shard server) will
-        also be supported.
-
-  rs_port:
+  port:
       default: 27017
       description: Default mongodb port for replicasets AND standalone server
-  cfg_port:
-      default: 27019
-      description: Default mongodb port for configserver / NOT IMPLEMENTED YET
-  sh_port:
-      default: 27018
-      description: Default mongodb port for shards / NOT IMPLEMENTED YET
-  mongos_port:
-      default: 27017
-      description: Default mongodb port for mongos / NOT IMPLEMENTED YET
+
   storage_engine:
       default: wiredTiger
       description: |
@@ -161,25 +132,26 @@ properties:
 
         Ref: https://docs.mongodb.com/manual/reference/configuration-options/#security.authorization
   admin_username:
-      default: MongoAdmin
+      default: admin
       description: |
         Username of the default admin user.
   admin_password:
       description: |
         Password for the admin user, in clear text.
   root_username:
-      default: MongoRoot
+      default: root
       description: |
         Username of the default root user.
   root_password:
       description: |
         Password for the root user, in clear text.
-  server_certificate:
-      default:
-        ca: "NOT INITIALIZED"
-        private_key: "NOT INITIALIZED"
-        certificate: "NOT INITIALIZED"
-      description: Mongodb certificate for ttl/ssl auth
+  server_certificate.ca:
+      default: "NOT INITIALIZED"
+      description: Mongodb certificate for ttl/ssl auth - CA part
+  server_certificate.private_key: 
+      default: "NOT INITIALIZED"
+  server_certificate.certificate: 
+      default: "NOT INITIALIZED"
   require_ssl:
       default: 1
       description: |
