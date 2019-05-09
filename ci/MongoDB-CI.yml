@@ -259,7 +259,8 @@ jobs:
           <<: *task-create-release-params
           CURRENT:          false
 
-      ensure: &deployment-unlock
+      ensure: 
+        &deployment-unlock
         put: deployment-lock
         params: {release: deployment-lock}
 
@@ -342,6 +343,7 @@ jobs:
         SHIELD_TENANT:        ((shield.tenant))
         SHIELD_STORAGE:       ((shield.storage))
         CURRENT:              true #use current "in production" mongodb version
+        APP_NAME:             ((cf.sample_app_name))
 
 
 #      on_failure: &deployment-unlock
@@ -634,7 +636,7 @@ jobs:
         <<: *deploy-parameters
         SHARDED: true
         DEPLOYMENT_NAME:   ((deployment.name))-shard
-  
+        APP_NAME:          ((cf.sample_app_name))-shard  
     - <<: *update-deployed-version
 
 - <<: *insert-datas
