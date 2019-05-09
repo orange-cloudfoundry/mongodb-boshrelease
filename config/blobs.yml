@@ -6,6 +6,10 @@ mongodb/mongodb-centos-x86_64-3.4.7.tar.gz:
   size: 159766619
   object_id: 51aba6f1-88ff-4192-4b1e-629050b9f0d4
   sha: 897e78575a384db62710b2a228d91be9260a4a42
+mongodb/mongodb-linux-x86_64-3.6.12.tar.gz:
+  size: 100307521
+  object_id: 4f4284a7-9755-4340-714a-70291712c2b9
+  sha: 5a145cccd202aab0764b326f1e7503f246b8d506
 mongodb/mongodb-ubuntu-x86_64-3.4.7.tar.gz:
   size: 159788170
   object_id: c2d2e867-e8ac-4bc5-7882-0803615e60ed
