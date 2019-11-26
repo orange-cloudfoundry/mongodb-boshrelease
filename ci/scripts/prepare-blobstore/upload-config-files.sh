@@ -2,8 +2,6 @@
 
 set -e
 
-apk add --update jq
-
 ROOT_FOLDER=${PWD}
 
 mkdir -p ~/.aws
