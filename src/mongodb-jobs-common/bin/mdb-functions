@@ -354,6 +354,38 @@ backup_root_password()
 }
 ################################################################################################
 
+################################################################################################
+# this function check if archived password ( if exists) fit the credhub one
+# allowing pasword changes in deployment manifest
+check_password()
+{
+  return=0
+  if [ -f ${DATA_DIR}/mongo_ident.conf ]
+  then
+    if [ -f ${DATA_DIR}/mongo_private.pem ]
+    then
+      openssl genrsa -out ${DATA_DIR}/mongo_private.pem 1024
+      chmod 600 ${DATA_DIR}/mongo_private.pem
+      if [ -f ${DATA_DIR}/mongo_public.pem ]
+      then
+        line=$(openssl rsautl -decrypt -inkey ./mongo_private.pem -in mongo_ident.conf)
+        _root_username=$(echo $line | cut -d" " -f1)
+        _root_password=$(echo $line | cut -d" " -f1)
+      fi
+    fi
+    if [ "$_root_username" != "${property_root_username}" -o "$_root_password" != "${property_root_password}"]
+    then
+      return=1
+    fi
+  fi  
+
+  return $return  
+  
+}
+################################################################################################
+
+
+
 ############# setting mongo connection script depending if we are on ssl mode or not ###########
 setMongoCmd()
 {
