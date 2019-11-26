@@ -53,6 +53,11 @@ else
    start_mongod_with_auth
 fi
 
+if [ $(check_password) -eq 1 ]
+then
+  update_password
+fi  
+
 run_replicaset
 
 [ ! -f ${RUN_DIR}/shardsvr_initialized ] && touch ${RUN_DIR}/shardsvr_initialized
