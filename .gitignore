@@ -23,3 +23,5 @@ releases/**/*.tgz
 .DS_Store
 blobs
 config/final.yml
+deployment-vars-*
+ci/settings.yml

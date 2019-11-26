@@ -17,6 +17,14 @@ fi
 system_update            # Updating system mandatories
 rights_and_directories   # Create Mongodb directories and update rights on keyfile
 
+if [ $(check_password) -eq 1 ] # check if credhub password fit the backuped one (if exists)
+then
+  echo password has changed
+fi
+
+sleep 50000
+exit 1
+
 export MONGO_CMD_PARAM="--quiet"
 if [ ! -f ${RUN_DIR}/mongodb_initialized ]
 then
