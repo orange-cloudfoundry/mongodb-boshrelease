@@ -594,7 +594,7 @@ jobs:
   plan:
 
     - get: mongodb-bosh-release
-      passed: [ mongo-version-upgrade-rs ]
+      passed: [ mongo-password-update-rs ]
       trigger: true
 
     - &remove-cf-components
