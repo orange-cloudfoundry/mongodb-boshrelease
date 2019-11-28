@@ -397,8 +397,9 @@ update_password()
 
   Master=$( check_master )
 
-  if [ $(${MONGO_CMD} mongodb://${property_root_username}:${property_root_password}@${Master}/admin?authSource=admin \
-                                --eval "exit"||grep "Authentication failed"|wc -l) -gt 0 ]
+
+  _test=$(${MONGO_CMD} mongodb://${property_root_username}:${property_root_password}@${Master}/admin?authSource=admin --eval "exit"|grep "Authentication failed"|wc -l)
+  if [ ${_test} -gt 0 ]
   then
 
     # removing other nodes from master
