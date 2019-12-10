@@ -40,7 +40,7 @@ resources:
   - name: mongodb-new-version
     type: mongo-src
     source:
-      branch: "3.6"
+      branch: "4.0"
 
   - name: mongodb-version-update
     type: keyval
@@ -504,6 +504,62 @@ jobs:
     - <<: *check-datas
       task: check-datas-after-version-upgrade
 
+- &mongo-update-password
+  name: mongo-password-update-rs
+  serial: true
+  plan:
+    - aggregate:
+      - get: datas
+        trigger: true
+        passed: [mongo-version-upgrade-rs]
+
+      - get: deployment-specs
+        passed: [mongo-version-upgrade-rs]
+
+      - get: mongodb-new-version
+
+      - get: mongodb-bosh-release
+
+    - *create-bosh-config
+
+    - <<: *check-datas
+
+    - <<: *get-config-files
+      task: "get-config-files -> new-mongodb-version"
+      params:
+        <<: *get-config-files-params
+        CURRENT: false
+
+    - &modify-credhub-root-password
+      task: modify-stored-root-password
+      file: mongodb-bosh-release/ci/tasks/modify-mongo-password.yml
+      privileged: true
+      params: &check-datas-params
+        MONGO_USER: ((deployment.mongodb.root-username))
+        BOSH_ALIAS:       ((bosh-server.alias))
+        IP:               ((credhub.ip))
+        PORT:             ((credhub.port))
+        USER:             ((credhub.username))
+        PASSWORD:         ((credhub.password))
+        DEPLOYMENT_NAME:  *deployment_name
+        UAA_CA:           ((uaa.ca))
+        CREDHUB_CA:       ((credhub.ca))
+
+
+
+    - <<: *do-deploy
+      task: update-password
+      params: 
+        <<: *deploy-parameters
+        CURRENT: false
+        OPSFILES: |
+                  enable-mongodb-broker.yml 
+                  enable-mongodb-broker-route-registrar.yml 
+                  enable-mongodb-broker-smoke-tests.yml
+                  enable-mongodb-acceptance-test.yml
+
+    - <<: *check-datas
+      task: check-datas-after-password-update              
 
 - &acceptance-tests
   name: acceptance-tests
@@ -511,7 +567,7 @@ jobs:
   plan:
     - get: mongodb-bosh-release
       trigger: true
-      passed: [ mongo-version-upgrade-rs ]
+      passed: [ mongo-password-update-rs ]
 
     - &acceptance-tests-init
       do:  
@@ -538,7 +594,7 @@ jobs:
   plan:
 
     - get: mongodb-bosh-release
-      passed: [ mongo-version-upgrade-rs ]
+      passed: [ mongo-password-update-rs ]
       trigger: true
 
     - &remove-cf-components

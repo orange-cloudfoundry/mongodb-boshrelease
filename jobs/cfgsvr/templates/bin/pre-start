@@ -19,6 +19,11 @@ rights_and_directories   # Create Mongodb directories and update rights on keyfi
 
 export MONGO_CMD_PARAM="--quiet"
 
+if [ $(check_password) -eq 1 ]
+then
+  update_password
+fi  
+
 start_mongod_noauth          # Start mongod without authentication
 
 run_replicaset
