@@ -253,16 +253,23 @@ add_secondary()
   # need to wait for complete add before restarting
   _timeout=30
   add_ok="false"
+  recovery_in_progress=5 #STARTUP2 state
   while [ "${add_ok}" == "false" ]
   do
     add_ok=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
       --eval 'rs.isMaster().secondary'||echo "false"`
+    recovery_in_progress=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+      --eval 'rs.status().myState'||echo "0"`
+
     if [ "${add_ok}" != "true" ]
     then
       add_ok="false"
-      sleep 2
-      _timeout=$((_timeout-2))
-      [ ${_timeout} -le 0 ] && echo "node ${deployment_current_ip}:${property_mongod_listen_port} hasn\'t been added. Timeout reached" && exit 1
+      if [ ${recovery_in_progress} -ne 5 -o ${recovery_in_progress} -ne 1 ]
+      then
+        sleep 2
+        _timeout=$((_timeout-2))
+        [ ${_timeout} -le 0 ] && echo "node ${deployment_current_ip}:${property_mongod_listen_port} hasn\'t been added. Timeout reached" && exit 1
+      fi
     fi
   done
 }
