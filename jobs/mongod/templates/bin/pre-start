@@ -18,12 +18,19 @@ system_update            # Updating system mandatories
 rights_and_directories   # Create Mongodb directories and update rights on keyfile
 
 export MONGO_CMD_PARAM="--quiet"
-if [ ! -f ${RUN_DIR}/mongodb_initialized ]
+
+
+if [ ! -f ${RUN_DIR}/mongodb_initialized -o $(check_password) -eq 1 ]
 then
    start_mongod_noauth          # Start mongod without authentication
 else
    start_mongod_with_auth
 fi
+
+if [ $(check_password) -eq 1 ]
+then
+  update_password
+fi  
 
 if [ ${property_replication_enable} -eq 0  ]
 then
@@ -35,7 +42,8 @@ else
 fi
 
 [ ! -f ${RUN_DIR}/mongodb_initialized ] && touch ${RUN_DIR}/mongodb_initialized
-# backup root password to allowpassword modification through manifest
+
+# backup root password to allowpassword modification through manifest or credhub
 backup_root_password
 
 kill_and_wait ${PIDFILE}

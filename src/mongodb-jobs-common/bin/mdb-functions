@@ -169,7 +169,7 @@ create_admin_users()
       fi 
     done
     # Create admin users if not already created
-    if [ "${created}" == "null" ]
+    if [ "${created}" == "null" -o $(check_password) -eq 1 ]
     then
        ${MONGO_CMD} ${MONGO_CMD_PARAM} mongodb://${deployment_current_ip}:${property_mongod_listen_port} \
                                        --eval "job_dir=\"${JOB_DIR}\""  \
@@ -202,7 +202,10 @@ init_primary()
 ########################## Primary node initialization #########################################
 run_replicaset()
 {
+
     Master=$( check_master )
+
+    
     if [ "${Master}" == "" -o "${Master}" == "${deployment_current_ip}:${property_mongod_listen_port}" ]
     then
       # check if rs is already initialized
@@ -213,6 +216,7 @@ run_replicaset()
         init_primary          # perform rs.initiate
         create_admin_users    # Create admin and root users
       fi
+
     else
       add_secondary
     fi
@@ -249,16 +253,23 @@ add_secondary()
   # need to wait for complete add before restarting
   _timeout=30
   add_ok="false"
+  recovery_in_progress=5 #STARTUP2 state
   while [ "${add_ok}" == "false" ]
   do
     add_ok=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
       --eval 'rs.isMaster().secondary'||echo "false"`
+    recovery_in_progress=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+      --eval 'rs.status().myState'||echo "0"`
+
     if [ "${add_ok}" != "true" ]
     then
       add_ok="false"
-      sleep 2
-      _timeout=$((_timeout-2))
-      [ ${_timeout} -le 0 ] && echo "node ${deployment_current_ip}:${property_mongod_listen_port} hasn\'t been added. Timeout reached" && exit 1
+      if [ ${recovery_in_progress} -ne 5 -o ${recovery_in_progress} -ne 1 ]
+      then
+        sleep 2
+        _timeout=$((_timeout-2))
+        [ ${_timeout} -le 0 ] && echo "node ${deployment_current_ip}:${property_mongod_listen_port} hasn\'t been added. Timeout reached" && exit 1
+      fi
     fi
   done
 }
@@ -353,6 +364,63 @@ backup_root_password()
 
 }
 ################################################################################################
+
+################################################################################################
+# this function check if archived password ( if exists) fit the credhub one
+# allowing pasword changes in deployment manifest
+check_password()
+{
+  return=0
+  if [ -f ${DATA_DIR}/mongo_ident.conf ]
+  then
+    if [ -f ${DATA_DIR}/mongo_private.pem ]
+    then
+      if [ -f ${DATA_DIR}/mongo_public.pem ]
+      then
+        line=$(openssl rsautl -decrypt -inkey ${DATA_DIR}/mongo_private.pem -in ${DATA_DIR}/mongo_ident.conf)
+        _root_username=$(echo $line | cut -d" " -f1)
+        _root_password=$(echo $line | cut -d" " -f2)
+      fi
+    fi
+    if [ "${_root_username}" != "${property_root_username}" -o "${_root_password}" != "${property_root_password}" ]
+    then
+      return=1
+    fi
+  fi  
+
+  echo $return  
+}
+################################################################################################
+
+
+################################################################################################
+update_password()
+{
+  
+  line=$(openssl rsautl -decrypt -inkey ${DATA_DIR}/mongo_private.pem -in ${DATA_DIR}/mongo_ident.conf)
+  previous_user=$(echo $line | cut -d" " -f1)
+  previous_password=$(echo $line | cut -d" " -f2)
+
+
+  Master=$( check_master )
+
+
+  _test=$(${MONGO_CMD} mongodb://${property_root_username}:${property_root_password}@${Master}/admin?authSource=admin --eval "exit"|grep "Authentication failed"|wc -l)
+  if [ ${_test} -gt 0 ]
+  then
+
+    # removing other nodes from master
+    ${MONGO_CMD} mongodb://${previous_user}:${previous_password}@${Master}/admin?authSource=admin \
+                                  --eval "rs.conf().members.forEach(function(_rs){if(_rs.host!=\"${Master}\"){rs.remove(_rs.host)}})"
+
+
+    ${MONGO_CMD} mongodb://${previous_user}:${previous_password}@${Master}/admin?authSource=admin \
+                                  --eval "job_dir=\"${JOB_DIR}\""  \
+                                  --shell < ${JOBS_COMMON_DIR}/js/create_admin_user.js
+  fi
+}
+################################################################################################
+
 
 ############# setting mongo connection script depending if we are on ssl mode or not ###########
 setMongoCmd()
