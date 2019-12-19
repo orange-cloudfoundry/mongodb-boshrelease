@@ -57,7 +57,7 @@ start_mongod_with_auth()
     if [ -f ${PIDFILE} ]
     then
       Master=$(check_master)|cut -d":" -f1
-      if [ "$Master" == "${deployment_current_ip}" ]
+      if [ "${Master}" == "${deployment_current_ip}" ]
       then
         ${MONGO_CMD} $MONGO_CMD_PARAM mongodb://${deployment_rs_config}/admin --eval "rs.stepDown()"
       fi
@@ -479,3 +479,46 @@ rs_scaleIn()
 }
 ################################################################################################
 
+############# checking current feature compatibility version  ##################
+check_current_fcv()
+{
+
+  MONGO_CMD="$(setMongoCmd)"
+
+  MONGO_CMD_PARAM="--quiet"
+
+  Master=$( check_master )
+
+  # currently declared feature compatibility
+  current_fcv=$(${MONGO_CMD} ${MONGO_CMD_PARAM} \
+              "mongodb://${property_root_username}:${property_root_password}@${Master}/admin?replicaSet=${property_replica_set_name}&authSource=admin" \
+              --eval 'db.adminCommand({getParameter:1,featureCompatibilityVersion:1}).featureCompatibilityVersion.version'| tail -1)
+  # current database version            
+  current_dbv=$(${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${Master}/admin?replicaSet=${property_replica_set_name}&authSource=admin" \
+              ${MONGO_CMD_PARAM} \
+              --eval 'db.version()'|tail -1| sed -e "s/^\([0-9]*\.[0-9]*\).*/\1/g")
+  [ "${current_fcv}" == "$current_dbv" ] && echo 0 || echo 1          
+
+}
+################################################################################################
+
+############# update feature compatibility version  ##################
+update_fcv()
+{
+
+  set -x
+
+  MONGO_CMD="$(setMongoCmd)"
+
+  MONGO_CMD_PARAM="--quiet"
+
+  Master=$( check_master )
+
+  current_dbv=$(${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${Master}/admin?replicaSet=${property_replica_set_name}&authSource=admin" \
+              ${MONGO_CMD_PARAM} \
+              --eval 'db.version()'|tail -1| sed -e "s/^\([0-9]*\.[0-9]*\).*/\1/g")
+  echo updating fcv to ${current_dbv}
+  ${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${Master}/admin?replicaSet=${property_replica_set_name}&authSource=admin" \
+              ${MONGO_CMD_PARAM} \
+              --eval 'db.adminCommand({setFeatureCompatibilityVersion:"'${current_dbv}'"})'          
+}
