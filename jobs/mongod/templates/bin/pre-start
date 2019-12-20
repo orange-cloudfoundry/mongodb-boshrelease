@@ -19,6 +19,16 @@ rights_and_directories   # Create Mongodb directories and update rights on keyfi
 
 export MONGO_CMD_PARAM="--quiet"
 
+# check if fcv is correctly setted on previously deployed clusters
+
+if [ "$( check_master )" != "" ]
+then
+  if [ $(check_current_fcv) -ne 0 ]
+  then
+    update_fcv
+    rm -rf ${DATA_DIR}/*
+  fi
+fi
 
 if [ ! -f ${RUN_DIR}/mongodb_initialized -o $(check_password) -eq 1 ]
 then
@@ -45,6 +55,13 @@ fi
 
 # backup root password to allowpassword modification through manifest or credhub
 backup_root_password
+
+#update fcv to deployed version
+if [ $(check_current_fcv) -ne 0 ]
+then
+  update_fcv
+  rm -rf ${DATA_DIR}/*
+fi
 
 kill_and_wait ${PIDFILE}
 
