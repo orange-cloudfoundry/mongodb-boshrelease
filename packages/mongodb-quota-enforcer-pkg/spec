@@ -1,0 +1,7 @@
+---
+name: mongodb-quota-enforcer-pkg
+dependencies: []
+files:
+- mongodb-quota-enforcer/**/*
+- openjdk/*
+- common/setup-java-prepackaging.sh

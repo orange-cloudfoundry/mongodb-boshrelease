@@ -1,0 +1,66 @@
+---
+name: quota-enforcer
+packages:
+- java-common
+- openjdk
+- mongodb-quota-enforcer-pkg
+consumes:
+- name: server
+  type: mongod
+  optional: true
+- name: config-server
+  type: cfgsvr
+  optional: true
+
+templates:
+  bin/pre-start: bin/pre-start
+  bin/ctl: bin/ctl
+  bin/monit_debugger: bin/monit_debugger
+  data/properties.sh.erb: data/properties.sh
+  helpers/ctl_setup.sh: helpers/ctl_setup.sh
+  helpers/ctl_utils.sh: helpers/ctl_utils.sh
+  config/application.yml.erb: config/application.yml
+  config/log4j.xml.erb: config/log4j.xml
+  config/manifest.yml.erb: config/manifest.yml
+  config/uaa_cert.crt.erb: config/uaa_cert.crt
+properties:
+  mongodb_node.admin_username:
+    description: mongodb root username
+  mongodb_node.admin_password:
+    description: mongodb root password
+  mongodb_node.admin_db:
+    description: mongodb admin database
+  mongodb_node.host:
+    description: mongodb admin database
+  cf.accessTokenUri:
+    description: cloudfoundry UAA access token url
+  cf.clientId:
+    description: cloudfoundry UAA client id
+  cf.clientSecret:
+    description: cloudfoundry UAA secret
+  cf.userAuthorizationUri:
+    description: auth cloufoundry uaa uri
+  cf.userInfoUri:
+    description: user informations cloud uaa uri
+  cf.space:
+    description: cf space to deploy quotaenforcer on cf
+  cf.org:
+    description: cf org to deploy quotaenforcer on cf
+  cf.api:
+    description: cf api to login to cloudfoundry
+  cf.skip_ssl:
+    description: skip ssl on cf login
+    default: true
+  cf.uaa_cert:
+    description: uaa https cert to insert in java keystore
+  cf.appdomain:
+    description: cf application domain to health check the app
+  cf.user.username:
+    description: cf user to push the app
+  cf.user.password:
+    description: cf user password
+  quota_enforcer.plansize: 
+    description: max size of database to enforce
+  quota_enforcer.ignoreUsers:
+    description: list of users to ignore from quota enforcer separated by comma ex (MongoAdmin, MongoRoot, monitoring)
+  

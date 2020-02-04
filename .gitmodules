@@ -5,3 +5,6 @@
 	path = src/github.com/orange-cloudfoundry/mongodb-acceptance-tests
 	url = https://github.com/orange-cloudfoundry/mongodb-acceptance-tests.git
 	branch = replicaset-tests
+[submodule "src/mongodb-quota-enforcer"]
+	path = src/mongodb-quota-enforcer
+	url = https://github.com/skortobi/mongodb-quota-enforcer

@@ -1,0 +1,53 @@
+set -e # exit immediately if a simple command exits with a non-zero status
+set -u # report the usage of uninitialized variables
+
+# Setup env vars and folders for the webapp_ctl script
+source /var/vcap/jobs/broker-smoke-tests/helpers/ctl_setup.sh 'broker-smoke-tests'
+
+# Home directory
+export CF_HOME=/var/vcap/data/cf_home/quota-enforcer/
+mkdir -p $CF_HOME
+cd $CF_HOME
+echo '$PWD' $PWD
+
+# Get parameters from spec
+CF_API_URL='<%= p("cf.api") %>'
+CF_ADMIN_USERNAME='<%= p("cf.user.username") %>'
+CF_ADMIN_PASSWORD='<%= p("cf.user.password") %>'
+CF_SKIP_SSL_VALIDATION= true
+CF_ORG='<%= p("cf.org") %>'
+CF_SPACE='<%= p("cf.space") %>'
+CF_MONGODB_APPNAME='mongodb-quota-enforcer'
+CF_SKIP_SSL_VALIDATION=<%= p("cf.skip_ssl") %>
+CF_MONGODB_APPDOMAIN='<%= p("cf.appdomain") %>'
+echo 'End Get parameters'
+
+# Copy cf-mongodb-example-app to $CF_HOME
+cp -R /var/vcap/packages/mongodb-quota-enforcer-pkg/mongodb-quota-enforcer.jar $CF_HOME/
+cp /var/vcap/jobs/quota-enforcer/config/manifest.yml $CF_HOME/
+cd $CF_HOME/
+echo '$PWD' $PWD
+echo 'End Copy'
+
+# Define CF API end point
+if [[ ${CF_SKIP_SSL_VALIDATION} == "true" ]]; then
+    cf api ${CF_API_URL} --skip-ssl-validation
+else
+    cf api ${CF_API_URL}
+fi
+echo 'End api'
+
+# Log to CF
+cf auth ${CF_ADMIN_USERNAME} ${CF_ADMIN_PASSWORD}
+echo 'End auth'
+
+# Target to org and space
+cf target -o ${CF_ORG} -s ${CF_SPACE}
+echo 'End target org and space'
+
+# Clean app, service instance and broker
+cf d -f -r ${CF_MONGODB_APPNAME}
+
+# Push mongodb-example-app
+cf push
+echo 'End push'
