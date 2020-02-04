@@ -1,0 +1,28 @@
+---
+server.port: 8081
+spring.application.name: mongodb-quotaenforcer
+spring.data.mongodb.username: <%= p('mongodb_node.admin_username') %>
+spring.data.mongodb.host: <%= p('mongodb_node.host') %>
+spring.data.mongodb.password: <%= p('mongodb_node.admin_password') %>
+spring.data.mongodb.database: <%= p('mongodb_node.admin_db') %>
+spring.data.mongodb.authentication-database: <%= p('mongodb_node.admin_db') %>
+logging.level.org.mongodb.driver.connection: ERROR
+logging.level.org.mongodb.driver.cluster: ERROR
+logging.level.org.springframework.security: DEBUG
+
+
+server.tomcat.remote-ip-header: x-forwarded-for
+server.tomcat.protocol-header: x-forwarded-proto
+
+quota-enforcer.plansize: <%= p('quota_enforcer.plansize') %>
+quota-enforcer.ignoreUsers:  <%= p('quota_enforcer.ignoreUsers') %>
+security.basic.enabled: false
+security.oauth2.client.clientId: <%= p('cf.clientId') %>
+security.oauth2.client.clientSecret: <%= p('cf.clientSecret') %>
+security.oauth2.client.accessTokenUri: <%= p('cf.accessTokenUri') %>
+security.oauth2.client.userAuthorizationUri: <%= p('cf.userAuthorizationUri') %>
+security.oauth2.resource.userInfoUri: <%= p('cf.userInfoUri') %>
+#server.ssl.key-store: classpath:quota-enforcer-keystore.p12
+#server.ssl.key-store-password: quota-enforcer
+#server.ssl.keyStoreType: PKCS12
+#server.ssl.keyAlias: quota-enforcer

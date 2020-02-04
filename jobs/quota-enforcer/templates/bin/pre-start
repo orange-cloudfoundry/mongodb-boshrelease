@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -u # report the usage of uninitialized variables
+
+cmd=$(/var/vcap/packages/openjdk/jre/bin/keytool -importcert -file /var/vcap/jobs/quota-enforcer/config/uaa_cert.crt -alias cf-uaa-certificate -keystore /var/vcap/packages/openjdk/jre/lib/security/cacerts -storepass changeit -noprompt)
+
+echo "Completed"

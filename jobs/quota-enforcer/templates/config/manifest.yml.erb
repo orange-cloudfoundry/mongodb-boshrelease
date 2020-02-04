@@ -1,0 +1,9 @@
+---
+applications:
+- name: mongodb-quota-enforcer
+  buildpack: java_buildpack
+  memory: 1g
+  instances: 1
+  path: mongodb-quota-enforcer.jar
+  env:
+    JAVA_OPTS: -Dserver.port=8080 -Dspring.data.mongodb.host=<%= p('mongodb_node.host') %> -Dspring.application.name=mongodb-quotaenforcer -Dspring.data.mongodb.username=<%= p('mongodb_node.admin_username') %> -Dspring.data.mongodb.password=<%= p('mongodb_node.admin_password') %> -Dspring.data.mongodb.database=<%= p('mongodb_node.admin_db') %> -Dspring.data.mongodb.authentication-database=<%= p('mongodb_node.admin_db') %> -Dlogging.level.org.mongodb.driver.connection=ERROR -Dlogging.level.org.mongodb.driver.cluster=ERROR -Dquota-enforcer.plansize=<%= p('quota_enforcer.plansize') %> -Dquota-enforcer.ignoreUsers=<%= p('quota_enforcer.ignoreUsers').strip %> -Dsecurity.basic.enabled=false -Dsecurity.oauth2.client.clientId=<%= p('cf.clientId') %> -Dsecurity.oauth2.client.clientSecret="<%= p('cf.clientSecret') %>" -Dsecurity.oauth2.client.accessTokenUri="<%= p('cf.accessTokenUri') %>" -Dsecurity.oauth2.client.userAuthorizationUri="<%= p('cf.userAuthorizationUri') %>" -Dsecurity.oauth2.resource.userInfoUri="<%= p('cf.userInfoUri') %>"
