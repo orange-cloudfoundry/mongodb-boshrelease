@@ -1,0 +1,5 @@
+check process quota-enforcer
+  with pidfile /var/vcap/sys/run/quota-enforcer/quota-enforcer.pid
+  start program "/var/vcap/jobs/quota-enforcer/bin/monit_debugger quota-enforcer_ctl '/var/vcap/jobs/quota-enforcer/bin/ctl start'"
+  stop program "/var/vcap/jobs/quota-enforcer/bin/monit_debugger quota-enforcer_ctl '/var/vcap/jobs/quota-enforcer/bin/ctl stop'"
+  group vcap
