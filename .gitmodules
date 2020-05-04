@@ -7,4 +7,4 @@
 	branch = replicaset-tests
 [submodule "src/mongodb-quota-enforcer"]
 	path = src/mongodb-quota-enforcer
-	url = https://github.com/skortobi/mongodb-quota-enforcer
+	url = https://github.com/skortobi/mongodb-quota-enforcer.git
