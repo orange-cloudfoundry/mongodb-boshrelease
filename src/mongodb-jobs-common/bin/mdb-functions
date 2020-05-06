@@ -56,7 +56,7 @@ start_mongod_with_auth()
     # Stopping eventually running instance
     if [ -f ${PIDFILE} ]
     then
-      Master=$(check_master)|cut -d":" -f1
+      Master=$( echo $( check_master )|cut -d":" -f1)
       if [ "${Master}" == "${deployment_current_ip}" ]
       then
         ${MONGO_CMD} $MONGO_CMD_PARAM mongodb://${deployment_rs_config}/admin --eval "rs.stepDown()"
