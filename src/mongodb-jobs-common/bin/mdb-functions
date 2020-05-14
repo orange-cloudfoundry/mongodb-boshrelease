@@ -56,14 +56,27 @@ start_mongod_with_auth()
     # Stopping eventually running instance
     if [ -f ${PIDFILE} ]
     then
-      Master=$(check_master)|cut -d":" -f1
+      Master=$( echo $( check_master )|cut -d":" -f1)
       if [ "${Master}" == "${deployment_current_ip}" ]
       then
         ${MONGO_CMD} $MONGO_CMD_PARAM mongodb://${deployment_rs_config}/admin --eval "rs.stepDown()"
+        #
+        Timeout=120
+        Master=""
+        while [ "${Master}" == "" -a ${Timeout} -gt 0 ]
+        do
+          Master=$( check_master )
+
+          if [ "${Master}" == "" ]
+          then
+            sleep 1
+            Timeout=$((Timeout-1))
+          fi
+        done
       fi
 
-
-      [ `ps -p $(cat ${PIDFILE})|wc -l` -gt 1 ] && kill_and_wait ${PIDFILE}
+      [ `ps -p $(cat ${PIDFILE})|wc -l` -gt 1 ] && \
+      kill_and_wait ${PIDFILE}
     fi
 
     pid_guard ${PIDFILE} ${JOB_NAME}
