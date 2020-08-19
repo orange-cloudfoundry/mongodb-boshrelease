@@ -234,7 +234,6 @@ run_replicaset()
       add_secondary
     fi
 }
-################################################################################################
 
 ########################## Adding secondary node to replicaset #################################
 add_secondary()
@@ -258,10 +257,39 @@ add_secondary()
     [ "$root_initialized" == "null" ] && sleep 2
   done
 
-   # Adding current node to rs
-  ${MONGO_CMD} mongodb://${Master} \
-    ${MONGO_CMD_PARAM} --eval 'rs.add("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
+  # checking if an arbiter is needed and if it has already been added
+  if [ "${property_use_arbiter}" == "yes" ]
+  then
+    _arbiter=$(${MONGO_CMD} mongodb://${Master} \
+    ${MONGO_CMD_PARAM} --eval 'rs.isMaster().arbiters' )
+    if [ "${_arbiter}" == "" ]
+    then
+      # stopping current node
+      kill_and_wait ${PIDFILE}
+      # emptying data dir
+      rm -rf ${DATA_DIR}/*
+      # override parameters in config file
+      sed -i -e '/[[:space:]]*journal:/,${s/enabled.*/enabled: false/}' \
+          -e '/[[:space:]]*mmapv1:/,${s/smallFiles.*/smallFiles: true/}' \
+          -e '/[[:space:]]*replication:/,${s/oplogSizeMB.*/oplogSizeMB: 1/}' \
+      ${MONGODB_CONF}/mongod.conf
+      replication_oplog_size_mb = 1
+      # starting current node
+      start_mongod_with_auth
+      # Adding current node as an arbiter
+      ${MONGO_CMD} mongodb://${Master} \
+      ${MONGO_CMD_PARAM} --eval 'rs.addArb("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
 
+    else
+      ${MONGO_CMD} mongodb://${Master} \
+      ${MONGO_CMD_PARAM} --eval 'rs.add("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
+    fi
+  else
+     # Adding current node to rs
+     ${MONGO_CMD} mongodb://${Master} \
+      ${MONGO_CMD_PARAM} --eval 'rs.add("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
+  fi
+  
   [ $? -ne 0 ] && exit 1
   # need to wait for complete add before restarting
   _timeout=30

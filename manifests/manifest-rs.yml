@@ -42,6 +42,7 @@ instance_groups:
       admin_password: ((admin_password))
       root_password:  ((root_password))
       require_ssl:  0
+      use_arbiter: (( use_arbiter ))
       replication:
         enable: 1
         key: ((keyfile_content))

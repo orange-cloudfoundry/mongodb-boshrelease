@@ -176,3 +176,12 @@ properties:
 
         This option overrides any value set to 'mongodb.mmap_v1_small_files' and
         'mongodb.replication.operation_log_max_size_mb'.
+  use_arbiter:
+      default: no
+      example: yes
+      description: |
+        Have one node to be an arbiter only, and hold no database (when set to
+        'yes').
+
+        This option overrides any value set to 'mongodb.mmap_v1_small_files' and
+        'mongodb.replication.operation_log_max_size_mb' for one of the rs node.
