@@ -5,6 +5,8 @@ export JOBS_COMMON_DIR='/var/vcap/packages/mongodb-jobs-common'
 source ${JOBS_COMMON_DIR}/bin/setenv mongod
 source ${JOBS_COMMON_DIR}/bin/mdb-functions
 
+source ${JOB_DIR}/bin/mdb-variables.sh
+
 if [ $(check_ssl) -eq 0 ]
 then
   export MONGO_CMD="${JOBS_COMMON_DIR}/bin/mongo.sh"
@@ -21,13 +23,10 @@ export MONGO_CMD_PARAM="--quiet"
 
 # check if fcv is correctly setted on previously deployed clusters
 
-if [ "$( check_master )" != "" ]
+if [ "$( check_master )" != "" ] && [ $(check_current_fcv) -ne 0 ]
 then
-  if [ $(check_current_fcv) -ne 0 ]
-  then
-    update_fcv
-    rm -rf ${DATA_DIR}/*
-  fi
+  update_fcv
+  # rm -rf ${DATA_DIR}/*
 fi
 
 if [ ! -f ${RUN_DIR}/mongodb_initialized -o $(check_password) -eq 1 ]
@@ -57,10 +56,10 @@ fi
 backup_root_password
 
 #update fcv to deployed version
-if [ $(check_current_fcv) -ne 0 ]
+if [ $(check_current_fcv) -ne 0 ] && [ "$( check_master )" != "" ]
 then
   update_fcv
-  rm -rf ${DATA_DIR}/*
+  #rm -rf ${DATA_DIR}/*
 fi
 
 kill_and_wait ${PIDFILE}

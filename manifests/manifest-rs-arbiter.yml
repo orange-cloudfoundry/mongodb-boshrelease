@@ -20,7 +20,7 @@ stemcells:
 instance_groups:
 - name: mongod
   release: *mongodb_release
-  azs: [z1]
+  azs: [z1,z2]
   instances: ((nb_instances))
   vm_type: ((vm_type))
   env:
@@ -41,11 +41,39 @@ instance_groups:
     properties: 
       admin_password: ((admin_password))
       root_password:  ((root_password))
-      use_arbiter:  ((use_arbiter))
       require_ssl:  0
       replication:
         enable: 1
         key: ((keyfile_content))
+
+- name: arbiter
+  release: *mongodb_release
+  azs: [z3]
+  instances: 1
+  vm_type: ((vm_type))
+  env:
+    bosh:
+      swap_size: 0
+    persistent_disk_fs: xfs
+  stemcell: *stemcell
+  networks: 
+    - name: ((deployments-network))
+  persistent_disk_type: ((persistent_disk_type))
+  jobs:
+  - name: mongod
+    release: *mongodb_release
+    consumes:
+      server: {from: deployment-server}
+    provides:
+      server: {as: arbiter-server}
+    properties: 
+      admin_password: ((admin_password))
+      root_password:  ((root_password))
+      use_arbiter:  ((use_arbiter))
+      require_ssl:  0
+      replication:
+        enable: 1
+        key: ((keyfile_content))        
 
 variables:
 - name: admin_password
