@@ -17,6 +17,7 @@ provides:
     - root_password
     - port
     - replication.enable
+    - use_arbiter
     - replication.replica_set_name
     - require_ssl
     - server_certificate.private_key
@@ -167,12 +168,9 @@ properties:
         the 'mongo' client, the '--ssl' argument will not be possible. This
         should be reserved to development environments and be avoided in
         production.
-  arbiter_only:
-      default: no
-      example: yes
+  use_arbiter:
+      default: 0
       description: |
-        Have the node be an arbitrer only, and hold no database (when set to
-        'yes').
-
+        Have one node to be an arbiter only, and hold no database
         This option overrides any value set to 'mongodb.mmap_v1_small_files' and
-        'mongodb.replication.operation_log_max_size_mb'.
+        'mongodb.replication.operation_log_max_size_mb' for one of the rs node.
