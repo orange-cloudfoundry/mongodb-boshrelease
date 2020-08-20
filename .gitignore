@@ -14,6 +14,7 @@
 config/*
 config/dev.yml
 config/private.yml
+config/final.yml
 dev_releases
 output
 releases/*.tgz

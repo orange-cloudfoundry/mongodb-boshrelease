@@ -2,7 +2,7 @@
 name: mongodb-acceptance-tests
 
 dependencies:
-  - golang-1.9-linux
+  - golang-1.14-linux
 
 files:
   - github.com/orange-cloudfoundry/mongodb-acceptance-tests/**/*

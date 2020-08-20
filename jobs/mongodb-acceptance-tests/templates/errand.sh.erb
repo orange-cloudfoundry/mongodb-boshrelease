@@ -5,7 +5,7 @@ mongo_test_suites = p('mongo_test_suite')
 set -e
 
 pushd /var/vcap/packages/mongodb-acceptance-tests || exit 115
-    source /var/vcap/packages/golang-1.9-linux/bosh/compile.env
+    source /var/vcap/packages/golang-1.14-linux/bosh/compile.env
 popd
 
 export MATS_PKG_NAME=github.com/orange-cloudfoundry/mongodb-acceptance-tests
