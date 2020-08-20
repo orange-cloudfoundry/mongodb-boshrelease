@@ -258,7 +258,7 @@ add_secondary()
   done
 
   # checking if an arbiter is needed and if it has already been added
-  if [ "${property_use_arbiter}" == "yes" ]
+  if [ ${property_use_arbiter} ]
   then
     _arbiter=$(${MONGO_CMD} mongodb://${Master} \
     ${MONGO_CMD_PARAM} --eval 'rs.isMaster().arbiters' )
