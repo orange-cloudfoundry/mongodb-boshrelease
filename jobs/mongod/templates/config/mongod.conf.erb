@@ -16,17 +16,6 @@ Conf_port = p("port")
 Conf_PEMKeyFile = Sys_Db_dirSSL + "/mongodb.pem"
 Conf_CAFile = Sys_Db_dirSSL + "/CA.crt"
 
-storage_journal_enabled = "true"
-storage_mmap_v1_small_files = p("mmap_v1_small_files")
-replication_oplog_size_mb = p("replication.operation_log_max_size_mb")
-
-if_p("arbiter_only") do
-  if p("arbiter_only") == "yes"
-    storage_journal_enabled = "false"
-    storage_mmap_v1_small_files = "true"
-    replication_oplog_size_mb = 1
-  end
-end
 -%>
 systemLog:
   destination: file
@@ -42,13 +31,13 @@ storage:
   directoryPerDB: true
   <%- end -%>
   journal:
-    enabled: <%= storage_journal_enabled %>
+    enabled: true
   <%- if_p("Conf_commitIntervalMs") do -%>  
     commitIntervalMs: <%= Conf_commitIntervalMs %>
   <%- end -%>
   <%- if p("storage_engine") == "mmapv1" -%>
   mmapv1:
-    smallFiles: <%= storage_mmap_v1_small_files %>
+    smallFiles: <%= p("mmap_v1_small_files") %>
     <% if_p("Conf_mmapv1_preallocDataFiles") do -%>
     preallocDataFiles: <%= Conf_mmapv1_preallocDataFiles %>
     <%- end -%>
@@ -117,7 +106,7 @@ operationProfiling:
 <%- if p("replication.enable") == 1 -%>
 replication:
   replSetName: <%= p("replication.replica_set_name") %>
-  oplogSizeMB: <%= replication_oplog_size_mb %>
+  oplogSizeMB: <%= p("replication.operation_log_max_size_mb") %>
 <%- end -%>
 setParameter:
   enableLocalhostAuthBypass: 1

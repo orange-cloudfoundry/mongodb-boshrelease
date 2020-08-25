@@ -127,6 +127,9 @@ system_update()
 ######################## Look for an existing Primary node #####################################
 check_master()
 {
+
+    source ${JOB_DIR}/bin/mdb-variables.sh
+
     # looking for already created master node
     Master=""
 
@@ -219,7 +222,7 @@ run_replicaset()
     Master=$( check_master )
 
     
-    if [ "${Master}" == "" -o "${Master}" == "${deployment_current_ip}:${property_mongod_listen_port}" ]
+    if [ "${Master}" == "" -o "${Master}" == "${deployment_current_ip}:${property_mongod_listen_port}" ] && [ ${property_use_arbiter} -eq 0 ]
     then
       # check if rs is already initialized
       if [ "$(${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
@@ -234,7 +237,6 @@ run_replicaset()
       add_secondary
     fi
 }
-################################################################################################
 
 ########################## Adding secondary node to replicaset #################################
 add_secondary()
@@ -249,42 +251,94 @@ add_secondary()
 
   # if root user is not available, primary has probably not finish his job, wait for it
   
-  root_initialized=""
-  while [ "$root_initialized" == "" ]
+  root_initialized="null"
+  while [ "$root_initialized" == "null" ]
   do
+    Master=$( check_master )
     root_initialized=`${MONGO_CMD} mongodb://${Master} \
       ${MONGO_CMD_PARAM} --eval 'db.getUser("'${property_root_username}'")' admin||echo "null"`
     
     [ "$root_initialized" == "null" ] && sleep 2
   done
 
-   # Adding current node to rs
-  ${MONGO_CMD} mongodb://${Master} \
-    ${MONGO_CMD_PARAM} --eval 'rs.add("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
+  # checking if an arbiter is needed and if it has already been added
+  _current_is_arb=false
+  if [ ${property_use_arbiter} -eq 1 ]
+  then
+    _arbiter=$(${MONGO_CMD} mongodb://${Master} \
+    ${MONGO_CMD_PARAM} --eval 'rs.isMaster().arbiters' )
+    if [ "${_arbiter}" == "" -o $(echo "${_arbiter}"|grep ${deployment_current_ip}':'${property_mongod_listen_port}|wc -l) -gt 0 ]
+    then
+      # stopping current node
+      kill_and_wait ${PIDFILE}
+      # emptying data dir
+      rm -rf ${DATA_DIR}/*
+      # override parameters in config file
 
+      sed -i -e '/[[:space:]]*replication:/,${s/oplogSizeMB.*/oplogSizeMB: 1/}' \
+                ${MONGODB_CONF}/mongod.conf
+
+      if [ "${property_engine}" != "wiredTiger" ]
+      then
+        sed -i -e '/[[:space:]]*journal:/,/[[:space:]]*processManagement:/{s/^\([[:space:]]*\)enabled.*/\1enabled: false/}' \
+               -e '/[[:space:]]*mmapv1:/,${s/smallFiles.*/smallFiles: true/}' \
+                ${MONGODB_CONF}/mongod.conf 
+      fi
+
+      # starting current node
+      start_mongod_with_auth
+      # Adding current node as an arbiter
+      ${MONGO_CMD} mongodb://${Master} \
+      ${MONGO_CMD_PARAM} --eval 'rs.addArb("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
+      _current_is_arb=true
+
+    else
+      ${MONGO_CMD} mongodb://${Master} \
+      ${MONGO_CMD_PARAM} --eval 'rs.add("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
+    fi
+  else
+     # Adding current node to rs
+     ${MONGO_CMD} mongodb://${Master} \
+      ${MONGO_CMD_PARAM} --eval 'rs.add("'${deployment_current_ip}':'${property_mongod_listen_port}'")'
+  fi
+  
   [ $? -ne 0 ] && exit 1
   # need to wait for complete add before restarting
   _timeout=30
   add_ok="false"
+
+  # standby
+
+  
   recovery_in_progress=5 #STARTUP2 state
   while [ "${add_ok}" == "false" ]
   do
-    add_ok=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
-      --eval 'rs.isMaster().secondary'||echo "false"`
-    recovery_in_progress=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
-      --eval 'rs.status().myState'||echo "0"`
-
-    if [ "${add_ok}" != "true" ]
+    if [ "${_current_is_arb}" == "true" ]
     then
-      add_ok="false"
-      if [ ${recovery_in_progress} -ne 5 -o ${recovery_in_progress} -ne 1 ]
+      echo $(${MONGO_CMD} mongodb://${Master} \
+      ${MONGO_CMD_PARAM} --eval 'rs.isMaster().arbiters')|grep ${deployment_current_ip}:${property_mongod_listen_port} > /dev/null
+      [ $? -eq 0 ] \
+      && add_ok=true \
+      || add_ok=false
+    else
+      add_ok=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+        --eval 'rs.isMaster().secondary'||echo "false"`
+      recovery_in_progress=`${MONGO_CMD} mongodb://${deployment_current_ip}:${property_mongod_listen_port} ${MONGO_CMD_PARAM} \
+        --eval 'rs.status().myState'||echo "0"`
+
+      if [ "${add_ok}" != "true" ]
       then
-        sleep 2
-        _timeout=$((_timeout-2))
-        [ ${_timeout} -le 0 ] && echo "node ${deployment_current_ip}:${property_mongod_listen_port} hasn\'t been added. Timeout reached" && exit 1
+        add_ok="false"
+        if [ ${recovery_in_progress} -ne 5 -o ${recovery_in_progress} -ne 1 ]
+        then
+          sleep 2
+          _timeout=$((_timeout-2))
+          [ ${_timeout} -le 0 ] && echo "node ${deployment_current_ip}:${property_mongod_listen_port} hasn\'t been added. Timeout reached" && exit 1
+        fi
       fi
     fi
   done
+  
 }
 ################################################################################################
 
@@ -519,14 +573,21 @@ check_current_fcv()
 update_fcv()
 {
 
-  set -x
-
+  Timeout=120
   MONGO_CMD="$(setMongoCmd)"
 
   MONGO_CMD_PARAM="--quiet"
 
-  Master=$( check_master )
-
+  while [ ${Master} == "" -a $Timeout -ge 0 ]
+  do
+    Master=$( check_master )
+    Timeout=$((Timeout-1))
+    sleep 1
+  done
+  if [ Timeout -eq 0 ]
+  then
+    exit 1
+  fi
   current_dbv=$(${MONGO_CMD} "mongodb://${property_root_username}:${property_root_password}@${Master}/admin?replicaSet=${property_replica_set_name}&authSource=admin" \
               ${MONGO_CMD_PARAM} \
               --eval 'db.version()'|tail -1| sed -e "s/^\([0-9]*\.[0-9]*\).*/\1/g")
