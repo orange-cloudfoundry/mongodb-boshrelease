@@ -578,7 +578,7 @@ update_fcv()
 
   MONGO_CMD_PARAM="--quiet"
 
-  while [ ${Master} == "" -a $Timeout -ge 0 ]
+  while [ "${Master}" == "" -a $Timeout -ge 0 ]
   do
     Master=$( check_master )
     Timeout=$((Timeout-1))
