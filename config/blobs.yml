@@ -4,6 +4,7 @@ cf-cli/cf-cli_6.30.0_linux_x86-64.tgz:
   sha: 10a795927fd6f03f1b7212f21ac508e6278270fd
 mongodb/mongodb-linux-x86_64-4.2.9.tar.gz:
   size: 132754477
+  object_id: 2b154e2c-6e91-41a5-7564-5d363698dbec
   sha: sha256:9b9c54da9bef5a710c18960d812dce4e165efddadfb4a7059ce9be61ebd93dbc
 openjdk/openjdk.tar.gz:
   size: 126476497
