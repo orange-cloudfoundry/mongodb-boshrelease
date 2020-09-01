@@ -1,0 +1,119 @@
+name: mongodb-services
+version: "12"
+commit_hash: e833cf8
+uncommitted_changes: false
+jobs:
+- name: broker
+  version: 2b62802d62458c46a2bf0e447f6a5905fe8e794e8a8ed1a6efa11d1560725028
+  fingerprint: 2b62802d62458c46a2bf0e447f6a5905fe8e794e8a8ed1a6efa11d1560725028
+  sha1: sha256:5e2ff3666c43e5f6319b48122c1f53189fa5df17da252d977831026d8c9ab2cf
+  packages:
+  - java-common
+  - openjdk
+  - mongodb-broker-pkg
+- name: broker-smoke-tests
+  version: 81f585b78da196a6180397405ed8106dbbe57843207bc56a45331805541d7a90
+  fingerprint: 81f585b78da196a6180397405ed8106dbbe57843207bc56a45331805541d7a90
+  sha1: sha256:0d78e9207b9c14744b84f2efd0778e64d33b4d8a87643416f71d3d88ac8a00ba
+  packages:
+  - cf-cli
+  - cf-mongodb-example-app
+- name: cfgsvr
+  version: dac503925e85855e28e6d0dff021c0217c1ffad417526133f332c9ac9e165344
+  fingerprint: dac503925e85855e28e6d0dff021c0217c1ffad417526133f332c9ac9e165344
+  sha1: sha256:a8e8a4b2dbfd4408fd673b467709f65060dc0206f01b474eeea47b588f2b4f86
+  packages:
+  - mongodb
+  - mongodb-jobs-common
+- name: mongod
+  version: 4f86a24656e8092e2e7394b182a8943422813b039af4f24b327cfc6a4a495ea0
+  fingerprint: 4f86a24656e8092e2e7394b182a8943422813b039af4f24b327cfc6a4a495ea0
+  sha1: sha256:475bf4d52947c0ba0218e4153d44e17181ddf5c8c0dab62c2a522b8ee80d1779
+  packages:
+  - mongodb
+  - mongodb-jobs-common
+- name: mongodb-acceptance-tests
+  version: b7d906f89606d292e269ec9edc3f0972f794985dab80ea03856ef1f867d36c30
+  fingerprint: b7d906f89606d292e269ec9edc3f0972f794985dab80ea03856ef1f867d36c30
+  sha1: sha256:5e4efdb7b4c3f7ad4752c2e9070d6a67ff47bcb34fb8dd0c2d10afbb93e55d55
+  packages:
+  - golang-1.9-linux
+  - mongodb-acceptance-tests
+- name: mongos
+  version: 8733d57ff552dc1e536e595c7fed6fd8350114032726ee9d338e7e07d0826be0
+  fingerprint: 8733d57ff552dc1e536e595c7fed6fd8350114032726ee9d338e7e07d0826be0
+  sha1: sha256:85ba77cf5eb519bdde129a0ca7bf7fb34c32692e50279761896c6820885b123c
+  packages:
+  - mongodb
+  - mongodb-jobs-common
+- name: quota-enforcer
+  version: 63c7df548f24f4b867ee7748d14b3a205d8783e322051d590f2434f7324162bc
+  fingerprint: 63c7df548f24f4b867ee7748d14b3a205d8783e322051d590f2434f7324162bc
+  sha1: sha256:20acaa75b0138e059ad80c04888a09928ca19873060b86b294f544ef80cdcae9
+  packages:
+  - java-common
+  - openjdk
+  - mongodb-quota-enforcer-pkg
+- name: shardsvr
+  version: 339d5b150c1760cbfea158b6c0582ea131103f768c9f144282aaab142618a271
+  fingerprint: 339d5b150c1760cbfea158b6c0582ea131103f768c9f144282aaab142618a271
+  sha1: sha256:71bfa61a30396f3e92d43e691ba06be5fb27704775d330db75838e1f25c72cf0
+  packages:
+  - mongodb
+  - mongodb-jobs-common
+packages:
+- name: cf-cli
+  version: bdf614455e9cf838dd058d2f3875f8d11f2a9f09d9799de756260ffbebfccf4d
+  fingerprint: bdf614455e9cf838dd058d2f3875f8d11f2a9f09d9799de756260ffbebfccf4d
+  sha1: sha256:0c0d0a26cf696d9bd7471283b2ec372d4d29023fc00895aadef7a07c46b4bc95
+  dependencies: []
+- name: cf-mongodb-example-app
+  version: 1b413034ade485e88f3e2f35b801bf63b3d4f748d3e3bb5c3ae0150d137af3a1
+  fingerprint: 1b413034ade485e88f3e2f35b801bf63b3d4f748d3e3bb5c3ae0150d137af3a1
+  sha1: sha256:151b3a92f2f4a55c4713647ec651b57fd45be807a73122238517c480a9467a5e
+  dependencies: []
+- name: golang-1.9-linux
+  version: c6287e4a02a8491523d22e50dd697dc22296f0f7
+  fingerprint: c6287e4a02a8491523d22e50dd697dc22296f0f7
+  sha1: b5ac764da27f6b738c04b00a58c31f508d8c7b75
+  dependencies: []
+- name: java-common
+  version: aa01a19771878444ec39b9bb330eab55189ca595623ce40b031d79fff6bf1c3d
+  fingerprint: aa01a19771878444ec39b9bb330eab55189ca595623ce40b031d79fff6bf1c3d
+  sha1: sha256:4e1a6b8e4f6e742946f02dc46af3fbeeb0b4ac6447abe3e14dcf8b096301f1a1
+  dependencies: []
+- name: mongodb
+  version: ac685d06ea502431e38f6193028dcabcba96952b89a1bbdbc648049d6ee8002e
+  fingerprint: ac685d06ea502431e38f6193028dcabcba96952b89a1bbdbc648049d6ee8002e
+  sha1: sha256:1c7bd98a117e6660c7446e8295b1372894467504bc48f25ce028a4f5782e9be9
+  dependencies: []
+- name: mongodb-acceptance-tests
+  version: 1a6cd9e36aecfbda629a7e37308151a9b45a80aa3006388a41a6a6c7ac915b88
+  fingerprint: 1a6cd9e36aecfbda629a7e37308151a9b45a80aa3006388a41a6a6c7ac915b88
+  sha1: sha256:9bd5ba59f97efec4f0b8138f1c96dcd2e689c695846ae104739883aa7559a17c
+  dependencies:
+  - golang-1.9-linux
+- name: mongodb-broker-pkg
+  version: cb56246c22f68063a91e756a42c8243540d511eebc140c50257bb78eedb0c89c
+  fingerprint: cb56246c22f68063a91e756a42c8243540d511eebc140c50257bb78eedb0c89c
+  sha1: sha256:192ed14c1ce46348b96d5099a47fda917a1dc9f7a5e346dcbf583f14e0a53cc1
+  dependencies: []
+- name: mongodb-jobs-common
+  version: c8117dad0a3c88753787a227f2c4477aa58b9a3cad11fde7fdb6730fe5c68771
+  fingerprint: c8117dad0a3c88753787a227f2c4477aa58b9a3cad11fde7fdb6730fe5c68771
+  sha1: sha256:feb62b6ae960f36fe91d7ef91000a1cacd856e9a899e5b7ce7a8d356bccd7d84
+  dependencies: []
+- name: mongodb-quota-enforcer-pkg
+  version: 257d023c8fd78f07f77d19aef90005c5ab2d573849af6e1ee44c434e6ad728a1
+  fingerprint: 257d023c8fd78f07f77d19aef90005c5ab2d573849af6e1ee44c434e6ad728a1
+  sha1: sha256:7f7ae979b2d5b72c327c6bf404bb1f9fae59513e3ccc739fae3a2b455db2ce74
+  dependencies: []
+- name: openjdk
+  version: d3732043c491d6dd81912127b455c3bb0d640abf3075a46da95c259282529f01
+  fingerprint: d3732043c491d6dd81912127b455c3bb0d640abf3075a46da95c259282529f01
+  sha1: sha256:0c98032d48c217887a4f2dd2b92c01d0716a0d8aa7cd340d0e9c23b9d7b54ce1
+  dependencies: []
+license:
+  version: 81ec95724079137d9ba07668394049ba527bd9bbfd54fe577622e42a56d38126
+  fingerprint: 81ec95724079137d9ba07668394049ba527bd9bbfd54fe577622e42a56d38126
+  sha1: sha256:dad3249c24924accb40562b13df2c0e51e103567b10149583cf0496e701dacbc
