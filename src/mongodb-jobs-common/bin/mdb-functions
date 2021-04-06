@@ -586,7 +586,7 @@ update_fcv()
     Timeout=$((Timeout-1))
     sleep 1
   done
-  if [ Timeout -eq 0 ]
+  if [ $Timeout -eq 0 ]
   then
     exit 1
   fi
