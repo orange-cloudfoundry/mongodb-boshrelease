@@ -37,6 +37,12 @@ public class MongoAdminService {
 	@Value("${mongodb.username:admin}")
 	private String adminUsername;
 
+	@Value("${mongodb.host:localhost}")
+	private String host;
+
+	@Value("${mongodb.port:27017}")
+	private int port;
+
 	@Autowired
 	public MongoAdminService(MongoClient client) {
 		this.client = client;
@@ -160,7 +166,7 @@ public class MongoAdminService {
 		.append(":")
 		.append(password)
 		.append("@")
-		.append(getServerAddresses())
+		.append(getServerAddressesFromConfigurationFile())
 		.append("/")
 		.append(database);
 		
@@ -187,6 +193,29 @@ public class MongoAdminService {
 		}
 		return builder.toString();
 	}
+
+	public String getServerAddressesFromConfigurationFile() {
+
+		StringBuilder builder = new StringBuilder();
+		String[] s_hosts = host.split(",");
+		for (int i = 0; i < s_hosts.length; i++) {
+			if( s_hosts[i] != null && !s_hosts[i].isEmpty()){
+				builder.append(s_hosts[i])
+						.append(":")
+						.append(port)
+						.append(",");
+			}
+		}
+		if (builder.length() > 0) {
+			builder.deleteCharAt(builder.length()-1);
+		}
+		return builder.toString();
+	}
+
+
+
+
+
 
 	private MongoServiceException handleException(Exception e) {
 		logger.warn(e.getLocalizedMessage(), e);
