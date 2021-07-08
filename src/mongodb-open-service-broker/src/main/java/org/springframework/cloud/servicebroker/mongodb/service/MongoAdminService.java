@@ -1,6 +1,8 @@
 package org.springframework.cloud.servicebroker.mongodb.service;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.bson.Document;
@@ -42,6 +44,9 @@ public class MongoAdminService {
 
 	@Value("${mongodb.port:27017}")
 	private int port;
+
+	@Value("${mongodb.hamode:false}")
+	private boolean hamode;
 
 	@Autowired
 	public MongoAdminService(MongoClient client) {
@@ -166,7 +171,7 @@ public class MongoAdminService {
 		.append(":")
 		.append(password)
 		.append("@")
-		.append(getServerAddressesFromConfigurationFile())
+		.append(getServerAddresses())
 		.append("/")
 		.append(database);
 		
@@ -176,6 +181,23 @@ public class MongoAdminService {
 			//.append("&readPreference=secondary");
 		}
 		
+		return strB.toString();
+	}
+
+	public String getHAConnectionString(String database, String username, String password, String address, int port) {
+
+		StringBuilder strB = new StringBuilder();
+		strB.append("mongodb://")
+				.append(username)
+				.append(":")
+				.append(password)
+				.append("@")
+				.append(address)
+				.append(":")
+				.append(port)
+				.append("/")
+				.append(database);
+		strB.append("?directConnection=true");
 		return strB.toString();
 	}
 
@@ -194,32 +216,27 @@ public class MongoAdminService {
 		return builder.toString();
 	}
 
-	public String getServerAddressesFromConfigurationFile() {
+	public Map<String, Object> getCredentialsMap(String database, String username, String password) {
 
-		StringBuilder builder = new StringBuilder();
-		String[] s_hosts = host.split(",");
-		for (int i = 0; i < s_hosts.length; i++) {
-			if( s_hosts[i] != null && !s_hosts[i].isEmpty()){
-				builder.append(s_hosts[i])
-						.append(":")
-						.append(port)
-						.append(",");
-			}
+		Map<String, Object> credentials = new HashMap<>();
+		if (hamode == false){
+			credentials.put("uri", (Object) this.getConnectionString(database, username, password));
+		}else{
+			String[] s_hosts = host.split(",");
+			String uri = this.getHAConnectionString(database, username, password,s_hosts[0],port); // first address in configuration file
+			credentials.put("uri", (Object) uri);
+			String secondary_uri = this.getHAConnectionString(database, username, password,s_hosts[1],port); //second address in configuration
+			credentials.put("secondary_uri", (Object) secondary_uri);
 		}
-		if (builder.length() > 0) {
-			builder.deleteCharAt(builder.length()-1);
-		}
-		return builder.toString();
+		return credentials;
 	}
-
-
-
-
-
 
 	private MongoServiceException handleException(Exception e) {
 		logger.warn(e.getLocalizedMessage(), e);
 		return new MongoServiceException(e.getLocalizedMessage());
 	}
+
+
+
 
 }
