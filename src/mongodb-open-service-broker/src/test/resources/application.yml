@@ -3,6 +3,7 @@ mongodb:
   port: 27017
   username: myUserAdmin
   password: abc123
+  hamode: false
   SECURITY_USER_NAME: user
   SECURITY_USER_PASSWORD: MySecurePwd
 

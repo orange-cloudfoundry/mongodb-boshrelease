@@ -28,6 +28,7 @@ mongodb:
   password: <%= link('config-server').p('root_password') %>
   <% end %>
   port: 27017
+  hamode: <%= p('broker.hamode').to_json %>
 
 server:
   port: <%= p('broker.port').to_json %>

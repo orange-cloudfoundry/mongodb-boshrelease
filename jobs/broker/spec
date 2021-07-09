@@ -29,6 +29,9 @@ properties:
   broker.port:
     description: server http port
     default: 8080
+  broker.hamode:
+    description: hamode (true means hamode enabled)
+    default: false
   mongodb_node.root_username:
     description: mongodb root username
   mongodb_node.root_password:
