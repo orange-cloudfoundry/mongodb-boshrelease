@@ -30,8 +30,6 @@ properties:
     description: mongodb root password
   mongodb_node.admin_db:
     description: mongodb admin database
-  mongodb_node.host:
-    description: mongodb admin database
   cf.accessTokenUri:
     description: cloudfoundry UAA access token url
   cf.clientId:
