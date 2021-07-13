@@ -25,3 +25,4 @@ blobs
 config/final.yml
 deployment-vars-*
 ci/settings.yml
+src/mongodb-quota-enforcer/target/**/*
