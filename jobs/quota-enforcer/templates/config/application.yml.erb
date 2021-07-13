@@ -2,7 +2,7 @@
 server.port: 8081
 spring.application.name: mongodb-quotaenforcer
 spring.data.mongodb.username: <%= p('mongodb_node.admin_username') %>
-spring.data.mongodb.host: <%= p('mongodb_node.host') %>
+spring.data.mongodb.host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
 spring.data.mongodb.password: <%= p('mongodb_node.admin_password') %>
 spring.data.mongodb.database: <%= p('mongodb_node.admin_db') %>
 spring.data.mongodb.authentication-database: <%= p('mongodb_node.admin_db') %>
