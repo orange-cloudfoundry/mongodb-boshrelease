@@ -219,6 +219,11 @@ public class MongoAdminService {
 	public Map<String, Object> getCredentialsMap(String database, String username, String password) {
 
 		Map<String, Object> credentials = new HashMap<>();
+		credentials.put("name", (Object) database);
+		credentials.put("username", (Object) username);
+		credentials.put("password", (Object) password);
+		credentials.put("hostname", (Object) this.getServerAddresses());
+
 		if (hamode == false){
 			credentials.put("uri", (Object) this.getConnectionString(database, username, password));
 		}else{
