@@ -1,15 +1,31 @@
 ---
 server.port: 8081
 spring.application.name: mongodb-quotaenforcer
-spring.data.mongodb.username: <%= p('mongodb_node.admin_username') %>
-spring.data.mongodb.host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
-spring.data.mongodb.password: <%= p('mongodb_node.admin_password') %>
-spring.data.mongodb.database: <%= p('mongodb_node.admin_db') %>
-spring.data.mongodb.authentication-database: <%= p('mongodb_node.admin_db') %>
-logging.level.org.mongodb.driver.connection: ERROR
+mongodb:
+  host: <% nodes = link('server') %><% nodes.instances.each do |instance| %><%= instance.address %>,<% end %>
+  username: <%= link('server').p('root_username') %>
+  password: <%= link('server').p('root_password') %>
+
+<%-
+  require "shellwords"
+
+  def esc(x)
+    Shellwords.shellescape(x)
+  end
+
+  _mongos_config = ''
+  link('server').instances.each do |instance|
+    _mongos_config = "#{_mongos_config}#{instance.address},"
+  end
+  # remove last ,
+  mongos_config = _mongos_config[0..-2]
+%>
+spring.data.mongodb.uri: mongodb://<%= link('server').p('root_username') %>:<%= link('server').p('root_password') %>@<%= esc(mongos_config) %>:27017/?replicaSet=rs0&authSource=admin
+
+logging.level.org.mongodb.driver.connection: INFO
 logging.level.org.mongodb.driver.cluster: ERROR
 logging.level.org.springframework.security: DEBUG
-
+#logging.level.orange.acdc.mongodb.quotaenforcer.controllers: DEBUG
 
 server.tomcat.remote-ip-header: x-forwarded-for
 server.tomcat.protocol-header: x-forwarded-proto
