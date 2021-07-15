@@ -21,6 +21,8 @@ mongodb:
   mongos_config = _mongos_config[0..-2]
 %>
 spring.data.mongodb.uri: mongodb://<%= link('server').p('root_username') %>:<%= link('server').p('root_password') %>@<%= esc(mongos_config) %>:27017/?replicaSet=rs0&authSource=admin
+spring.data.mongodb.database: <%= p('mongodb_node.admin_db') %>
+spring.data.mongodb.authentication-database: <%= p('mongodb_node.admin_db') %>
 
 logging.level.org.mongodb.driver.connection: INFO
 logging.level.org.mongodb.driver.cluster: ERROR
