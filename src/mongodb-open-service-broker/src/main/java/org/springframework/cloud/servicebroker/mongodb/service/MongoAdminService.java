@@ -222,14 +222,15 @@ public class MongoAdminService {
 		credentials.put("database", (Object) database);
 		credentials.put("username", (Object) username);
 		credentials.put("password", (Object) password);
-		credentials.put("hostname", (Object) s_hosts[0]);
 		if (hamode == false){
 			credentials.put("uri", (Object) this.getConnectionString(database, username, password));
+			credentials.put("hostname", (Object) this.getServerAddresses());
 		}else{
 			String uri = this.getHAConnectionString(database, username, password,s_hosts[0],port); // first address in configuration file
 			credentials.put("uri", (Object) uri);
 			String secondary_uri = this.getHAConnectionString(database, username, password,s_hosts[1],port); //second address in configuration
 			credentials.put("secondary_uri", (Object) secondary_uri);
+			credentials.put("hostname", (Object) s_hosts[0]);
 			credentials.put("hostname_secondary", (Object) s_hosts[1]);
 		}
 		return credentials;
