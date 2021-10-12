@@ -1,7 +1,6 @@
 package org.springframework.cloud.servicebroker.mongodb.service;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -219,14 +218,19 @@ public class MongoAdminService {
 	public Map<String, Object> getCredentialsMap(String database, String username, String password) {
 
 		Map<String, Object> credentials = new HashMap<>();
+		String[] s_hosts = host.split(",");
+		credentials.put("database", (Object) database);
+		credentials.put("username", (Object) username);
+		credentials.put("password", (Object) password);
+		credentials.put("hostname", (Object) s_hosts[0]);
 		if (hamode == false){
 			credentials.put("uri", (Object) this.getConnectionString(database, username, password));
 		}else{
-			String[] s_hosts = host.split(",");
 			String uri = this.getHAConnectionString(database, username, password,s_hosts[0],port); // first address in configuration file
 			credentials.put("uri", (Object) uri);
 			String secondary_uri = this.getHAConnectionString(database, username, password,s_hosts[1],port); //second address in configuration
 			credentials.put("secondary_uri", (Object) secondary_uri);
+			credentials.put("hostname_secondary", (Object) s_hosts[1]);
 		}
 		return credentials;
 	}
