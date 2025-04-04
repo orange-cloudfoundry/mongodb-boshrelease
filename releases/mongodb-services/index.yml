@@ -33,4 +33,6 @@ builds:
     version: "4"
   efec8348-3dca-49f9-7afd-c96aecf04557:
     version: 3.4.7
+  fc80701c-ddc9-421f-5c81-4162306a234e:
+    version: "17"
 format-version: "2"
