@@ -3,4 +3,6 @@ final_name: mongodb-services
 blobstore:
   provider: s3
   options:
-    bucket_name: orange-mongodb-cf-service-boshrelease
+    bucket_name: s3selfcare-mongodb-cf-service-boshrelease
+    region: eu
+    host: storage.googleapis.com
